@@ -179,6 +179,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         // DÉCLENCHÉ HORS DE LA TRANSACTION 
         // (Pour s'assurer que les données globales sont commitées et lisibles par les autres threads)
         const { checkGamification } = await import("@/lib/actions/gamification");
+        const { updateUserStreak } = await import("@/lib/actions/streak");
         
         for (const s of createdSessions) {
             // Recalcule les volumes totaux en incluant la session fraîchement commitée
@@ -186,6 +187,9 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
             // Vérifie les paliers de niveau et de records
             await checkGamification(session.user.id, s.id);
         }
+
+        // Met à jour la jauge d'assiduité du joueur (Streak)
+        await updateUserStreak(session.user.id);
 
         revalidatePath("/");
         revalidatePath("/league");

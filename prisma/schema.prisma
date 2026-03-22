@@ -71,6 +71,8 @@ model User {
   leagueId      String
   totalXP       Int       @default(0)
   level         Int       @default(1)
+  currentStreak Int       @default(0)
+  highestStreak Int       @default(0)
   
   // Status flags
   inCagnotte    Boolean   @default(true)

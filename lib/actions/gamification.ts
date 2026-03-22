@@ -174,22 +174,10 @@ export async function checkGamification(userId: string, lastSessionId: string) {
 
     const recordMapping = [
         { id: "RECORD_DAY_PUSHUP", type: "VOLUME", tf: "DAY", ex: "PUSHUP", coef: 0.5 },
-        { id: "RECORD_WEEK_PUSHUP", type: "VOLUME", tf: "WEEK", ex: "PUSHUP", coef: 1.0 },
-        { id: "RECORD_MONTH_PUSHUP", type: "VOLUME", tf: "MONTH", ex: "PUSHUP", coef: 2.0 },
         { id: "RECORD_SERIES_PUSHUP", type: "SERIES", tf: "YEAR", ex: "PUSHUP", coef: 5.0 },
         { id: "RECORD_DAY_SQUAT", type: "VOLUME", tf: "DAY", ex: "SQUAT", coef: 0.5 },
-        { id: "RECORD_WEEK_SQUAT", type: "VOLUME", tf: "WEEK", ex: "SQUAT", coef: 1.0 },
-        { id: "RECORD_MONTH_SQUAT", type: "VOLUME", tf: "MONTH", ex: "SQUAT", coef: 2.0 },
         { id: "RECORD_SERIES_SQUAT", type: "SERIES", tf: "YEAR", ex: "SQUAT", coef: 5.0 },
-        // For PLANK, we must group VENTRAL, LATERAL_L, LATERAL_R. 
-        // Wait, the Record table stores them separately! 
-        // The user wanted "Gainage" grouped. 
-        // If we want Gainage grouped, we must dynamically sum them here, or accept they are just VENTRAL records!
-        // To keep it simple and accurate to the DB, we will use VENTRAL as the proxy for "Gainage Total" in records, or calculate the sum.
-        // Let's use VENTRAL for the badge condition as it's the primary plank.
         { id: "RECORD_DAY_PLANK", type: "VOLUME", tf: "DAY", ex: "VENTRAL", coef: 0.5 },
-        { id: "RECORD_WEEK_PLANK", type: "VOLUME", tf: "WEEK", ex: "VENTRAL", coef: 1.0 },
-        { id: "RECORD_MONTH_PLANK", type: "VOLUME", tf: "MONTH", ex: "VENTRAL", coef: 2.0 },
         { id: "RECORD_SERIES_PLANK", type: "SERIES", tf: "YEAR", ex: "VENTRAL", coef: 5.0 },
     ];
 

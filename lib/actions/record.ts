@@ -33,7 +33,7 @@ export async function getLeagueRankings(
         // Group by user, take max
         const usersInLeague = await prisma.user.findMany({
             where: { leagueId },
-            select: { id: true, nickname: true }
+            select: { id: true, nickname: true, currentStreak: true }
         });
 
         const rankings = await Promise.all(usersInLeague.map(async (user) => {
@@ -50,6 +50,7 @@ export async function getLeagueRankings(
             return {
                 userId: user.id,
                 nickname: user.nickname,
+                currentStreak: user.currentStreak,
                 value: best?.value || 0
             };
         }));
@@ -70,18 +71,22 @@ export async function getLeagueRankings(
             orderBy: { _sum: { value: 'desc' } }
         });
 
-        // Join with nicknames
+        // Join with nicknames and streaks
         const userIds = aggregations.map(a => a.userId);
         const users = await prisma.user.findMany({
             where: { id: { in: userIds } },
-            select: { id: true, nickname: true }
+            select: { id: true, nickname: true, currentStreak: true }
         });
 
-        return aggregations.map(agg => ({
-            userId: agg.userId,
-            nickname: users.find(u => u.id === agg.userId)?.nickname || "Inconnu",
-            value: agg._sum.value || 0
-        }));
+        return aggregations.map(agg => {
+            const u = users.find(u => u.id === agg.userId);
+            return {
+                userId: agg.userId,
+                nickname: u?.nickname || "Inconnu",
+                currentStreak: u?.currentStreak || 0,
+                value: agg._sum.value || 0
+            };
+        });
     }
 }
 

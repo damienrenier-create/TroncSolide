@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ExerciseBatchForm from "@/components/exercises/ExerciseBatchForm";
 import { Flame, Trophy, TrendingUp, History, Wallet, Award, Lock, TreePine, Calendar, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { deleteSession } from "@/lib/actions/moderation";
 import { useRouter } from "next/navigation";
@@ -159,20 +160,31 @@ export default function DashboardClient({
                     </div>
                 </section>
 
-                <section className="glass-premium info-card">
-                    <div className="card-header">
-                        <Trophy size={16} className="text-primary" />
-                        <span>Top Ligue</span>
+                <Link href="/league" className="glass-premium info-card clickable-card" style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <div className="card-header" style={{ marginBottom: "0.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <Trophy size={16} className="text-primary" />
+                            <span>Top Ligue</span>
+                        </div>
+                        <span style={{ fontSize: "0.65rem", fontWeight: "800", color: "var(--primary)", opacity: 0.8 }}>VOIR TOUT ➔</span>
                     </div>
-                    <div className="league-preview">
+                    <div className="league-preview" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         {stats.top3.map((player: any, i: number) => (
-                            <div key={i} className="league-row" style={{ opacity: i === 0 ? 1 : 0.6 }}>
+                            <div key={i} className="league-row" style={{ 
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                opacity: i === 0 ? 1 : i === 1 ? 0.8 : 0.6,
+                                background: "rgba(255,255,255,0.02)", 
+                                padding: "6px 10px", 
+                                borderRadius: "8px" 
+                            }}>
                                 <span>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} {player.nickname}</span>
-                                <span className="xp-small" style={{ fontWeight: 800 }}>{player.totalXP}</span>
+                                <span className="xp-small" style={{ fontWeight: 900, color: i === 0 ? "var(--primary)" : "inherit" }}>{player.totalXP}</span>
                             </div>
                         ))}
                     </div>
-                </section>
+                </Link>
             </div>
 
             {/* 4. Recent History */}
@@ -248,6 +260,13 @@ export default function DashboardClient({
                 }
                 .event-banner {
                     box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+                }
+                .clickable-card {
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                .clickable-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
                 }
             `}</style>
         </div>

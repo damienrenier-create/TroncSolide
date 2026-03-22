@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { submitMedicalCertificate, exitCagnotte } from "@/lib/actions/economy";
 import { signOut } from "next-auth/react";
-import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap } from "lucide-react";
+import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info } from "lucide-react";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import BadgeModal from "@/components/badges/BadgeModal";
@@ -142,6 +142,12 @@ export default function ProfileClient({ user }: { user: any }) {
                     <FileText size={18} />
                     <span>Certificats Médicaux</span>
                 </div>
+                <div style={{ display: "flex", gap: "8px", background: "rgba(59, 130, 246, 0.1)", padding: "10px", borderRadius: "12px", marginTop: "1rem", color: "var(--primary)" }}>
+                    <Info size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
+                    <p style={{ fontSize: "0.75rem", margin: 0, lineHeight: 1.4 }}>
+                        Signale tes jours de maladie ou blessure ici. Les jours couverts par un certificat s'affichent comme réussis et **te protègent des pénalités financières** de la cagnotte.
+                    </p>
+                </div>
                 <form action={handleAddCert} style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
                     {/* userId handled by server session */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
@@ -168,6 +174,12 @@ export default function ProfileClient({ user }: { user: any }) {
                 <div className="card-header">
                     <Wallet size={18} />
                     <span>Gestion Cagnotte</span>
+                </div>
+                <div style={{ display: "flex", gap: "8px", background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "12px", marginTop: "1rem", color: "var(--accent)" }}>
+                    <Info size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
+                    <p style={{ fontSize: "0.75rem", margin: 0, lineHeight: 1.4 }}>
+                        La cagnotte pénalise les jours d'inactivité (2€ par échec). Être dans la cagnotte est optionnel, mais c'est le gage d'une motivation inébranlable. Si tu décides de la quitter, tu ne contribueras plus, mais ton palmarès restera.
+                    </p>
                 </div>
                 <div style={{ marginTop: "1rem" }}>
                     {user.inCagnotte ? (

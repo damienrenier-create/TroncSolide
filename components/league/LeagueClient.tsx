@@ -2,14 +2,48 @@
 
 import { useState } from "react";
 import { ExerciseType, RecordType, RecordTimeframe } from "@prisma/client";
-import { Trophy, Calendar, Filter, Zap, Target } from "lucide-react";
+import { Trophy, Calendar, Filter, Zap, Target, Flame } from "lucide-react";
+import Link from "next/link";
 import GazetteComponent from "./GazetteComponent";
 
 interface Ranking {
     userId: string;
     nickname: string;
     value: number;
+    currentStreak?: number;
 }
+
+const StreakFlame = ({ streak }: { streak?: number }) => {
+    if (!streak || streak === 0) return null;
+    
+    let color = "#94a3b8";
+    let fill = "none";
+    let size = 14;
+    let effectClass = "";
+
+    if (streak >= 30) {
+        color = "#0cebeb";
+        fill = "#20e3b2";
+        size = 18;
+        effectClass = "flame-mythic";
+    } else if (streak >= 7) {
+        color = "#ef4444";
+        fill = "#f97316";
+        size = 16;
+        effectClass = "flame-hot";
+    } else if (streak >= 3) {
+        color = "#f97316";
+        fill = "none";
+        effectClass = "flame-warm";
+    }
+
+    return (
+        <div className={`streak-badge ${effectClass}`} title={`${streak} jours consécutifs !`}>
+            <Flame size={size} color={color} fill={fill !== "none" ? fill : undefined} />
+            <span style={{ color, fontWeight: 900 }}>{streak}</span>
+        </div>
+    );
+};
 
 interface LeagueClientProps {
     initialRankings: Ranking[];
@@ -50,12 +84,15 @@ export default function LeagueClient({
 
     return (
         <div className="container" style={{ padding: "1.5rem 1rem" }}>
-            <header style={{ marginBottom: "1.5rem" }}>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: "800" }}>{leagueName} 🏆</h2>
-                <div className="tab-switcher" style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem", whiteSpace: "nowrap" }}>
+            <header style={{ marginBottom: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: "800", margin: 0 }}>{leagueName} 🏆</h2>
+                
+                <div className="segmented-control">
                     <button onClick={() => setView("RANKINGS")} className={view === "RANKINGS" ? 'active' : ''}>Podiums</button>
                     <button onClick={() => setView("GLOBAL")} className={view === "GLOBAL" ? 'active' : ''}>Vue Globale</button>
-                    <button onClick={() => setView("GAZETTE")} className={view === "GAZETTE" ? 'active' : ''}>Gazette</button>
+                    <button onClick={() => setView("GAZETTE")} className={view === "GAZETTE" ? 'active' : ''}>
+                        Gazette <span className="gazette-tag" title="Flux d'actualités">News</span>
+                    </button>
                 </div>
             </header>
 
@@ -137,7 +174,10 @@ export default function LeagueClient({
                                         <div className="player-avatar-ring silver">
                                             <span>🥈</span>
                                         </div>
-                                        <div className="player-name-pop">{top3[1].nickname}</div>
+                                        <div className="player-name-pop">
+                                            <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} className="profile-link">{top3[1].nickname}</Link>
+                                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[1].currentStreak} /></div>
+                                        </div>
                                         <div className="step-bar-3d silver">
                                             <span className="rank-label">2ND</span>
                                             <div className="val-badge">{top3[1].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
@@ -153,7 +193,10 @@ export default function LeagueClient({
                                     <div className="player-avatar-ring gold">
                                         <span>🥇</span>
                                     </div>
-                                    <div className="player-name-pop" style={{ fontSize: "1rem" }}>{top3[0].nickname}</div>
+                                    <div className="player-name-pop" style={{ fontSize: "1rem" }}>
+                                        <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} className="profile-link">{top3[0].nickname}</Link>
+                                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[0].currentStreak} /></div>
+                                    </div>
                                     <div className="step-bar-3d gold">
                                         <span className="rank-label">1ST</span>
                                         <div className="val-badge main">{top3[0].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
@@ -166,7 +209,10 @@ export default function LeagueClient({
                                         <div className="player-avatar-ring bronze">
                                             <span>🥉</span>
                                         </div>
-                                        <div className="player-name-pop">{top3[2].nickname}</div>
+                                        <div className="player-name-pop">
+                                            <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} className="profile-link">{top3[2].nickname}</Link>
+                                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[2].currentStreak} /></div>
+                                        </div>
                                         <div className="step-bar-3d bronze">
                                             <span className="rank-label">3RD</span>
                                             <div className="val-badge">{top3[2].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
@@ -197,9 +243,10 @@ export default function LeagueClient({
                                     <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px" }}>
                                         <div className="user-letter">{r.nickname.charAt(0).toUpperCase()}</div>
                                         <div className="user-nick-row">
-                                            <span style={{ fontWeight: "800" }}>{r.nickname}</span>
+                                            <Link href={`/profile/${encodeURIComponent(r.nickname)}`} className="profile-link" style={{ fontWeight: "800" }}>{r.nickname}</Link>
                                             {r.userId === currentUserId && <span className="self-tag">TOI</span>}
                                         </div>
+                                        <StreakFlame streak={r.currentStreak} />
                                     </div>
                                     <div className="rank-score">
                                         {r.value}
@@ -246,7 +293,9 @@ export default function LeagueClient({
                                                         {cell.r.value}<span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{ex.unit}</span>
                                                     </div>
                                                     <div style={{ fontSize: "0.75rem", fontWeight: "700", color: cell.highlight ? "white" : "var(--text-muted)", background: cell.highlight ? "var(--primary)" : "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: "8px", marginTop: "4px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                        {cell.r.user?.nickname}
+                                                        <Link href={`/profile/${encodeURIComponent(cell.r.user?.nickname)}`} className={cell.highlight ? "profile-link-white" : "profile-link"}>
+                                                            {cell.r.user?.nickname}
+                                                        </Link>
                                                     </div>
                                                 </>
                                             ) : (
@@ -264,6 +313,102 @@ export default function LeagueClient({
             )}
 
             <style jsx>{`
+        /* Segmented Control Header */
+        .segmented-control {
+            display: flex;
+            background: rgba(0,0,0,0.04);
+            padding: 4px;
+            border-radius: 14px;
+            position: relative;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .segmented-control::-webkit-scrollbar { display: none; }
+        
+        .segmented-control button {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: none;
+            background: transparent;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .segmented-control button.active {
+            color: var(--foreground);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .gazette-tag {
+            background: var(--primary);
+            color: white;
+            font-size: 0.55rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Streak Badges */
+        .streak-badge {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.03);
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+        .flame-warm {
+            background: rgba(249, 115, 22, 0.1);
+        }
+        .flame-hot {
+            background: rgba(239, 68, 68, 0.1);
+            animation: pulse-hot 2s infinite;
+        }
+        .flame-mythic {
+            background: rgba(12, 235, 235, 0.1);
+            animation: pulse-mythic 1.5s infinite;
+            box-shadow: 0 0 10px rgba(12, 235, 235, 0.2);
+        }
+        @keyframes pulse-hot {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(239,68,68,0.5)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 6px rgba(239,68,68,0.8)); }
+        }
+        @keyframes pulse-mythic {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(12,235,235,0.6)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 12px rgba(32,227,178,0.9)); }
+        }
+
+        .profile-link {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .profile-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        .profile-link-white {
+            color: white;
+            text-decoration: none;
+        }
+        .profile-link-white:hover {
+            text-decoration: underline;
+        }
+
+        /* Legacy Filter Scroll */
         .filter-group {
           margin-bottom: 0.5rem;
         }

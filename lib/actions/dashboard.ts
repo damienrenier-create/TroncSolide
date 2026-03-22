@@ -5,6 +5,7 @@ import { startOfDay, subDays, eachDayOfInterval, isWithinInterval } from "date-f
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getActiveEvents } from "@/lib/actions/events";
+import { evaluatePeriodicRecords } from "@/lib/actions/periodic-evaluator";
 
 
 export async function getUserStats() {
@@ -29,25 +30,11 @@ export async function getUserStats() {
 
     if (!user) return null;
 
-    // 1. Calculate Streak (Limit to last 100 days to avoid heavy load)
-    const allSessions = await prisma.exerciseSession.findMany({
-        where: { userId, type: "VENTRAL" },
-        orderBy: { date: 'desc' },
-        take: 100, // Enough for most streaks
-        select: { date: true }
-    });
+    // Trigger lazy evaluation of weekly and monthly badges
+    await evaluatePeriodicRecords(user.leagueId);
 
-    let streak = 0;
-    let currentDate = startOfDay(new Date());
-    const uniqueDates = Array.from(new Set(allSessions.map(s => startOfDay(s.date).getTime())));
-
-    for (let i = 0; i < 1000; i++) {
-        const checkDate = subDays(currentDate, i);
-        if (uniqueDates.includes(checkDate.getTime())) {
-            streak++;
-        } else if (i === 0) continue;
-        else break;
-    }
+    // 1. Calculate Streak is now fully managed by the backend (User.currentStreak)
+    const streak = user.currentStreak;
 
     // 2. League Overview (Top 3)
     const top3 = await prisma.user.findMany({
