@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Trophy, BarChart2, User, Award, HelpCircle } from "lucide-react";
+import { Home, Trophy, BarChart2, User, Award, Megaphone } from "lucide-react";
 
 const navItems = [
     { label: "Home", href: "/", icon: Home },
     { label: "Ligue", href: "/league", icon: Trophy },
     { label: "Stats", href: "/stats", icon: BarChart2 },
+    { label: "La Place", href: "/square", icon: Megaphone },
     { label: "Palmarès", href: "/badges", icon: Award },
-    { label: "FAQ", href: "/faq", icon: HelpCircle },
     { label: "Compte", href: "/profile", icon: User },
 ];
 
