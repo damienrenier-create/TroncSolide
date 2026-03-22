@@ -170,6 +170,9 @@ model UserBadge {
   userId    String
   badgeId   String
   awardedAt DateTime @default(now())
+  rank      Int?     // For Tiered milestones (1=Platine, 2=Or...)
+  baseXP    Int?     // Base XP capital for dynamic records
+  rateXP    Float?   // Daily XP rate for persistent records
 
   user      User     @relation(fields: [userId], references: [id])
   badge     Badge    @relation(fields: [badgeId], references: [id])

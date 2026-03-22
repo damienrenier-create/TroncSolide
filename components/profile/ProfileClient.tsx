@@ -6,9 +6,11 @@ import { signOut } from "next-auth/react";
 import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap } from "lucide-react";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
+import BadgeModal from "@/components/badges/BadgeModal";
 
 export default function ProfileClient({ user }: { user: any }) {
     const [loading, setLoading] = useState(false);
+    const [selectedBadge, setSelectedBadge] = useState<any>(null);
     const levelInfo = getLevelInfo(user.totalXP);
 
     async function handleAddCert(formData: FormData) {
@@ -47,8 +49,15 @@ export default function ProfileClient({ user }: { user: any }) {
                 <div className="showcase-grid">
                     {user.badges.length > 0 ? user.badges.map((b: any) => {
                         const def = BADGE_DEFINITIONS.find(d => d.id === b.badgeId || d.name === b.badge?.name);
+                        
+                        // We must reconstruct the badge definition with the specific user data so the Modal can display it correctly.
+                        const enrichedBadge = def ? {
+                            ...def,
+                            users: [b] // Pass the specific UserBadge data as the single owner for this viewer's profile
+                        } : null;
+
                         return (
-                            <div key={b.id} title={def?.description} className="trophy-case-item">
+                            <div key={b.id} title={def?.description} className="trophy-case-item" onClick={() => enrichedBadge && setSelectedBadge(enrichedBadge)} style={{ cursor: "pointer" }}>
                                 <div className={`trophy-icon-wrapper ${def?.type === "FIRST_COME" ? 'first-come-glow' : ''}`}>
                                     <span style={{ fontSize: "1.75rem" }}>{def?.icon}</span>
                                     {def?.type === "FIRST_COME" && <Zap size={10} className="rare-spark" />}
@@ -63,6 +72,9 @@ export default function ProfileClient({ user }: { user: any }) {
                     )}
                 </div>
             </section>
+            
+            {/* INJECT MODAL */}
+            {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />}
 
             <style jsx>{`
                 .showcase-grid {

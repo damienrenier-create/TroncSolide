@@ -53,5 +53,24 @@ export const BADGE_DEFINITIONS = [
 
     // --- FAMILLE D : ÉVÉNEMENTS SPÉCIAUX ---
     { id: "ANNIVERSARY_1", name: "Premier Anniversaire", description: "Présent lors du 1er anniversaire", type: "ACHIEVEMENT" as BadgeType, icon: "🎂", xpValue: 1000 },
-    { id: "ST_MARVIN", name: "Saint Marvin", description: "Participé à l'événement St Marvin", type: "ACHIEVEMENT" as BadgeType, icon: "✨", xpValue: 500 },
+
+    // --- FAMILLE E : LES RECORDS DE LIGUE (LE VOL) ---
+    // Ces badges dynamiques n'ont pas d'xpValue fixe ici car leur valeur dépend de la taille de l'exploit !
+    // Pompes
+    { id: "RECORD_DAY_PUSHUP", name: "Champion du Jour (Pompes)", description: "Détenteur du record absolu de Pompes sur 1 journée.", type: "FIRST_COME" as BadgeType, icon: "🥇", xpValue: 0 },
+    { id: "RECORD_WEEK_PUSHUP", name: "Champion de la Sem. (Pompes)", description: "Détenteur du record absolu de Pompes sur 1 semaine.", type: "FIRST_COME" as BadgeType, icon: "🏆", xpValue: 0 },
+    { id: "RECORD_MONTH_PUSHUP", name: "Champion du Mois (Pompes)", description: "Détenteur du record absolu de Pompes sur 1 mois entier.", type: "FIRST_COME" as BadgeType, icon: "👑", xpValue: 0 },
+    { id: "RECORD_SERIES_PUSHUP", name: "L'Imbattable (Série Pompes)", description: "Détenteur du record ALL-TIME de la plus longue série de pompes.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 0 },
+
+    // Squats
+    { id: "RECORD_DAY_SQUAT", name: "Champion du Jour (Squat)", description: "Détenteur du record absolu de Squats sur 1 journée.", type: "FIRST_COME" as BadgeType, icon: "🥇", xpValue: 0 },
+    { id: "RECORD_WEEK_SQUAT", name: "Champion de la Sem. (Squat)", description: "Détenteur du record absolu de Squats sur 1 semaine.", type: "FIRST_COME" as BadgeType, icon: "🏆", xpValue: 0 },
+    { id: "RECORD_MONTH_SQUAT", name: "Champion du Mois (Squat)", description: "Détenteur du record absolu de Squats sur 1 mois entier.", type: "FIRST_COME" as BadgeType, icon: "👑", xpValue: 0 },
+    { id: "RECORD_SERIES_SQUAT", name: "L'Imbattable (Série Squat)", description: "Détenteur du record ALL-TIME de la plus longue série de squats.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 0 },
+
+    // Gainage
+    { id: "RECORD_DAY_PLANK", name: "Champion du Jour (Gainage)", description: "Détenteur du record absolu de Gainage Total sur 1 journée.", type: "FIRST_COME" as BadgeType, icon: "🥇", xpValue: 0 },
+    { id: "RECORD_WEEK_PLANK", name: "Champion de la Sem. (Gainage)", description: "Détenteur du record absolu de Gainage Total sur 1 semaine.", type: "FIRST_COME" as BadgeType, icon: "🏆", xpValue: 0 },
+    { id: "RECORD_MONTH_PLANK", name: "Champion du Mois (Gainage)", description: "Détenteur du record absolu de Gainage Total sur 1 mois entier.", type: "FIRST_COME" as BadgeType, icon: "👑", xpValue: 0 },
+    { id: "RECORD_SERIES_PLANK", name: "L'Imbattable (Série Gainage)", description: "Détenteur du record ALL-TIME de la plus longue série de gainage.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 0 },
 ];
