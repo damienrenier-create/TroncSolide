@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { submitMedicalCertificate, exitCagnotte } from "@/lib/actions/economy";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info } from "lucide-react";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
@@ -11,6 +11,7 @@ import BadgeModal from "@/components/badges/BadgeModal";
 export default function ProfileClient({ user }: { user: any }) {
     const [loading, setLoading] = useState(false);
     const [selectedBadge, setSelectedBadge] = useState<any>(null);
+    const { update } = useSession();
     const levelInfo = getLevelInfo(user.totalXP);
 
     async function handleAddCert(formData: FormData) {
@@ -39,6 +40,32 @@ export default function ProfileClient({ user }: { user: any }) {
                     <span>Niveau {levelInfo.level} : {levelInfo.name}</span>
                 </div>
             </header>
+
+            {/* NEW: ADMIN TWIN SWITCH BUTTON */}
+            {(user.email === "damienrenier@hotmail.com" || user.email === "damienrenier+clone@hotmail.com") && (
+                <section className="glass" style={{ padding: "1rem", marginBottom: "1.5rem", border: "1px solid var(--primary)", background: "rgba(245, 158, 11, 0.05)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                            <h4 style={{ fontWeight: 800, color: "var(--primary)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                                🛠️ Mode Administrateur
+                            </h4>
+                            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>
+                                {user.email === "damienrenier@hotmail.com" ? "Tu es sur ton profil Original." : "Tu es sur ton profil CLONE (Ligue 060488)."}
+                            </p>
+                        </div>
+                        <button 
+                            className="btn-primary" 
+                            style={{ padding: "0.5rem 0.75rem", fontSize: "0.7rem", color: "white", boxShadow: "0 0 10px rgba(217, 119, 6, 0.4)" }}
+                            onClick={() => {
+                                setLoading(true);
+                                update({ overrideId: user.email === "damienrenier@hotmail.com" ? "cmn2e73ds0001iesbmk6zfl5v" : "cmn29996b0001jw3325gxiasp" }).then(() => window.location.reload());
+                            }}
+                        >
+                            {user.email === "damienrenier@hotmail.com" ? "Passer sur le Clone ➔" : "➔ Retour à l'Original"}
+                        </button>
+                    </div>
+                </section>
+            )}
 
             {/* 1. Badge Trophy Room */}
             <section className="glass-premium" style={{ padding: "1.5rem", marginBottom: "1.5rem", borderRadius: "28px" }}>

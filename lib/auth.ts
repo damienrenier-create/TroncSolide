@@ -38,6 +38,20 @@ export const authOptions: NextAuthOptions = {
         signIn: "/login",
     },
     callbacks: {
+        async jwt({ token, user, trigger, session }) {
+            if (user) {
+                token.sub = user.id;
+                token.email = user.email;
+            }
+            // Admin Twin Session Override Tunnel
+            if (trigger === "update" && session?.overrideId) {
+                if (token.email === "damienrenier@hotmail.com" || token.email === "damienrenier+clone@hotmail.com") {
+                    token.sub = session.overrideId;
+                    token.email = session.overrideId === "cmn2e73ds0001iesbmk6zfl5v" ? "damienrenier+clone@hotmail.com" : "damienrenier@hotmail.com";
+                }
+            }
+            return token;
+        },
         async session({ session, token }) {
             if (token && session.user) {
                 session.user.id = token.sub as string;
@@ -49,6 +63,7 @@ export const authOptions: NextAuthOptions = {
                 if (dbUser) {
                     session.user.leagueId = dbUser.leagueId;
                     session.user.role = dbUser.role;
+                    session.user.email = token.email as string;
                 }
             }
             return session;

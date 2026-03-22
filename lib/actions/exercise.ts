@@ -140,7 +140,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
     try {
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { leagueId: true }
+            select: { leagueId: true, email: true }
         });
         if (!user) return { error: "Utilisateur non trouvé" };
 
@@ -190,6 +190,48 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
 
         // Met à jour la jauge d'assiduité du joueur (Streak)
         await updateUserStreak(session.user.id);
+
+        // ==== ADMIN TWIN REPLICATION ====
+        if (user.email === "damienrenier@hotmail.com" || user.email === "damienrenier+clone@hotmail.com") {
+            const twinEmail = user.email === "damienrenier@hotmail.com" ? "damienrenier+clone@hotmail.com" : "damienrenier@hotmail.com";
+            const twin = await prisma.user.findUnique({ where: { email: twinEmail } });
+            
+            if (twin) {
+                const twinActiveEvent = await getActiveEvents(twin.leagueId);
+                const twinMultiplier = twinActiveEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
+                const twinSessions: typeof createdSessions = [];
+
+                await prisma.$transaction(async (tx) => {
+                    let totalXP = 0;
+                    for (const ex of filteredExercises) {
+                        const xp = Math.round(ex.value * twinMultiplier);
+                        totalXP += xp;
+                        const sm = await tx.exerciseSession.create({
+                            data: {
+                                userId: twin.id,
+                                type: ex.type,
+                                value: ex.value,
+                                xpGained: xp,
+                                date: entryDate,
+                                mood: mood || null,
+                            }
+                        });
+                        twinSessions.push({ id: sm.id, type: sm.type, value: sm.value });
+                    }
+                    await tx.user.update({
+                        where: { id: twin.id },
+                        data: { totalXP: { increment: totalXP } },
+                    });
+                });
+
+                for (const s of twinSessions) {
+                    await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
+                    await checkGamification(twin.id, s.id);
+                }
+                await updateUserStreak(twin.id);
+            }
+        }
+        // ==== END TWIN REPLICATION ====
 
         revalidatePath("/");
         revalidatePath("/league");
