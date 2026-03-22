@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { submitMedicalCertificate, exitCagnotte } from "@/lib/actions/economy";
 import { signOut, useSession } from "next-auth/react";
-import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info } from "lucide-react";
+import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info, HelpCircle } from "lucide-react";
+import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import BadgeModal from "@/components/badges/BadgeModal";
@@ -35,9 +36,15 @@ export default function ProfileClient({ user }: { user: any }) {
                     <User size={40} color="white" />
                 </div>
                 <h2 style={{ fontSize: "1.75rem", fontWeight: "900", color: "var(--foreground)" }}>{user.nickname}</h2>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "var(--secondary)", fontWeight: "800", fontSize: "0.9rem" }}>
-                    <TreePine size={16} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "var(--secondary)", fontWeight: "800", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                    <span style={{ fontSize: "1.2rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>{levelInfo.emoji}</span>
                     <span>Niveau {levelInfo.level} : {levelInfo.name}</span>
+                </div>
+                
+                <div style={{ marginTop: "1rem", display: "flex", gap: "10px", justifyContent: "center" }}>
+                    <Link href="/faq" style={{ background: "rgba(255,255,255,0.05)", padding: "6px 16px", borderRadius: "100px", fontSize: "0.75rem", fontWeight: "800", color: "var(--foreground)", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
+                        <HelpCircle size={14} /> LIRE LA FAQ DE JEU
+                    </Link>
                 </div>
             </header>
 

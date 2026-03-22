@@ -1,9 +1,21 @@
 export const NATURE_LEVELS = [
-    "Graine", "Germe", "Pousse", "Tige", "Feuille", "Bourgeon", "Fleur", "Pétale", "Sève", "Racine",
-    "Arbrisseau", "Buisson", "Fougère", "Mousse", "Lierre", "Bambou", "Roseau", "Genêt", "Bruyère", "Ajonc",
-    "Arbuste", "Bouleau", "Saule", "Tremble", "Aulne", "Charme", "Frêne", "Érable", "Hêtre", "Mélèze",
-    "Pin", "Sapin", "Cèdre", "Séquoia", "Baobab", "Olivier", "Chêne", "Orme", "Tilleul", "Noyer",
-    "Forêt", "Bosquet", "Clairière", "Vallée", "Montagne", "Rivière", "Océan", "Nuage", "Soleil", "Ciel"
+    { name: "Graine", emoji: "🌰" }, { name: "Germe", emoji: "🪴" }, { name: "Pousse", emoji: "🌱" },
+    { name: "Tige", emoji: "🌿" }, { name: "Feuille", emoji: "🍃" }, { name: "Bourgeon", emoji: "🏵️" },
+    { name: "Fleur", emoji: "🌸" }, { name: "Pétale", emoji: "💮" }, { name: "Sève", emoji: "🍯" },
+    { name: "Racine", emoji: "🪢" }, { name: "Arbrisseau", emoji: "🌾" }, { name: "Buisson", emoji: "🪹" },
+    { name: "Fougère", emoji: "🪷" }, { name: "Mousse", emoji: "🦠" }, { name: "Lierre", emoji: "🕸️" }, 
+    { name: "Bambou", emoji: "🎋" }, { name: "Roseau", emoji: "🌾" }, { name: "Genêt", emoji: "🌼" }, 
+    { name: "Bruyère", emoji: "🪻" }, { name: "Ajonc", emoji: "🌵" }, { name: "Arbuste", emoji: "🪴" },
+    { name: "Bouleau", emoji: "🌳" }, { name: "Saule", emoji: "🌲" }, { name: "Tremble", emoji: "🍁" },
+    { name: "Aulne", emoji: "🍂" }, { name: "Charme", emoji: "🌳" }, { name: "Frêne", emoji: "🌲" },
+    { name: "Érable", emoji: "🍁" }, { name: "Hêtre", emoji: "🪵" }, { name: "Mélèze", emoji: "🌲" },
+    { name: "Pin", emoji: "🌲" }, { name: "Sapin", emoji: "🎄" }, { name: "Cèdre", emoji: "🌲" },
+    { name: "Séquoia", emoji: "🪵" }, { name: "Baobab", emoji: "🌳" }, { name: "Olivier", emoji: "🫒" },
+    { name: "Chêne", emoji: "🌳" }, { name: "Orme", emoji: "🌳" }, { name: "Tilleul", emoji: "🍃" },
+    { name: "Noyer", emoji: "🥜" }, { name: "Forêt", emoji: "🌲" }, { name: "Bosquet", emoji: "🌳" },
+    { name: "Clairière", emoji: "🦌" }, { name: "Vallée", emoji: "⛰️" }, { name: "Montagne", emoji: "🏔️" },
+    { name: "Rivière", emoji: "🏞️" }, { name: "Océan", emoji: "🌊" }, { name: "Nuage", emoji: "☁️" },
+    { name: "Soleil", emoji: "☀️" }, { name: "Ciel", emoji: "🌌" }
 ];
 
 export function getLevelInfo(totalXP: number) {
@@ -30,9 +42,11 @@ export function getLevelInfo(totalXP: number) {
         }
     }
 
+    const levelData = NATURE_LEVELS[currentLevel] || { name: "Élémentaire", emoji: "🌱" };
     return {
         level: currentLevel,
-        name: NATURE_LEVELS[currentLevel] || "Élémentaire",
+        name: levelData.name,
+        emoji: levelData.emoji,
         nextLevelXP: xpForNext,
         progressXP: totalXP - accumulated,
         requiredXP: (currentLevel + 1) * 50 // The absolute XP cost of this specific level

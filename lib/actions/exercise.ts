@@ -190,6 +190,16 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
 
         // Met à jour la jauge d'assiduité du joueur (Streak)
         await updateUserStreak(session.user.id);
+        
+        // ==== FLAMBEAU CHECK ====
+        if (entryDate.getTime() === today.getTime()) {
+            const dailyTarget = await getDailyTarget(session.user.id);
+            const dailyProgress = await getTodayProgress(session.user.id);
+            if (dailyProgress >= dailyTarget && dailyTarget > 0) {
+                const { tryClaimTorch } = await import("./torch");
+                await tryClaimTorch(session.user.id, user.leagueId, entryDate);
+            }
+        }
 
         // ==== ADMIN TWIN REPLICATION ====
         if (user.email === "damienrenier@hotmail.com" || user.email === "damienrenier+clone@hotmail.com") {
@@ -229,6 +239,15 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                     await checkGamification(twin.id, s.id);
                 }
                 await updateUserStreak(twin.id);
+
+                if (entryDate.getTime() === today.getTime()) {
+                    const twinDailyTarget = await getDailyTarget(twin.id);
+                    const twinDailyProgress = await getTodayProgress(twin.id);
+                    if (twinDailyProgress >= twinDailyTarget && twinDailyTarget > 0) {
+                        const { tryClaimTorch } = await import("./torch");
+                        await tryClaimTorch(twin.id, twin.leagueId, entryDate);
+                    }
+                }
             }
         }
         // ==== END TWIN REPLICATION ====

@@ -118,7 +118,7 @@ export default function DashboardClient({
                 <div className="glass-premium stat-card nature-rank" style={{ padding: "1.25rem" }}>
                     <div className="stat-info" style={{ flex: 1 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <TreePine className="text-secondary" size={18} />
+                            <span style={{ fontSize: "1.2rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>{levelInfo.emoji}</span>
                             <span style={{ fontSize: "0.8rem", fontWeight: "900", color: "var(--text-muted)" }}>NV. {levelInfo.level}</span>
                         </div>
                         <span style={{ fontSize: "1rem", fontWeight: "800", display: "block" }}>{levelInfo.name}</span>

@@ -56,6 +56,8 @@ model League {
   events      Event[]
   records     Record[]
   feedItems   FeedItem[]
+  messages    Message[]
+  torchHolders TorchHolder[]
 
   @@map("leagues")
 }
@@ -73,6 +75,8 @@ model User {
   level         Int       @default(1)
   currentStreak Int       @default(0)
   highestStreak Int       @default(0)
+  currentTorchStreak Int  @default(0)
+  highestTorchStreak Int  @default(0)
   
   // Status flags
   inCagnotte    Boolean   @default(true)
@@ -87,6 +91,8 @@ model User {
   records       Record[]
   likesSent     Like[]
   feedItems     FeedItem[] @relation("FeedItemUser")
+  messages      Message[]
+  torchHolders  TorchHolder[]
 
   @@map("users")
 }
@@ -237,4 +243,31 @@ model PotHistory {
   league    League   @relation(fields: [leagueId], references: [id])
 
   @@map("pot_history")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  leagueId  String
+  userId    String
+  content   String   @db.VarChar(240)
+  createdAt DateTime @default(now())
+
+  league    League   @relation(fields: [leagueId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("messages")
+}
+
+model TorchHolder {
+  id        String   @id @default(cuid())
+  leagueId  String
+  userId    String
+  date      DateTime // Normalisé à 00:00:00 du jour
+  createdAt DateTime @default(now())
+
+  league    League   @relation(fields: [leagueId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([leagueId, date])
+  @@map("torch_holders")
 }
