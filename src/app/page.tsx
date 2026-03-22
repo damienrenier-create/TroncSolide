@@ -1,66 +1,43 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getDailyTarget, getTodayProgress } from "@/lib/actions/exercise";
+import { getUserStats } from "@/lib/actions/dashboard";
+import { syncPenalties } from "@/lib/actions/economy";
+import DashboardClient from "@/components/dashboard/DashboardClient";
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  // Sync penalties on load (simple "cron" replacement)
+  await syncPenalties();
+
+  const [target, progress, stats] = await Promise.all([
+    getDailyTarget(session.user.id),
+    getTodayProgress(session.user.id),
+    getUserStats()
+  ]);
+
+  if (!stats) return (
+    <div className="container dashboard-container" style={{ textAlign: "center", marginTop: "4rem" }}>
+      <p>Session obsolète ou utilisateur introuvable.</p>
+      <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "1rem" }}>
+        Veuillez vous déconnecter et vous reconnecter pour synchroniser votre compte avec la nouvelle base de données.
+      </p>
+      <a href="/api/auth/signout" className="btn-primary" style={{ display: "inline-block", marginTop: "1rem" }}>Se déconnecter</a>
     </div>
+  );
+
+  return (
+    <DashboardClient
+      userId={session.user.id}
+      initialTarget={target}
+      initialProgress={progress}
+      stats={stats}
+    />
   );
 }

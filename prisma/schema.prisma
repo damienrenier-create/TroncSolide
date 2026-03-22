@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MODERATOR
+}
+
+enum ExerciseType {
+  VENTRAL
+  LATERAL_L
+  LATERAL_R
+  SQUAT
+  PUSHUP
+}
+
+enum BadgeType {
+  ACHIEVEMENT
+  FIRST_COME
+}
+
+enum RecordTimeframe {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum RecordType {
+  VOLUME
+  SERIES
+}
+
+enum FeedItemType {
+  LEVEL_UP
+  BADGE_WON
+}
+
+model League {
+  id          String   @id @default(cuid())
+  name        String
+  accessCode  String   @unique
+  creatorId   String?
+  createdAt   DateTime @default(now())
+  
+  users       User[]
+  badges      Badge[]
+  potHistory  PotHistory[]
+  events      Event[]
+  records     Record[]
+  feedItems   FeedItem[]
+
+  @@map("leagues")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  nickname      String
+  birthday      DateTime
+  joinedAt      DateTime  @default(now())
+  role          Role      @default(USER)
+  leagueId      String
+  totalXP       Int       @default(0)
+  level         Int       @default(1)
+  
+  // Status flags
+  inCagnotte    Boolean   @default(true)
+  active        Boolean   @default(true) // For "Abandon project"
+  
+  league        League    @relation(fields: [leagueId], references: [id])
+  sessions      ExerciseSession[]
+  certificates  MedicalCertificate[]
+  penalties     Penalty[]
+  badges        UserBadge[]
+  wonBadges     Badge[]   @relation("FirstComeWinner")
+  records       Record[]
+  likesSent     Like[]
+  feedItems     FeedItem[] @relation("FeedItemUser")
+
+  @@map("users")
+}
+
+model ExerciseSession {
+  id        String       @id @default(cuid())
+  userId    String
+  type      ExerciseType
+  value     Int          // Seconds for planks, reps for others
+  xpGained  Int
+  date      DateTime     // Date of the exercise (can be retroactive)
+  createdAt DateTime     @default(now())
+  mood      String?      @db.VarChar(50)
+
+  user      User         @relation(fields: [userId], references: [id])
+
+  @@map("exercise_sessions")
+}
+
+model Record {
+  id        String          @id @default(cuid())
+  userId    String
+  leagueId  String
+  type      RecordType
+  timeframe RecordTimeframe
+  exercise  ExerciseType
+  value     Int
+  date      DateTime        @default(now())
+
+  user      User            @relation(fields: [userId], references: [id])
+  league    League          @relation(fields: [leagueId], references: [id])
+
+  @@unique([leagueId, exercise, type, timeframe])
+  @@map("records")
+}
+
+model MedicalCertificate {
+  id        String   @id @default(cuid())
+  userId    String
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("medical_certificates")
+}
+
+model Penalty {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float    @default(2.0)
+  date      DateTime
+  status    String   @default("UNPAID")
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("penalties")
+}
+
+model Badge {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  xpValue     Int       @default(0)
+  type        BadgeType @default(ACHIEVEMENT)
+  leagueId    String?
+  winnerId    String?   
+  
+  league      League?   @relation(fields: [leagueId], references: [id])
+  winner      User?     @relation("FirstComeWinner", fields: [winnerId], references: [id])
+  users       UserBadge[]
+  feedItems   FeedItem[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  leagueId    String
+  title       String
+  description String?
+  date        DateTime
+  isRecurring Boolean  @default(false)
+  type        String   @default("GENERAL") // ANNIVERSARY, SPECIAL, etc.
+
+  league    League   @relation(fields: [leagueId], references: [id])
+
+  @@map("events")
+}
+
+model FeedItem {
+  id        String       @id @default(cuid())
+  leagueId  String
+  userId    String
+  type      FeedItemType
+  badgeId   String?
+  level     Int?         // For LEVEL_UP
+  createdAt DateTime     @default(now())
+
+  league    League       @relation(fields: [leagueId], references: [id])
+  user      User         @relation("FeedItemUser", fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge?       @relation(fields: [badgeId], references: [id])
+  likes     Like[]
+
+  @@map("feed_items")
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  userId     String
+  feedItemId String
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedItem   FeedItem @relation(fields: [feedItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feedItemId])
+  @@map("likes")
+}
+
+model PotHistory {
+  id        String   @id @default(cuid())
+  leagueId  String
+  amount    Float
+  date      DateTime @default(now())
+  action    String   
+
+  league    League   @relation(fields: [leagueId], references: [id])
+
+  @@map("pot_history")
+}
