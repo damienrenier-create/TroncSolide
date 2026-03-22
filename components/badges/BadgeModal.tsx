@@ -58,7 +58,7 @@ export default function BadgeModal({ badge, onClose }: { badge: any, onClose: ()
                 {/* HISTORIQUE / POSSÉSSEURS */}
                 <div style={{ marginTop: "1.5rem" }}>
                     <h3 style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--secondary)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                        <Trophy size={14} /> Possesseurs
+                        <Trophy size={14} /> Possesseurs Actuels
                     </h3>
 
                     {badge.users && badge.users.length > 0 ? (
@@ -71,11 +71,10 @@ export default function BadgeModal({ badge, onClose }: { badge: any, onClose: ()
                                             <div>
                                                 <div style={{ fontWeight: "800", fontSize: "1rem" }}>{ub.user?.nickname}</div>
                                                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                                                    Débloqué il y a {formatDistanceToNow(new Date(ub.awardedAt), { locale: fr })}
+                                                    Obtenu le {new Date(ub.awardedAt).toLocaleDateString("fr-FR")}
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Link to showcase if needed, though we don't have public profiles readily routed yet, let's keep it simple */}
                                     </div>
 
                                     {/* Stats spécifiques */}
@@ -109,10 +108,29 @@ export default function BadgeModal({ badge, onClose }: { badge: any, onClose: ()
                     )}
                 </div>
 
+                {isRecord && badge.feedItems && badge.feedItems.length > 1 && (
+                    <div style={{ marginTop: "1.5rem" }}>
+                        <h3 style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <TrendingUp size={14} /> Historique des Braquages
+                        </h3>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingLeft: "0.5rem", borderLeft: "2px solid rgba(255,255,255,0.1)" }}>
+                            {badge.feedItems.slice(1).map((feed: any, i: number) => (
+                                <div key={i} style={{ fontSize: "0.8rem", color: "var(--text-muted)", padding: "0.25rem 0" }}>
+                                    <strong>{feed.user?.nickname}</strong> a détenu ce record le <br/>
+                                    {new Date(feed.createdAt).toLocaleDateString("fr-FR")} à {new Date(feed.createdAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}.
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center" }}>
-                    <Link href="/faq" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--secondary)", textDecoration: "none", fontWeight: "700" }}>
+                    <button 
+                        onClick={() => { onClose(); window.location.hash = "faq"; }} 
+                        className="btn-ghost"
+                        style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--secondary)", fontWeight: "700" }}>
                         <ExternalLink size={14} /> Voir le règlement complet
-                    </Link>
+                    </button>
                 </div>
             </div>
 

@@ -215,16 +215,9 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                     const CASSEUR_BONUS = 200;
 
                     if (oldUb) {
-                        // DEPOUILLER L'ANCIEN PROPRIETAIRE
-                        const daysHeld = differenceInDays(startOfDay(today), startOfDay(oldUb.awardedAt));
-                        const lostLongevity = daysHeld * (oldUb.rateXP || 0);
-                        const totalLostXP = (oldUb.baseXP || 0) + Math.floor(lostLongevity);
-
+                        // DEPOUILLER L'ANCIEN PROPRIETAIRE DE SON TITRE (Mais il garde son XP accumulée)
                         await tx.userBadge.delete({ where: { id: oldUb.id } });
-                        await tx.user.update({
-                            where: { id: oldUb.userId },
-                            data: { totalXP: { decrement: totalLostXP } }
-                        });
+                        // => On ne fait plus de decrement sur l'ancien joueur. Il a profité de la rente pendant son règne.
 
                         // Announce the theft
                         await tx.feedItem.create({
@@ -302,6 +295,11 @@ export async function getBadgeCatalogue() {
             users: { 
                 include: { user: { select: { nickname: true } } },
                 orderBy: { rank: 'asc' }
+            },
+            feedItems: {
+                where: { type: "BADGE_WON" },
+                include: { user: { select: { nickname: true } } },
+                orderBy: { createdAt: 'desc' }
             }
         }
     });
