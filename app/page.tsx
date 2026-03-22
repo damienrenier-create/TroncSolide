@@ -7,21 +7,20 @@ import { syncPenalties } from "@/lib/actions/economy";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 
 export default async function DashboardPage() {
-  try {
-    const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
-      redirect("/login");
-    }
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
 
-    // Sync penalties on load (simple "cron" replacement)
-    await syncPenalties();
+  // Sync penalties on load (simple "cron" replacement)
+  await syncPenalties();
 
-    const [target, progress, stats] = await Promise.all([
-      getDailyTarget(session.user.id),
-      getTodayProgress(session.user.id),
-      getUserStats()
-    ]);
+  const [target, progress, stats] = await Promise.all([
+    getDailyTarget(session.user.id),
+    getTodayProgress(session.user.id),
+    getUserStats()
+  ]);
 
   if (!stats) return (
     <div className="container dashboard-container" style={{ textAlign: "center", marginTop: "4rem" }}>
@@ -33,22 +32,12 @@ export default async function DashboardPage() {
     </div>
   );
 
-    return (
-      <DashboardClient
-        userId={session.user.id}
-        initialTarget={target}
-        initialProgress={progress}
-        stats={stats}
-      />
-    );
-  } catch (error) {
-    console.error("Dashboard error:", error);
-    return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <h1>Erreur lors du chargement 🌳</h1>
-        <p>Veuillez vérifier vos variables d'environnement (DATABASE_URL, etc.) sur Vercel.</p>
-        <pre style={{ fontSize: "0.8rem", marginTop: "1rem" }}>{String(error)}</pre>
-      </div>
-    );
-  }
+  return (
+    <DashboardClient
+      userId={session.user.id}
+      initialTarget={target}
+      initialProgress={progress}
+      stats={stats}
+    />
+  );
 }
