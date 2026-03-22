@@ -16,6 +16,7 @@ interface LeagueClientProps {
     leagueName: string;
     currentUserId: string;
     initialFeedItems: any[];
+    allRecords: any[];
     onFilterChange: (exercise: ExerciseType, type: RecordType, timeframe: RecordTimeframe) => Promise<Ranking[]>;
 }
 
@@ -24,6 +25,7 @@ export default function LeagueClient({
     leagueName,
     currentUserId,
     initialFeedItems,
+    allRecords,
     onFilterChange
 }: LeagueClientProps) {
     const [rankings, setRankings] = useState<Ranking[]>(initialRankings);
@@ -31,7 +33,7 @@ export default function LeagueClient({
     const [type, setType] = useState<RecordType>("VOLUME");
     const [timeframe, setTimeframe] = useState<RecordTimeframe>("WEEK");
     const [loading, setLoading] = useState(false);
-    const [view, setView] = useState<"RANKINGS" | "GAZETTE">("RANKINGS");
+    const [view, setView] = useState<"RANKINGS" | "GAZETTE" | "GLOBAL">("RANKINGS");
 
     async function handleUpdate(newExercise: ExerciseType, newType: RecordType, newTimeframe: RecordTimeframe) {
         setLoading(true);
@@ -50,8 +52,9 @@ export default function LeagueClient({
         <div className="container" style={{ padding: "1.5rem 1rem" }}>
             <header style={{ marginBottom: "1.5rem" }}>
                 <h2 style={{ fontSize: "1.5rem", fontWeight: "800" }}>{leagueName} 🏆</h2>
-                <div className="tab-switcher">
-                    <button onClick={() => setView("RANKINGS")} className={view === "RANKINGS" ? 'active' : ''}>Classements</button>
+                <div className="tab-switcher" style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem", whiteSpace: "nowrap" }}>
+                    <button onClick={() => setView("RANKINGS")} className={view === "RANKINGS" ? 'active' : ''}>Podiums</button>
+                    <button onClick={() => setView("GLOBAL")} className={view === "GLOBAL" ? 'active' : ''}>Vue Globale</button>
                     <button onClick={() => setView("GAZETTE")} className={view === "GAZETTE" ? 'active' : ''}>Gazette</button>
                 </div>
             </header>
@@ -209,6 +212,53 @@ export default function LeagueClient({
                         </div>
                     </section>
                 </>
+            ) : view === "GLOBAL" ? (
+                <section className="global-records-view" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
+                    {[
+                        { id: "VENTRAL", label: "Gainage Ventral", icon: "🛡️", unit: "s" },
+                        { id: "PUSHUP", label: "Pompes", icon: "💪", unit: "" },
+                        { id: "SQUAT", label: "Squats", icon: "🦵", unit: "" },
+                        { id: "LATERAL_L", label: "Gainage Gauche", icon: "👈", unit: "s" },
+                        { id: "LATERAL_R", label: "Gainage Droit", icon: "👉", unit: "s" }
+                    ].map(ex => {
+                        const getRec = (t: string, tf: string) => allRecords.find((r: any) => r.exercise === ex.id && r.type === t && r.timeframe === tf);
+                        
+                        return (
+                            <div key={ex.id} className="glass-premium" style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "24px", padding: "1.5rem", background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)" }}>
+                                <h3 style={{ fontSize: "1.2rem", fontWeight: "900", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "8px", color: "var(--foreground)" }}>
+                                    <span>{ex.icon}</span> {ex.label}
+                                </h3>
+                                
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" }}>
+                                    {[
+                                        { l: "Record Jour", r: getRec("VOLUME", "DAY") },
+                                        { l: "Record Semaine", r: getRec("VOLUME", "WEEK") },
+                                        { l: "Record Mois", r: getRec("VOLUME", "MONTH") },
+                                        { l: "Record Absolu", r: getRec("SERIES", "YEAR"), highlight: true }
+                                    ].map((cell, idx) => (
+                                        <div key={idx} style={{ background: cell.highlight ? "rgba(217, 119, 6, 0.1)" : "rgba(0,0,0,0.2)", border: cell.highlight ? "1px solid rgba(217, 119, 6, 0.3)" : "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "6px" }}>
+                                            <div style={{ fontSize: "0.65rem", fontWeight: "900", letterSpacing: "0.05em", color: cell.highlight ? "var(--primary)" : "var(--text-muted)", textTransform: "uppercase" }}>
+                                                {cell.l}
+                                            </div>
+                                            {cell.r ? (
+                                                <>
+                                                    <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--foreground)", textShadow: cell.highlight ? "0 2px 10px rgba(217, 119, 6, 0.3)" : "none" }}>
+                                                        {cell.r.value}<span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{ex.unit}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: "0.75rem", fontWeight: "700", color: cell.highlight ? "white" : "var(--text-muted)", background: cell.highlight ? "var(--primary)" : "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: "8px", marginTop: "4px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                        {cell.r.user?.nickname}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div style={{ fontSize: "1.2rem", fontWeight: "900", color: "rgba(255,255,255,0.1)", marginTop: "10px" }}>-</div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </section>
             ) : (
                 <GazetteComponent initialItems={initialFeedItems} currentUserId={currentUserId} />
             )}

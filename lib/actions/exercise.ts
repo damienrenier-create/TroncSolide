@@ -148,6 +148,8 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         const activeEvent = await getActiveEvents(user.leagueId);
         const bonusMultiplier = activeEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
 
+        const createdSessions: { id: string, type: ExerciseType, value: number }[] = [];
+
         await prisma.$transaction(async (tx) => {
             let totalXPGained = 0;
 
@@ -165,15 +167,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                         mood: mood || null,
                     },
                 });
-
-                // Sync records for this specific exercise
-                await syncRecords(session.user.id, user.leagueId, ex.type, ex.value, entryDate);
-
-                // Gamification check
-                const { checkGamification } = await import("@/lib/actions/gamification");
-
-                // Note: checkGamification might need await depending on its internal logic
-                await checkGamification(session.user.id, newSession.id);
+                createdSessions.push({ id: newSession.id, type: ex.type, value: ex.value });
             }
 
             await tx.user.update({
@@ -181,6 +175,17 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                 data: { totalXP: { increment: totalXPGained } },
             });
         });
+
+        // DÉCLENCHÉ HORS DE LA TRANSACTION 
+        // (Pour s'assurer que les données globales sont commitées et lisibles par les autres threads)
+        const { checkGamification } = await import("@/lib/actions/gamification");
+        
+        for (const s of createdSessions) {
+            // Recalcule les volumes totaux en incluant la session fraîchement commitée
+            await syncRecords(session.user.id, user.leagueId, s.type, s.value, entryDate);
+            // Vérifie les paliers de niveau et de records
+            await checkGamification(session.user.id, s.id);
+        }
 
         revalidatePath("/");
         revalidatePath("/league");
