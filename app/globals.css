@@ -346,11 +346,338 @@ a {
   animation: pulse-primary 3s infinite ease-in-out;
 }
 
-.glass-card-hover {
-  transition: transform 0.3s ease, background 0.3s ease;
-}
-
 .glass-card-hover:hover {
   transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================
+   POMPES APP DESIGN SYSTEM (AUTH & LOGGING)
+   ========================================= */
+
+/* Auth Pages */
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 100px);
+  padding: 1rem;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 440px;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.auth-header {
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #0f172a;
+}
+
+.auth-input-group {
+  margin-bottom: 1.25rem;
+}
+
+.auth-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.auth-input::placeholder {
+  color: #475569;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
+}
+
+.auth-button {
+  width: 100%;
+  padding: 1.15rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 25px rgba(217, 119, 6, 0.25);
+  margin-top: 1rem;
+}
+
+.auth-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(217, 119, 6, 0.35);
+}
+
+.auth-button:active {
+  transform: translateY(0);
+}
+
+.auth-link-text {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.auth-link {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.auth-alert-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.auth-alert-success {
+  background: #d1fae5;
+  color: #047857;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Logging Form */
+.log-header-container {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.log-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+}
+
+.log-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.date-selector-container {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.date-selector-container::-webkit-scrollbar {
+  display: none;
+}
+
+.date-chip {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.date-chip:hover {
+  background: #f8fafc;
+}
+
+.date-chip.active {
+  border-color: #0f172a;
+  color: #0f172a;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.log-card {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(0,0,0,0.03);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.log-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.log-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.log-card-title {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.log-card-unit {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.log-card-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.log-add-serie-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.log-add-serie-btn:hover {
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.log-serie-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.log-serie-label {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #94a3b8;
+  min-width: 20px;
+}
+
+.val-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #475569;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.val-btn:active {
+  background: #f1f5f9;
+  transform: scale(0.92);
+}
+
+.log-val-input {
+  width: 100%;
+  height: 36px;
+  text-align: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.log-val-input:focus {
+  border-color: var(--primary);
+}
+
+.log-action-btn {
+  background: var(--primary);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
+  transition: transform 0.1s;
+}
+
+.log-action-btn:active {
+  transform: scale(0.92);
+}
+
+.log-remove-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }

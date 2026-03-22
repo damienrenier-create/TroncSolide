@@ -23,49 +23,45 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="container" style={{ marginTop: "4rem" }}>
-            <div className="glass" style={{ padding: "2rem" }}>
-                <h1 style={{ marginBottom: "1.5rem", textAlign: "center" }}>Rejoindre tronc-solide</h1>
+        <div className="auth-container">
+            <div className="auth-card">
+                <h1 className="auth-header">Rejoindre tronc-solide</h1>
 
-                {error && (
-                    <div style={{ background: "#ef444433", color: "#ef4444", padding: "1rem", borderRadius: "8px", marginBottom: "1rem" }}>
-                        {error}
-                    </div>
-                )}
+                {error && <div className="auth-alert-error">{error}</div>}
 
-                <form action={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem" }}>Pseudo</label>
-                        <input name="nickname" type="text" required style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--card-border)", background: "#0f172a", color: "white" }} />
+                <form action={handleSubmit}>
+                    <div className="auth-input-group">
+                        <label className="auth-label">Pseudo</label>
+                        <input name="nickname" type="text" required className="auth-input" placeholder="Ton pseudo stylé" />
                     </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem" }}>Email</label>
-                        <input name="email" type="email" required style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--card-border)", background: "#0f172a", color: "white" }} />
+                    <div className="auth-input-group">
+                        <label className="auth-label">Email</label>
+                        <input name="email" type="email" required className="auth-input" placeholder="prenom@exemple.com" />
                     </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem" }}>Date d'anniversaire</label>
-                        <input name="birthday" type="date" required style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--card-border)", background: "#0f172a", color: "white" }} />
+                    <div className="auth-input-group">
+                        <label className="auth-label">Date d'anniversaire</label>
+                        <input name="birthday" type="date" required className="auth-input" />
                     </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "0.5rem" }}>Mot de passe</label>
-                        <input name="password" type="password" required style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--card-border)", background: "#0f172a", color: "white" }} />
+                    <div className="auth-input-group">
+                        <label className="auth-label">Mot de passe</label>
+                        <input name="password" type="password" required className="auth-input" placeholder="••••••••" />
                     </div>
 
-                    <div style={{ marginTop: "0.5rem", padding: "1rem", background: "#3b82f61a", borderRadius: "8px" }}>
-                        <label style={{ display: "block", marginBottom: "0.5rem", color: "var(--primary)" }}>Code d'accès Ligue</label>
-                        <input name="leagueCode" type="text" placeholder="CODE-REQUIS" required style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--primary)", background: "#0f172a", color: "white" }} />
+                    <div className="auth-input-group" style={{ background: "#eff6ff", padding: "1rem", borderRadius: "16px", border: "1px solid #dbeafe" }}>
+                        <label className="auth-label" style={{ color: "#1e40af" }}>Code d'accès Ligue</label>
+                        <input name="leagueCode" type="text" placeholder="CODE-REQUIS" required className="auth-input" style={{ background: "#0f172a", border: "2px solid #3b82f6" }} />
                     </div>
 
-                    <button className="btn-primary" disabled={loading} style={{ marginTop: "1rem" }}>
+                    <button className="auth-button" disabled={loading}>
                         {loading ? "Chargement..." : "S'inscrire"}
                     </button>
                 </form>
 
-                <p style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.9rem", color: "var(--text-muted)" }}>
-                    Déjà un compte ? <a href="/login" style={{ color: "var(--primary)" }}>Se connecter</a>
+                <p className="auth-link-text">
+                    Déjà un compte ? <a href="/login" className="auth-link">Se connecter</a>
                 </p>
             </div>
         </div>

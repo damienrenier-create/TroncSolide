@@ -24,7 +24,7 @@ export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void
         PUSHUP: [0],
         SQUAT: [0],
         VENTRAL: [0],
-        LATERAL_L: [0],
+        LATERAL_L: [0], // Default wait... the user's screenshot had LATERAL_G and LATERAL_D... it matches perfectly!
         LATERAL_R: [0]
     });
 
@@ -96,9 +96,15 @@ export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            {/* Header / Date Selector */}
-            <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "4px" }}>
+        <div>
+            {/* Header */}
+            <div className="log-header-container">
+                <h1 className="log-title">Enregistrer une séance</h1>
+                <div className="log-subtitle">Qu'as-tu accompli aujourd'hui ?</div>
+            </div>
+
+            {/* Date Selector */}
+            <div className="date-selector-container">
                 {dates.map((d, i) => (
                     <button
                         key={i}
@@ -111,61 +117,60 @@ export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void
             </div>
 
             {error && (
-                <div style={{ background: "#fee2e2", color: "#b91c1c", padding: "0.75rem", borderRadius: "12px", fontSize: "0.85rem", fontWeight: "600", border: "1px solid #fecaca" }}>
+                <div className="auth-alert-error" style={{ marginBottom: "1rem" }}>
                     {error}
                 </div>
             )}
 
             {/* Exercise List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div>
                 {EXERCISES.map((ex) => (
-                    <div key={ex.type} className="batch-exercise-row glass-premium" style={{ padding: "1.25rem", borderRadius: "24px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-                            <div style={{ fontSize: "1.5rem" }}>{ex.icon}</div>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: "0.9rem", fontWeight: "900", color: "var(--foreground)" }}>{ex.label}</div>
-                                <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "600" }}>{ex.unit}</div>
+                    <div key={ex.type} className="log-card">
+                        <div className="log-card-header">
+                            <div className="log-card-icon">{ex.icon}</div>
+                            <div className="log-card-info">
+                                <div className="log-card-title">{ex.label}</div>
+                                <div className="log-card-unit">{ex.unit}</div>
                             </div>
                             <button
                                 onClick={() => addSet(ex.type)}
-                                className="add-set-link"
+                                className="log-add-serie-btn"
                             >
                                 <Plus size={14} /> Nouvelle série
                             </button>
                         </div>
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                            {values[ex.type].map((val, idx) => (
-                                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                    <span style={{ fontSize: "0.65rem", fontWeight: "900", color: "var(--text-muted)", minWidth: "15px" }}>S{idx + 1}</span>
-                                    <button onClick={() => updateSetValue(ex.type, idx, -5)} className="val-btn">-5</button>
-                                    <input
-                                        type="number"
-                                        value={val}
-                                        onChange={(e) => handleValueChange(ex.type, idx, e.target.value)}
-                                        className="batch-val-input"
-                                    />
-                                    <button onClick={() => updateSetValue(ex.type, idx, 5)} className="val-btn">+5</button>
+                        {values[ex.type].map((val, idx) => (
+                            <div key={idx} className="log-serie-row">
+                                <span className="log-serie-label">S{idx + 1}</span>
+                                <button onClick={() => updateSetValue(ex.type, idx, -5)} className="val-btn">-5</button>
+                                <input
+                                    type="number"
+                                    value={val}
+                                    onChange={(e) => handleValueChange(ex.type, idx, e.target.value)}
+                                    className="log-val-input"
+                                />
+                                <button onClick={() => updateSetValue(ex.type, idx, 5)} className="val-btn">+5</button>
 
-                                    {values[ex.type].length > 1 && (
-                                        <button onClick={() => removeSet(ex.type, idx)} className="remove-set-btn">
-                                            <Minus size={14} />
-                                        </button>
-                                    )}
-                                    {idx === values[ex.type].length - 1 && (
-                                        <button onClick={() => addSet(ex.type)} className="plus-btn-small">
-                                            <Plus size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                                {values[ex.type].length > 1 && idx !== values[ex.type].length - 1 && (
+                                    <button onClick={() => removeSet(ex.type, idx)} className="log-remove-btn">
+                                        <Minus size={16} />
+                                    </button>
+                                )}
+                                
+                                {idx === values[ex.type].length - 1 && (
+                                     <button onClick={() => addSet(ex.type)} className="log-action-btn">
+                                        <Plus size={18} />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 ))}
             </div>
 
             {/* Mood Field */}
-            <div className="glass" style={{ padding: "1rem", borderRadius: "20px", display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div className="log-card" style={{ padding: "1rem 1.5rem", flexDirection: "row", alignItems: "center", gap: "1rem" }}>
                 <MessageSquare size={20} className="text-primary" />
                 <input
                     type="text"
@@ -173,66 +178,18 @@ export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void
                     value={mood}
                     onChange={(e) => setMood(e.target.value)}
                     maxLength={50}
-                    style={{ flex: 1, border: "none", background: "none", outline: "none", fontSize: "0.9rem", color: "var(--foreground)", fontWeight: "500" }}
+                    style={{ flex: 1, border: "none", background: "none", outline: "none", fontSize: "0.95rem", color: "#0f172a", fontWeight: "600" }}
                 />
             </div>
 
             <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="btn-primary start-button"
-                style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+                className="auth-button"
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
             >
-                {loading ? "Enregistrement..." : <><Check size={20} /> VALIDER LA SÉANCE</>}
+                {loading ? "Enregistrement..." : <>VALIDER LA SÉANCE</>}
             </button>
-
-            <style jsx>{`
-                .add-set-link {
-                    background: none;
-                    border: none;
-                    color: var(--primary);
-                    font-size: 0.7rem;
-                    font-weight: 800;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    cursor: pointer;
-                    padding: 4px 8px;
-                    border-radius: 8px;
-                    transition: background 0.2s;
-                }
-                .add-set-link:hover {
-                    background: rgba(217, 119, 6, 0.05);
-                }
-                .remove-set-btn {
-                    background: rgba(239, 68, 68, 0.05);
-                    border: none;
-                    color: #ef4444;
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                }
-                .plus-btn-small {
-                    width: 32px;
-                    height: 32px;
-                    background: var(--primary);
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.15);
-                }
-                .val-btn:active, .plus-btn-small:active, .remove-set-btn:active {
-                    transform: scale(0.9);
-                }
-            `}</style>
         </div>
     );
 }
