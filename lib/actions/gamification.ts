@@ -27,7 +27,16 @@ async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: str
         }
     });
 
-    if (existing) return existing;
+    if (existing) {
+        // Update xpValue if it changed in code
+        if (existing.xpValue !== def.xpValue) {
+            await prisma.badge.update({
+                where: { id: existing.id },
+                data: { xpValue: def.xpValue }
+            });
+        }
+        return existing;
+    }
 
     return prisma.badge.create({
         data: {
@@ -35,6 +44,7 @@ async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: str
             description: def.description,
             icon: def.icon,
             type: def.type,
+            xpValue: def.xpValue,
             leagueId: isFirstCome ? leagueId : null
         }
     });
@@ -169,6 +179,14 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                 await tx.badge.update({
                     where: { id: badge.id },
                     data: { winnerId: userId }
+                });
+            }
+
+            // AFFECT XP BONUS TO USER
+            if (def.xpValue > 0) {
+                await tx.user.update({
+                    where: { id: userId },
+                    data: { totalXP: { increment: def.xpValue } }
                 });
             }
 

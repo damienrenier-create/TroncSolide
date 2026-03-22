@@ -7,16 +7,20 @@ export const NATURE_LEVELS = [
 ];
 
 export function getLevelInfo(totalXP: number) {
-    // Progression: Level 1 = 500XP, Level 2 = 1000XP, etc.
-    // Formula: Sum of (i * 500) for i = 1 to level
-    // Approximate inverse: level = sqrt(2 * XP / 500)
+    // PROGRESSION PROGRESSIVE POUR DÉBUTANTS :
+    // Étant donné que le jour 1 ne demande que 1 XP, et augmente de 1 par jour.
+    // Cost pour le niveau i = i * 50 XP.
+    // Niveau 1 = 50 XP (atteint au Jour 10 parfait).
+    // Niveau 5 = 50 + 100 + 150 + 200 + 250 = 750 XP (atteint au Jour 38 parfait).
+    // Niveau 20 = 10 500 XP (atteint vers 6 mois).
+    // Niveau 50 = 63 750 XP (atteint vers 1 an d'efforts continus parfaits).
 
     let currentLevel = 0;
-    let xpForNext = 500;
+    let xpForNext = 50;
     let accumulated = 0;
 
     for (let i = 1; i <= 50; i++) {
-        const cost = i * 500;
+        const cost = i * 50;
         if (totalXP >= (accumulated + cost)) {
             accumulated += cost;
             currentLevel = i;
@@ -31,6 +35,6 @@ export function getLevelInfo(totalXP: number) {
         name: NATURE_LEVELS[currentLevel] || "Élémentaire",
         nextLevelXP: xpForNext,
         progressXP: totalXP - accumulated,
-        requiredXP: (currentLevel + 1) * 500
+        requiredXP: (currentLevel + 1) * 50 // The absolute XP cost of this specific level
     };
 }
