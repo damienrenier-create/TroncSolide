@@ -43,11 +43,20 @@ export const authOptions: NextAuthOptions = {
                 token.sub = user.id;
                 token.email = user.email;
             }
-            // Admin Twin Session Override Tunnel
+            // Admin Twin Session Override Tunnel (Multi-Dimension Damien)
             if (trigger === "update" && session?.overrideId) {
-                if (token.email === "damienrenier@hotmail.com" || token.email === "damienrenier+clone@hotmail.com") {
-                    token.sub = session.overrideId;
-                    token.email = session.overrideId === "cmn2e73ds0001iesbmk6zfl5v" ? "damienrenier+clone@hotmail.com" : "damienrenier@hotmail.com";
+                const damienAccounts = [
+                    { id: "cmn29996b0001jw3325gxiasp", email: "damienrenier@hotmail.com" },
+                    { id: "cmn2e73ds0001iesbmk6zfl5v", email: "damienrenier+clone@hotmail.com" },
+                    { id: "cmn3ocfbp0002sem2pvmxvtw1", email: "damienrenier+clone2@hotmail.com" }
+                ];
+
+                const isCurrentDamien = damienAccounts.some(acc => acc.email === token.email);
+                const targetAccount = damienAccounts.find(acc => acc.id === session.overrideId);
+
+                if (isCurrentDamien && targetAccount) {
+                    token.sub = targetAccount.id;
+                    token.email = targetAccount.email;
                 }
             }
             return token;

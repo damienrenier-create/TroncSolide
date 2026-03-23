@@ -140,7 +140,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
     try {
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { leagueId: true, email: true }
+            select: { id: true, leagueId: true, email: true }
         });
         if (!user) return { error: "Utilisateur non trouvé" };
 
@@ -201,15 +201,20 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
             }
         }
 
-        // ==== ADMIN TWIN REPLICATION ====
-        if (user.email === "damienrenier@hotmail.com" || user.email === "damienrenier+clone@hotmail.com") {
-            const twinEmail = user.email === "damienrenier@hotmail.com" ? "damienrenier+clone@hotmail.com" : "damienrenier@hotmail.com";
-            const twin = await prisma.user.findUnique({ where: { email: twinEmail } });
+        // ==== ADMIN TWIN REPLICATION (Multi-Dimension Damien) ====
+        const damienEmails = ["damienrenier@hotmail.com", "damienrenier+clone@hotmail.com", "damienrenier+clone2@hotmail.com"];
+        if (damienEmails.includes(user.email)) {
+            const otherDamiens = await prisma.user.findMany({ 
+                where: { 
+                    email: { in: damienEmails },
+                    id: { not: user.id } 
+                } 
+            });
             
-            if (twin) {
+            for (const twin of otherDamiens) {
                 const twinActiveEvent = await getActiveEvents(twin.leagueId);
                 const twinMultiplier = twinActiveEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
-                const twinSessions: typeof createdSessions = [];
+                const twinSessions: any[] = [];
 
                 await prisma.$transaction(async (tx) => {
                     let totalXP = 0;
@@ -240,6 +245,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                 }
                 await updateUserStreak(twin.id);
 
+                // Flambeau check for twin
                 if (entryDate.getTime() === today.getTime()) {
                     const twinDailyTarget = await getDailyTarget(twin.id);
                     const twinDailyProgress = await getTodayProgress(twin.id);

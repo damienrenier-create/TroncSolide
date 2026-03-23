@@ -53,28 +53,52 @@ export default function ProfileClient({ user }: { user: any }) {
                 </div>
             </header>
 
-            {/* NEW: ADMIN TWIN SWITCH BUTTON */}
-            {(user.email === "damienrenier@hotmail.com" || user.email === "damienrenier+clone@hotmail.com") && (
-                <section className="glass" style={{ padding: "1rem", marginBottom: "1.5rem", border: "1px solid var(--primary)", background: "rgba(245, 158, 11, 0.05)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                            <h4 style={{ fontWeight: 800, color: "var(--primary)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                                🛠️ Mode Administrateur
-                            </h4>
-                            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>
-                                {user.email === "damienrenier@hotmail.com" ? "Tu es sur ton profil Original." : "Tu es sur ton profil CLONE (Ligue 060488)."}
-                            </p>
-                        </div>
-                        <button 
-                            className="btn-primary" 
-                            style={{ padding: "0.5rem 0.75rem", fontSize: "0.7rem", color: "white", boxShadow: "0 0 10px rgba(217, 119, 6, 0.4)" }}
-                            onClick={() => {
-                                setLoading(true);
-                                update({ overrideId: user.email === "damienrenier@hotmail.com" ? "cmn2e73ds0001iesbmk6zfl5v" : "cmn29996b0001jw3325gxiasp" }).then(() => window.location.reload());
-                            }}
-                        >
-                            {user.email === "damienrenier@hotmail.com" ? "Passer sur le Clone ➔" : "➔ Retour à l'Original"}
-                        </button>
+            {/* NEW: ADMIN TWIN SWITCH BUTTON (Multi-Dimension) */}
+            {["damienrenier@hotmail.com", "damienrenier+clone@hotmail.com", "damienrenier+clone2@hotmail.com"].includes(user.email) && (
+                <section className="glass" style={{ padding: "1.25rem", marginBottom: "1.5rem", border: "1px solid var(--primary)", background: "rgba(245, 158, 11, 0.05)", borderRadius: "24px" }}>
+                    <div style={{ marginBottom: "1rem" }}>
+                        <h4 style={{ fontWeight: 900, color: "var(--primary)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", textTransform: "uppercase", letterSpacing: "1px" }}>
+                             Multivers Damien
+                        </h4>
+                        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                            Navigue entre tes différentes dimensions temporelles. La progression est synchronisée.
+                        </p>
+                    </div>
+                    
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px" }}>
+                        {[
+                            { name: "Original", id: "cmn29996b0001jw3325gxiasp", email: "damienrenier@hotmail.com", league: "Ligue de Base" },
+                            { name: "Clone 1", id: "cmn2e73ds0001iesbmk6zfl5v", email: "damienrenier+clone@hotmail.com", league: "Ligue 060488" },
+                            { name: "Clone 2", id: "cmn3ocfbp0002sem2pvmxvtw1", email: "damienrenier+clone2@hotmail.com", league: "Ligue CLANPRIGNON" }
+                        ].map((dim) => {
+                            const isCurrent = user.email === dim.email;
+                            return (
+                                <button 
+                                    key={dim.id}
+                                    disabled={isCurrent || loading}
+                                    onClick={() => {
+                                        setLoading(true);
+                                        update({ overrideId: dim.id }).then(() => window.location.reload());
+                                    }}
+                                    className={isCurrent ? "" : "glass-hover"}
+                                    style={{ 
+                                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                                        padding: "0.75rem 1rem", borderRadius: "12px", border: isCurrent ? "2px solid var(--primary)" : "1px solid rgba(0,0,0,0.05)",
+                                        background: isCurrent ? "white" : "rgba(255,255,255,0.03)",
+                                        cursor: isCurrent ? "default" : "pointer",
+                                        transition: "all 0.2s"
+                                    }}
+                                >
+                                    <div style={{ textAlign: "left" }}>
+                                        <div style={{ fontWeight: 900, fontSize: "0.85rem", color: isCurrent ? "var(--primary)" : "var(--foreground)" }}>
+                                            {dim.name} {isCurrent && "📍"}
+                                        </div>
+                                        <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: 700 }}>{dim.league}</div>
+                                    </div>
+                                    {!isCurrent && <span style={{ fontSize: "0.8rem", color: "var(--primary)" }}>Switch ➔</span>}
+                                </button>
+                            );
+                        })}
                     </div>
                 </section>
             )}
