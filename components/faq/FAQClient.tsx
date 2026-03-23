@@ -1,0 +1,182 @@
+"use client"
+
+import { useState, useEffect } from "react";
+import { BookOpen, HelpCircle, ShieldAlert, Trophy, Award, Zap } from "lucide-react";
+import { NATURE_LEVELS } from "@/lib/constants/levels";
+import BadgeCatalogueClient from "@/components/badges/BadgeCatalogueClient";
+
+export default function FAQClient({ badges, groups, catalogue, faqItems }: any) {
+    const [activeTab, setActiveTab] = useState("rules"); // 'rules', 'progression', 'badges'
+
+    // Automatically switch tabs based on hash in URL
+    useEffect(() => {
+        const hash = window.location.hash;
+        if (hash === "#niveaux") {
+            setActiveTab("progression");
+        } else if (hash === "#jalons" || hash === "#periodiques" || hash === "#badges") {
+            setActiveTab("badges");
+        } else if (hash === "#concept" || hash === "#cagnotte") {
+            setActiveTab("rules");
+        }
+    }, []);
+
+    const tabs = [
+        { id: "rules", label: "Le Manuel", icon: <BookOpen size={18} /> },
+        { id: "progression", label: "Niveaux", icon: <Zap size={18} /> },
+        { id: "badges", label: "Trophées & Badges", icon: <Trophy size={18} /> }
+    ];
+
+    return (
+        <div className="container dashboard-container" style={{ paddingBottom: "100px" }}>
+            <header className="hero-card glass" style={{ padding: "2rem 1.5rem", marginTop: "1rem" }}>
+                <BookOpen size={48} className="text-primary mb-4" strokeWidth={1.5} style={{ margin: "0 auto 1rem" }} />
+                <h1 style={{ fontSize: "1.75rem", fontWeight: "900", color: "var(--foreground)", marginBottom: "0.5rem" }}>La Bible de Tronc Solide</h1>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Règles du jeu, progression, niveaux et encyclopédie complète des trophées.</p>
+            </header>
+
+            {/* TAB NAVIGATION */}
+            <div style={{ display: "flex", gap: "10px", marginBottom: "2rem", overflowX: "auto", paddingBottom: "10px", scrollbarWidth: "none" }}>
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        style={{
+                            display: "flex", alignItems: "center", gap: "8px",
+                            padding: "12px 20px", borderRadius: "100px", border: "none",
+                            background: activeTab === tab.id ? "var(--primary)" : "rgba(255,255,255,0.05)",
+                            color: activeTab === tab.id ? "white" : "var(--text-muted)",
+                            fontWeight: 900, cursor: "pointer", transition: "all 0.2s",
+                            whiteSpace: "nowrap"
+                        }}
+                    >
+                        {tab.icon}
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* TAB CONTENT: RULES */}
+            {activeTab === "rules" && (
+                <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                    <section className="glass" id="concept" style={{ padding: "1.5rem" }}>
+                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <HelpCircle size={20} className="text-primary" />
+                            Le Concept
+                        </h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                            <p><strong>Tronc Solide</strong> est un défi communautaire de gainage quotidien. Le but ultime ? Ne jamais rompre la chaîne et persévérer quoi qu'il arrive.</p>
+                            <p>Chaque jour, un objectif en secondes t'est assigné. Tu dois le réaliser en une ou plusieurs fois, et surtout le <strong>loguer obligatoirement</strong> dans La Place avant minuit pour qu'il soit comptabilisé.</p>
+                        </div>
+                    </section>
+
+                    <section className="glass" id="cagnotte" style={{ padding: "1.5rem", marginTop: "1rem" }}>
+                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "#ef4444" }}>
+                            <ShieldAlert size={20} />
+                            La Cagnotte & L'Infirmerie
+                        </h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                            <p>C'est l'outil de dissuasion radical. Si tu es inscrit dans le pot de cagnotte (participation optionnelle), <strong>chaque jour manqué ou oublié te coûte exactement 2€</strong> d’amende incontestable.</p>
+                            <p>Tu es blessé, malade, ou dans l'impossibilité physique de participer ? Aucun problème, le but n'est pas de se détruire. Déclare tes dates en avance dans la rubrique <strong>Certificats Médicaux</strong> de ton Profil privé. Les jours couverts par la durée de ton repos seront validés automatiquement dans le système (ils te rapporteront 0 XP, mais te sauveront de la moindre amende ou de la casse de ta série).</p>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            {/* TAB CONTENT: PROGRESSION */}
+            {activeTab === "progression" && (
+                <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                    <section className="glass" id="niveaux" style={{ padding: "1.5rem" }}>
+                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <Zap size={20} className="text-primary" />
+                            Gain d'XP & Hiérarchie de la Nature
+                        </h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                            <div className="glass-premium" style={{ padding: "1rem", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <strong style={{ color: "var(--foreground)" }}>Le Fonctionnement de l'EXP est pur et méritocratique :</strong><br/>
+                                <ul style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px", paddingLeft: "20px" }}>
+                                    <li>1 pompe valide réussie = <strong>1 XP</strong>.</li>
+                                    <li>1 seconde de gainage tenue = <strong>1 XP</strong>.</li>
+                                    <li>Même si tu dépasses ton objectif du jour, l'effort supplémentaire paie continuellement.</li>
+                                </ul>
+                            </div>
+                            
+                            <p style={{ marginTop: "0.5rem" }}>Cet XP s'accumule indéfiniment. Plus tu t'entraînes et tu repousses tes limites, plus l'XP croît, ce qui te permet de gravir les échelons et de débloquer de nouveaux <strong>Titres d'Évolution</strong> toujours plus prestigieux.</p>
+                            
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "10px", marginTop: "1rem" }}>
+                                {NATURE_LEVELS.map((level, idx) => {
+                                    let requiredXP = 0;
+                                    for (let i = 1; i <= idx; i++) requiredXP += i * 50;
+                                    return (
+                                        <div key={idx} style={{ background: "rgba(0,0,0,0.02)", padding: "12px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.04)" }}>
+                                            <div style={{ fontSize: "0.65rem", fontWeight: "900", color: "var(--primary)", letterSpacing: "1px" }}>NV. {idx + 1}</div>
+                                            <div style={{ fontWeight: "900", fontSize: "1rem", color: "var(--foreground)", marginTop: "4px" }}>{level.emoji} {level.name}</div>
+                                            <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-muted)", opacity: 0.8, marginTop: "6px" }}>{requiredXP.toLocaleString()} XP</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            {/* TAB CONTENT: TROPHÉES & BADGES */}
+            {activeTab === "badges" && (
+                <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                    <section className="glass" id="jalons" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
+                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <Trophy size={20} className="text-primary" />
+                            Jalons & Séries (La Constance pure)
+                        </h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                            <p>Celui qui ne rompt jamais la chaîne est grassement récompensé. Des Badges de Jalon exclusifs existent pour témoigner de ta volonté de fer, offrant au passage d'importants bonus forfaitaires d'XP qui te catapulteront dans le classement.</p>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "0.5rem" }}>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
+                                    <span style={{ fontSize: "1.5rem" }}>🥉</span>
+                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>7 Jours</div>
+                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#b45309" }}>+200 XP</div>
+                                </div>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
+                                    <span style={{ fontSize: "1.5rem" }}>🥈</span>
+                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>30 Jours</div>
+                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#94a3b8" }}>+500 XP</div>
+                                </div>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
+                                    <span style={{ fontSize: "1.5rem" }}>🥇</span>
+                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>100 Jours</div>
+                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#eab308" }}>+1,000 XP</div>
+                                </div>
+                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
+                                    <span style={{ fontSize: "1.5rem" }}>💎</span>
+                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>365 Jours</div>
+                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#06b6d4" }}>+5,000 XP</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="glass" id="periodiques" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
+                        <h3 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "var(--primary)" }}>
+                            <Award size={20} />
+                            Trophées Périodiques (Bataille Sanglante)
+                        </h3>
+                        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                            Attention, terrain miné ! Les trophées <strong>Champion de la Semaine</strong> et <strong>Champion du Mois</strong> ne sont pas des acquis. Ils sont décernés et remis en jeu à la fin de chaque période ! Ils reviennent de droit au joueur ayant accumulé le plus grand volume d'entraînement total (Pompes + Squats confondus) durant ladite période.<br/><br/>Tant que tu possèdes un Trophée, il te rapporte de l'expertise quotidiennement (le "Salaire du Roi"). Mais **si quelqu'un te le vole**, il te dépouille par la même occasion de la rente que tu étais censé toucher ! Ton trône n'est jamais acquis.
+                        </p>
+                    </section>
+
+                    {/* Catalogue des Badges Complet */}
+                    <div id="badges" style={{ animation: "fadeIn 0.5s ease-out" }}>
+                        {badges ? (
+                            <BadgeCatalogueClient groups={groups} faqItems={faqItems} />
+                        ) : (
+                            <div className="glass" style={{ textAlign: "center", padding: "3rem 2rem", borderRadius: "20px" }}>
+                                <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", fontWeight: "800" }}>Connecte-toi pour explorer l'encyclopédie des hauts faits secrets et publics de ta ligue.</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
