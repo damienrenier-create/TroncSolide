@@ -115,7 +115,7 @@ export default function DashboardClient({
 
             {/* 2. Stat Bar - Horizontal Impact */}
             <div className="stats-grid" style={{ marginTop: "-1rem" }}>
-                <div className="glass-premium stat-card nature-rank" style={{ padding: "1.25rem" }}>
+                <Link href="/faq#niveaux" className="glass-premium stat-card nature-rank clickable-card" style={{ padding: "1.25rem", textDecoration: "none", color: "inherit" }}>
                     <div className="stat-info" style={{ flex: 1 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                             <span style={{ fontSize: "1.2rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>{levelInfo.emoji}</span>
@@ -126,9 +126,9 @@ export default function DashboardClient({
                             <div className="level-fill" style={{ width: `${levelProgress}%`, height: "100%", background: "var(--secondary)", borderRadius: "3px", boxShadow: "0 0 10px rgba(5, 150, 105, 0.2)" }} />
                         </div>
                     </div>
-                </div>
+                </Link>
 
-                <div className="glass-premium stat-card" style={{ padding: "1.25rem", flexDirection: "column", alignItems: "flex-start" }}>
+                <Link href="/faq#niveaux" className="glass-premium stat-card clickable-card" style={{ padding: "1.25rem", flexDirection: "column", alignItems: "flex-start", textDecoration: "none", color: "inherit" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "8px" }}>
                         <Award className="text-primary" size={18} />
                         <div className={`streak-badge ${stats.streak > 0 ? 'active' : ''}`} style={{ margin: 0, padding: "2px 8px" }}>
@@ -138,19 +138,31 @@ export default function DashboardClient({
                     </div>
                     <span style={{ fontSize: "0.8rem", fontWeight: "900", color: "var(--text-muted)" }}>EXP TOTAL</span>
                     <span className="stat-number" style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{stats.totalXP} ✨</span>
-                </div>
+                </Link>
             </div>
 
             {/* 3. Economy & Ligue Focus */}
             <div className="secondary-grid">
-                <section className={`glass-premium info-card ${!isEligible ? 'locked' : ''}`} style={{ border: isEligible ? "1px solid var(--secondary)" : "" }}>
+                <Link href="/faq#cagnotte" className={`glass-premium info-card clickable-card ${!isEligible ? 'locked' : ''}`} style={{ border: isEligible ? "1px solid var(--secondary)" : "", textDecoration: "none", color: "inherit" }}>
                     <div className="card-header">
                         <Wallet size={16} className={isEligible ? "text-secondary" : "text-muted"} />
                         <span>Cagnotte Pot</span>
                     </div>
                     <div className="cagnotte-status">
                         {isEligible ? (
-                            <div className="status-active" style={{ fontSize: "1rem" }}>{stats.unpaidAmount}€ <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>à payer</span></div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%" }}>
+                                <div className="status-active" style={{ fontSize: "1rem" }}>{stats.unpaidAmount}€ <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>à payer</span></div>
+                                {stats.unpaidPenalties && stats.unpaidPenalties.length > 0 && (
+                                    <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px", width: "100%" }}>
+                                        {stats.unpaidPenalties.map((p: any, idx: number) => (
+                                            <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
+                                                <span>{new Date(p.date).toLocaleDateString()}</span>
+                                                <span style={{ color: "var(--foreground)" }}>{p.amount}€</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <div className="status-locked">
                                 <Lock size={12} style={{ marginRight: '4px' }} />
@@ -158,33 +170,35 @@ export default function DashboardClient({
                             </div>
                         )}
                     </div>
-                </section>
+                </Link>
 
-                <Link href="/league" className="glass-premium info-card clickable-card" style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <div className="card-header" style={{ marginBottom: "0.5rem" }}>
+                <div className="glass-premium info-card" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <Link href="/league" className="card-header clickable-card" style={{ marginBottom: "0.5rem", textDecoration: "none", color: "inherit", padding: "4px", borderRadius: "8px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <Trophy size={16} className="text-primary" />
                             <span>Top Ligue</span>
                         </div>
                         <span style={{ fontSize: "0.65rem", fontWeight: "800", color: "var(--primary)", opacity: 0.8 }}>VOIR TOUT ➔</span>
-                    </div>
+                    </Link>
                     <div className="league-preview" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         {stats.top3.map((player: any, i: number) => (
-                            <div key={i} className="league-row" style={{ 
+                            <Link href={`/profile/${player.nickname}`} key={i} className="league-row clickable-card" style={{ 
                                 display: "flex",
                                 justifyContent: "space-between",
                                 alignItems: "center",
                                 opacity: i === 0 ? 1 : i === 1 ? 0.8 : 0.6,
                                 background: "rgba(255,255,255,0.02)", 
                                 padding: "6px 10px", 
-                                borderRadius: "8px" 
+                                borderRadius: "8px",
+                                textDecoration: "none",
+                                color: "inherit"
                             }}>
                                 <span>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} {player.nickname}</span>
                                 <span className="xp-small" style={{ fontWeight: 900, color: i === 0 ? "var(--primary)" : "inherit" }}>{player.totalXP}</span>
-                            </div>
+                            </Link>
                         ))}
                     </div>
-                </Link>
+                </div>
             </div>
 
             {/* 4. Recent History */}

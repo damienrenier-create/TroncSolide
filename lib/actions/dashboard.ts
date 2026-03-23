@@ -82,10 +82,13 @@ export async function getUserStats() {
     }
 
     // 4. Penalty summary
-    const unpaidPenalties = await prisma.penalty.aggregate({
+    const unpaidPenaltiesList = await prisma.penalty.findMany({
         where: { userId, status: "UNPAID" },
-        _sum: { amount: true }
+        select: { amount: true, date: true },
+        orderBy: { date: 'asc' }
     });
+
+    const unpaidAmount = unpaidPenaltiesList.reduce((acc, p) => acc + (p.amount || 0), 0);
 
     // 5. Active Events
     const activeEvent = await getActiveEvents(user.leagueId);
@@ -99,7 +102,8 @@ export async function getUserStats() {
             totalDays: 21,
             isEligible: successfulDays >= 21
         },
-        unpaidAmount: unpaidPenalties._sum.amount || 0,
+        unpaidAmount,
+        unpaidPenalties: unpaidPenaltiesList,
         activeEvent
     };
 }

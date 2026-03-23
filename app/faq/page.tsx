@@ -27,7 +27,7 @@ export default function FAQPage() {
             </section>
 
             <section className="glass" style={{ padding: "1.5rem" }}>
-                <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "#ef4444" }}>
+                <h2 id="cagnotte" style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "#ef4444" }}>
                     <ShieldAlert size={20} />
                     La Cagnotte & L'Infirmerie
                 </h2>
@@ -38,7 +38,7 @@ export default function FAQPage() {
             </section>
 
             <section className="glass" style={{ padding: "1.5rem" }}>
-                <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                <h2 id="niveaux" style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
                     <Zap size={20} className="text-primary" />
                     Progression & XP
                 </h2>
