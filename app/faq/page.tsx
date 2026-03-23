@@ -21,6 +21,7 @@ export default async function FAQPage() {
     }) : [];
 
     const agenda = [
+        { date: "Flexible", name: "Anniversaire d'un Membre 🎂", bonus: "Duel: XP x5 pour la Star", award: "Badge Royal ou Chasseur" },
         { date: "01/04", name: "Poisson d'Avril 🐟", bonus: "🏆 Compétition de Reps", award: "Badges Poissons (Top 5)" },
         { date: "05/04", name: "Fête de Pâques 🥚", bonus: "🏆 Chasse aux Œufs (Reps)", award: "Badges Œufs (Top 5)" },
         { date: "01/05", name: "Fête du Travail 💪", bonus: "🚀 XP x5 sur la séance", award: "Honneur & Volume" },
@@ -45,7 +46,7 @@ export default async function FAQPage() {
             title: "Accomplissements Personnels",
             icon: <Star size={18} color="white" />,
             color: "var(--secondary)",
-            items: catalogue.filter(b => b.type === "ACHIEVEMENT" && !["Graine", "Jeune", "Arbre", "Gardien", "Anniversaire", "Marvin"].some(k => b.name.includes(k)))
+            items: catalogue.filter(b => b.type === "ACHIEVEMENT" && !["Graine", "Jeune", "Arbre", "Gardien", "Anniversaire", "Marvin", "BIRTHDAY", "APRIL_FOOLS", "EASTER", "MOTHERS_DAY", "FATHERS_DAY"].some(k => b.id.includes(k)))
         },
         {
             title: "Hiérarchie de la Nature",
@@ -54,10 +55,10 @@ export default async function FAQPage() {
             items: catalogue.filter(b => ["Graine", "Jeune", "Arbre", "Gardien", "Fleur", "Bourgeon"].some(k => b.name.includes(k)) || b.id.startsWith("LEVEL_"))
         },
         {
-            title: "Événements Spéciaux",
+            title: "Événements Spéciaux & Défis 🎊",
             icon: <Calendar size={18} color="white" />,
             color: "#8b5cf6",
-            items: catalogue.filter(b => ["Anniversaire", "Marvin", "ST_MARVIN", "ANNIVERSARY_1"].some(k => b.id.includes(k)))
+            items: catalogue.filter(b => ["Anniversaire", "Marvin", "ST_MARVIN", "ANNIVERSARY_1", "BIRTHDAY", "APRIL_FOOLS", "EASTER", "MOTHERS_DAY", "FATHERS_DAY"].some(k => b.id.includes(k)))
         }
     ];
 
