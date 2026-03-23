@@ -146,7 +146,6 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
 
         const { getActiveEvents } = await import("./events");
         const activeEvent = await getActiveEvents(user.leagueId);
-        const bonusMultiplier = activeEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
 
         const COMPETITIVE_EXERCISES: ExerciseType[] = ["PUSHUP", "SQUAT", "VENTRAL", "LATERAL_L", "LATERAL_R"];
         const createdSessions: { id: string, type: ExerciseType, value: number }[] = [];
@@ -156,7 +155,19 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
 
             for (const ex of filteredExercises) {
                 const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
-                const xp = isCompetitive ? Math.round(ex.value * bonusMultiplier) : 0;
+                
+                let multiplier = activeEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
+
+                // Bonus fêtes
+                if (activeEvent?.type === "LABOR_DAY") {
+                    multiplier = 5;
+                } else if (activeEvent?.type === "MOTHERS_DAY" && (ex.type === "VENTRAL" || ex.type === "SQUAT")) {
+                    multiplier = 5;
+                } else if (activeEvent?.type === "FATHERS_DAY" && ex.type === "PUSHUP") {
+                    multiplier = 5;
+                }
+
+                const xp = isCompetitive ? Math.round(ex.value * multiplier) : 0;
                 totalXPGained += xp;
 
                 const newSession = await tx.exerciseSession.create({

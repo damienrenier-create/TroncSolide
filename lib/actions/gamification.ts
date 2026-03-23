@@ -9,8 +9,9 @@ import { differenceInDays, startOfDay } from "date-fns";
 import { getBrusselsToday } from "@/lib/date-utils";
 
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
+import { processAnniversarySettlement } from "./settlement";
 
-async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: string) {
+export async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: string) {
     const isFirstCome = def.type === "FIRST_COME";
     const existing = await prisma.badge.findFirst({
         where: { name: def.name, OR: [{ leagueId }, { leagueId: null }] }
@@ -51,6 +52,9 @@ export async function checkGamification(userId: string, lastSessionId: string) {
     
     let currentTotalXP = user.totalXP;
     const today = getBrusselsToday();
+
+    // Lancer le règlement de l'anniversaire d'hier si nécessaire
+    await processAnniversarySettlement(user.leagueId);
 
     // 1. Level Up Logic
     const levelInfo = getLevelInfo(currentTotalXP);
@@ -185,7 +189,6 @@ export async function checkGamification(userId: string, lastSessionId: string) {
         const topRecord = allRecords.find(r => r.type === mapping.type && r.timeframe === mapping.tf && r.exercise === mapping.ex);
         
         if (topRecord && topRecord.userId === userId) {
-            // I am the current record holder in DB. Do I have the badge?
             const def = BADGE_DEFINITIONS.find(b => b.id === mapping.id);
             if (!def) continue;
 
@@ -195,30 +198,23 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                 const myUb = await tx.userBadge.findUnique({ where: { userId_badgeId: { userId, badgeId: badge.id } } });
                 
                 if (!myUb) {
-                    // I DON'T have the badge, but I AM the record holder. This means I JUST STOLE IT!
                     const oldUb = await tx.userBadge.findFirst({ where: { badgeId: badge.id } });
-                    
                     const newBaseXP = Math.floor(topRecord.value * mapping.coef);
-                    const newRateXP = Math.max(1, Math.floor(newBaseXP * 0.01)); // 1% per day minimum 1
+                    const newRateXP = Math.max(1, Math.floor(newBaseXP * 0.01));
                     const CASSEUR_BONUS = 200;
 
                     if (oldUb) {
-                        // DEPOUILLER L'ANCIEN PROPRIETAIRE DE SON TITRE (Mais il garde son XP accumulée)
                         await tx.userBadge.delete({ where: { id: oldUb.id } });
-                        // => On ne fait plus de decrement sur l'ancien joueur. Il a profité de la rente pendant son règne.
-
-                        // Announce the theft
                         await tx.feedItem.create({
                             data: { leagueId: user.leagueId, userId: oldUb.userId, type: "BADGE_LOST", badgeId: badge.id } 
                         });
                     }
 
-                    // COURONNER LE NOUVEAU PROPRIETAIRE
                     await tx.userBadge.create({
                         data: {
                             userId,
                             badgeId: badge.id,
-                            rank: 1, // Always Platine
+                            rank: 1,
                             baseXP: newBaseXP,
                             rateXP: newRateXP,
                             awardedAt: today
@@ -234,8 +230,6 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                         data: { leagueId: user.leagueId, userId: userId, type: "BADGE_WON", badgeId: badge.id }
                     });
                 } else {
-                    // I already have it. Update its baseXP if I beat my own record?
-                    // User broke their own record!
                     const newBaseXP = Math.floor(topRecord.value * mapping.coef);
                     if (newBaseXP > (myUb.baseXP || 0)) {
                         const diff = newBaseXP - (myUb.baseXP || 0);
@@ -248,17 +242,13 @@ export async function checkGamification(userId: string, lastSessionId: string) {
 
                         await tx.user.update({
                             where: { id: userId },
-                            data: { totalXP: { increment: diff } } // Just give them the difference
+                            data: { totalXP: { increment: diff } }
                         });
                     }
                 }
             });
         }
     }
-
-    // Note: The daily "Longevity Rente" (salary) is conceptually added every day. 
-    // In a real app we'd need a cron job, or we calculate it virtually on the frontend.
-    // For now, it only materially impacts the user when it is STOLEN (deducted). 
 
     revalidatePath("/profile");
     revalidatePath("/faq");
@@ -292,4 +282,35 @@ export async function getBadgeCatalogue() {
     });
 
     return badges;
+}
+
+/**
+ * Manuellement attribuer un badge à un utilisateur (utilisé par le règlement d'anniversaire)
+ */
+export async function awardBadge(userId: string, badgeId: string, leagueId: string, customXP?: number) {
+    const def = BADGE_DEFINITIONS.find(b => b.id === badgeId);
+    if (!def) return;
+
+    const badge = await ensureBadgeExists(def, leagueId);
+    const finalXP = customXP !== undefined ? customXP : def.xpValue;
+
+    await prisma.$transaction(async (tx) => {
+        const existing = await tx.userBadge.findUnique({ where: { userId_badgeId: { userId, badgeId: badge.id } } });
+        if (existing) return;
+
+        await tx.userBadge.create({
+            data: { userId, badgeId: badge.id, baseXP: finalXP }
+        });
+
+        if (finalXP > 0) {
+            await tx.user.update({
+                where: { id: userId },
+                data: { totalXP: { increment: finalXP } }
+            });
+        }
+
+        await tx.feedItem.create({
+            data: { leagueId, userId, type: "BADGE_WON", badgeId: badge.id }
+        });
+    });
 }

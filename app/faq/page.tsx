@@ -1,7 +1,7 @@
 import { getBadgeCatalogue } from "@/lib/actions/gamification";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import FAQClient from "@/components/faq/FAQClient";
-import { Trophy, Target, Star, TreePine, Calendar, Zap, Shield, TrendingUp } from "lucide-react";
+import { Trophy, Target, Star, TreePine, Calendar, Zap, Shield, TrendingUp, Award } from "lucide-react";
 
 export const metadata = {
     title: "FAQ & Règles | Tronc Solide",
@@ -11,7 +11,6 @@ export const metadata = {
 export default async function FAQPage() {
     const badges = await getBadgeCatalogue();
     
-    // We can still render the static part if not logged in, but BadgeCatalogue needs data
     const catalogue = badges ? BADGE_DEFINITIONS.map(def => {
         const dbBadge = badges.find(b => b.name === def.name);
         return {
@@ -20,6 +19,14 @@ export default async function FAQPage() {
             users: dbBadge?.users || []
         };
     }) : [];
+
+    const agenda = [
+        { date: "01/04", name: "Poisson d'Avril 🐟", bonus: "🏆 Compétition de Reps", award: "Badges Poissons (Top 5)" },
+        { date: "05/04", name: "Fête de Pâques 🥚", bonus: "🏆 Chasse aux Œufs (Reps)", award: "Badges Œufs (Top 5)" },
+        { date: "01/05", name: "Fête du Travail 💪", bonus: "🚀 XP x5 sur la séance", award: "Honneur & Volume" },
+        { date: "10/05", name: "Fête des Mères 💖", bonus: "🚀 XP x5 (Gainage & Squats)", award: "Top 3 Badges" },
+        { date: "14/06", name: "Fête des Pères 💙", bonus: "🚀 XP x5 (Pompes)", award: "Top 3 Badges" },
+    ];
 
     const groups = [
         {
@@ -79,6 +86,11 @@ export default async function FAQPage() {
             q: "Pour en faire plus ✨",
             a: "Cette section te permet de loguer des tractions, de la course à pied ou des étirements. Pour l'instant, ces exercices ne rapportent pas d'XP et n'ont pas de badges dédiés, ils servent uniquement à ton suivi personnel.",
             icon: <Star size={20} className="text-primary" />
+        },
+        {
+            q: "Le Duel d'Anniversaire 🎂",
+            a: "Lors de l'anniversaire d'un membre, la ligue entre en mode 'Duel'. Si la star finit la journée avec le plus de reps, elle gagne un badge royal et ses XP du jour sont multipliés par 5 ! Mais si un autre membre la bat, ce chasseur gagne un badge et voit ses XP multipliés par 3. La star, elle, garde un bonus de 1.5x.",
+            icon: <Award size={20} className="text-accent" />
         }
     ];
 
@@ -88,6 +100,7 @@ export default async function FAQPage() {
             catalogue={catalogue} 
             groups={groups} 
             faqItems={faqItems} 
+            agenda={agenda}
         />
     );
 }

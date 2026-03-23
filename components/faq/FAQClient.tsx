@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { BookOpen, HelpCircle, ShieldAlert, Trophy, Award, Zap } from "lucide-react";
+import { BookOpen, HelpCircle, ShieldAlert, Trophy, Award, Zap, Calendar } from "lucide-react";
 import { NATURE_LEVELS } from "@/lib/constants/levels";
 import BadgeCatalogueClient from "@/components/badges/BadgeCatalogueClient";
 
-export default function FAQClient({ badges, groups, catalogue, faqItems }: any) {
-    const [activeTab, setActiveTab] = useState("rules"); // 'rules', 'progression', 'badges'
+export default function FAQClient({ badges, groups, catalogue, faqItems, agenda }: any) {
+    const [activeTab, setActiveTab] = useState("rules"); // 'rules', 'agenda', 'progression', 'badges'
 
     // Automatically switch tabs based on hash in URL
     useEffect(() => {
@@ -14,6 +14,8 @@ export default function FAQClient({ badges, groups, catalogue, faqItems }: any) 
             const hash = window.location.hash;
             if (hash === "#niveaux") {
                 setActiveTab("progression");
+            } else if (hash === "#agenda") {
+                setActiveTab("agenda");
             } else if (hash === "#jalons" || hash === "#periodiques" || hash === "#badges") {
                 setActiveTab("badges");
             } else if (hash === "#concept" || hash === "#cagnotte" || hash === "#regles") {
@@ -33,6 +35,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems }: any) 
 
     const tabs = [
         { id: "rules", label: "Le Manuel", icon: <BookOpen size={18} /> },
+        { id: "agenda", label: "Agenda", icon: <Calendar size={18} /> },
         { id: "progression", label: "Niveaux", icon: <Zap size={18} /> },
         { id: "badges", label: "Trophées & Badges", icon: <Trophy size={18} /> }
     ];
@@ -110,6 +113,36 @@ export default function FAQClient({ badges, groups, catalogue, faqItems }: any) 
                         <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                             <p>C'est l'outil de dissuasion radical. Si tu es inscrit dans le pot de cagnotte (participation optionnelle), <strong>chaque jour manqué ou oublié te coûte exactement 2€</strong> d’amende incontestable.</p>
                             <p>Tu es blessé, malade, ou dans l'impossibilité physique de participer ? Aucun problème, le but n'est pas de se détruire. Déclare tes dates en avance dans la rubrique <strong>Certificats Médicaux</strong> de ton Profil privé. Les jours couverts par la durée de ton repos seront validés automatiquement dans le système (ils te rapporteront 0 XP, mais te sauveront de la moindre amende ou de la casse de ta série).</p>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            {/* TAB CONTENT: AGENDA */}
+            {activeTab === "agenda" && (
+                <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                    <section className="glass" style={{ padding: "1.5rem" }}>
+                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <Calendar size={20} className="text-secondary" />
+                            Agenda de la Ligue & Événements 🏆
+                        </h2>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+                            Marquez vos calendriers ! Ces journées spéciales offrent des multiplicateurs massifs et des trophées uniques que vous ne pouvez obtenir qu'une fois par an.
+                        </p>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            {agenda?.map((item: any, idx: number) => (
+                                <div key={idx} className="glass-premium" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.05)" }}>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: "0.7rem", fontWeight: "900", color: "var(--primary)", letterSpacing: "1px" }}>{item.date}</div>
+                                        <div style={{ fontWeight: "900", fontSize: "1rem", color: "var(--foreground)", marginTop: "2px" }}>{item.name}</div>
+                                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>{item.bonus}</div>
+                                    </div>
+                                    <div style={{ background: "rgba(0,0,0,0.04)", padding: "6px 12px", borderRadius: "12px", fontSize: "0.7rem", fontWeight: "800", color: "var(--foreground)", whiteSpace: "nowrap" }}>
+                                        {item.award}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </section>
                 </div>

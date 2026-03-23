@@ -111,9 +111,51 @@ export default function DashboardClient({
                 </div>
             )}
 
-            {/* 0. Active Event Banner (Anniversary) */}
-            {stats.activeEvent && (
-                <section className="glass event-banner" style={{ marginBottom: "1rem", padding: "1rem", borderColor: "var(--accent)", borderLeftWidth: "4px" }}>
+            {/* 0. Active Event Banner (Anniversary Duel) */}
+            {stats.activeEvent && stats.activeEvent.type === "ANNIVERSARY" && (
+                <section className="glass event-banner anniversary-duel-card" style={{ marginBottom: "1.5rem", padding: "1.5rem", border: "2px solid var(--accent)", background: "linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)", borderRadius: "24px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                            <div style={{ background: "var(--accent)", padding: "8px", borderRadius: "12px", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <Award size={20} />
+                            </div>
+                            <div>
+                                <h4 style={{ fontSize: "1rem", fontWeight: "900", color: "#1e293b", margin: 0 }}>DUEL D'ANNIVERSAIRE 🎂</h4>
+                                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600", margin: 0 }}>{stats.activeEvent.star.nickname} vs Le Reste du Monde</p>
+                            </div>
+                        </div>
+                        <div style={{ background: "var(--accent)", color: "white", padding: "4px 12px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "900", boxShadow: "0 4px 10px rgba(139, 92, 246, 0.3)" }}>
+                            X5 XP SI ELLE GAGNE
+                        </div>
+                    </div>
+
+                    <div style={{ position: "relative", height: "12px", background: "rgba(0,0,0,0.05)", borderRadius: "6px", overflow: "hidden", marginBottom: "0.5rem" }}>
+                        <div style={{ 
+                            position: "absolute", 
+                            left: 0, 
+                            height: "100%", 
+                            width: `${Math.min(100, (stats.activeEvent.star.reps / Math.max(1, (stats.activeEvent.topChallenger?.value || 0) + stats.activeEvent.star.reps)) * 100)}%`, 
+                            background: "var(--accent)",
+                            transition: "width 1s ease-out"
+                        }} />
+                    </div>
+                    
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "800" }}>
+                        <div style={{ color: "var(--accent)" }}>{stats.activeEvent.star.nickname} : {stats.activeEvent.star.reps} RP</div>
+                        <div style={{ color: "var(--text-muted)" }}>Meilleur Challenger : {stats.activeEvent.topChallenger?.value || 0} RP</div>
+                    </div>
+
+                    <p style={{ fontSize: "0.7rem", marginTop: "1rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", fontWeight: "600", margin: "1rem 0 0" }}>
+                        {stats.activeEvent.star.reps >= (stats.activeEvent.topChallenger?.value || 0) 
+                            ? "👑 La Star domine actuellement ! Battez-la pour l'XP x3 !" 
+                            : "🏹 La Star est talonnée ! Les chasseurs profitent de l'XP x3 !"}
+                    </p>
+                </section>
+            )}
+
+            {/* Other Events Banner */}
+            {stats.activeEvent && stats.activeEvent.type !== "ANNIVERSARY" && (
+                <section className="glass event-banner" style={{ marginBottom: "1.5rem", padding: "1rem", borderColor: "var(--accent)", borderLeftWidth: "4px" }}>
                     <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
                         <Calendar className="text-accent" size={24} />
                         <div>

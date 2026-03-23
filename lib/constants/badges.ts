@@ -53,6 +53,32 @@ export const BADGE_DEFINITIONS = [
 
     // --- FAMILLE D : ÉVÉNEMENTS SPÉCIAUX ---
     { id: "ANNIVERSARY_1", name: "Premier Anniversaire", description: "Présent lors du 1er anniversaire", type: "ACHIEVEMENT" as BadgeType, icon: "🎂", xpValue: 1000 },
+    { id: "BIRTHDAY_STAR", name: "Joyeux Anniversaire", description: "A remporté son duel d'anniversaire contre la ligue !", type: "ACHIEVEMENT" as BadgeType, icon: "👑", xpValue: 0 },
+    { id: "BIRTHDAY_HUNTER", name: "Chasseur d'Anniversaire", description: "A battu la star du jour pendant son anniversaire.", type: "ACHIEVEMENT" as BadgeType, icon: "🏹", xpValue: 100 },
+
+    // POISSONS D'AVRIL
+    { id: "APRIL_FOOLS_1", name: "Friture", description: "5ème du 1er avril", type: "ACHIEVEMENT" as BadgeType, icon: "🐟", xpValue: 100 },
+    { id: "APRIL_FOOLS_2", name: "Sardine Étincelante", description: "4ème du 1er avril", type: "ACHIEVEMENT" as BadgeType, icon: "🐠", xpValue: 200 },
+    { id: "APRIL_FOOLS_3", name: "Bar Agile", description: "3ème du 1er avril", type: "ACHIEVEMENT" as BadgeType, icon: "🐡", xpValue: 400 },
+    { id: "APRIL_FOOLS_4", name: "Requin Marteau", description: "2ème du 1er avril", type: "ACHIEVEMENT" as BadgeType, icon: "🦈", xpValue: 700 },
+    { id: "APRIL_FOOLS_5", name: "Mégaleodon", description: "Champion du 1er avril", type: "ACHIEVEMENT" as BadgeType, icon: "🐳", xpValue: 1200 },
+
+    // PÂQUES
+    { id: "EASTER_1", name: "Œuf de Colibri", description: "5ème de Pâques", type: "ACHIEVEMENT" as BadgeType, icon: "🪺", xpValue: 100 },
+    { id: "EASTER_2", name: "Œuf de Moineau", description: "4ème de Pâques", type: "ACHIEVEMENT" as BadgeType, icon: "🥚", xpValue: 200 },
+    { id: "EASTER_3", name: "Œuf de Poule", description: "3ème de Pâques", type: "ACHIEVEMENT" as BadgeType, icon: "🐣", xpValue: 400 },
+    { id: "EASTER_4", name: "Œuf d'Autruche", description: "2ème de Pâques", type: "ACHIEVEMENT" as BadgeType, icon: "🥚", xpValue: 700 },
+    { id: "EASTER_5", name: "Œuf de Dinosaure", description: "Champion de Pâques", type: "ACHIEVEMENT" as BadgeType, icon: "🦖", xpValue: 1200 },
+
+    // FÊTE DES MÈRES
+    { id: "MOTHERS_DAY_GOLD", name: "Maman d'Or", description: "Top 1 XP - Fête des Mères", type: "ACHIEVEMENT" as BadgeType, icon: "💖", xpValue: 500 },
+    { id: "MOTHERS_DAY_SILVER", name: "Maman d'Argent", description: "Top 2 XP - Fête des Mères", type: "ACHIEVEMENT" as BadgeType, icon: "🤍", xpValue: 300 },
+    { id: "MOTHERS_DAY_BRONZE", name: "Maman de Bronze", description: "Top 3 XP - Fête des Mères", type: "ACHIEVEMENT" as BadgeType, icon: "🤎", xpValue: 150 },
+
+    // FÊTE DES PÈRES
+    { id: "FATHERS_DAY_GOLD", name: "Papa d'Or", description: "Top 1 XP - Fête des Pères", type: "ACHIEVEMENT" as BadgeType, icon: "💙", xpValue: 500 },
+    { id: "FATHERS_DAY_SILVER", name: "Papa d'Argent", description: "Top 2 XP - Fête des Pères", type: "ACHIEVEMENT" as BadgeType, icon: "🤍", xpValue: 300 },
+    { id: "FATHERS_DAY_BRONZE", name: "Papa de Bronze", description: "Top 3 XP - Fête des Pères", type: "ACHIEVEMENT" as BadgeType, icon: "🤎", xpValue: 150 },
 
     // --- FAMILLE E : LES RECORDS DE LIGUE (LE VOL) ---
     // Ces badges dynamiques n'ont pas d'xpValue fixe ici car leur valeur dépend de la taille de l'exploit !
