@@ -10,15 +10,26 @@ export default function FAQClient({ badges, groups, catalogue, faqItems }: any) 
 
     // Automatically switch tabs based on hash in URL
     useEffect(() => {
-        const hash = window.location.hash;
-        if (hash === "#niveaux") {
-            setActiveTab("progression");
-        } else if (hash === "#jalons" || hash === "#periodiques" || hash === "#badges") {
-            setActiveTab("badges");
-        } else if (hash === "#concept" || hash === "#cagnotte") {
-            setActiveTab("rules");
-        }
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            if (hash === "#niveaux") {
+                setActiveTab("progression");
+            } else if (hash === "#jalons" || hash === "#periodiques" || hash === "#badges") {
+                setActiveTab("badges");
+            } else if (hash === "#concept" || hash === "#cagnotte" || hash === "#regles") {
+                setActiveTab("rules");
+            }
+        };
+
+        handleHashChange();
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
+
+    // Scroll to top when tab changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [activeTab]);
 
     const tabs = [
         { id: "rules", label: "Le Manuel", icon: <BookOpen size={18} /> },
@@ -61,11 +72,33 @@ export default function FAQClient({ badges, groups, catalogue, faqItems }: any) 
                     <section className="glass" id="concept" style={{ padding: "1.5rem" }}>
                         <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
                             <HelpCircle size={20} className="text-primary" />
-                            Le Concept
+                            Le Concept & La Salle
                         </h2>
                         <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                             <p><strong>Tronc Solide</strong> est un défi communautaire de gainage quotidien. Le but ultime ? Ne jamais rompre la chaîne et persévérer quoi qu'il arrive.</p>
                             <p>Chaque jour, un objectif en secondes t'est assigné. Tu dois le réaliser en une ou plusieurs fois, et surtout le <strong>loguer obligatoirement</strong> dans La Place avant minuit pour qu'il soit comptabilisé.</p>
+                            <div className="glass-premium" style={{ padding: "1rem", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", marginTop: "0.5rem" }}>
+                                <div style={{ fontWeight: 800, color: "var(--foreground)", marginBottom: "4px" }}>💡 À Savoir :</div>
+                                <p style={{ fontSize: "0.75rem" }}>La difficulté augmente de <strong>1 seconde par jour</strong>. C'est l'essence même de la progression lente mais inéluctable du Tronc.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="glass" id="regles" style={{ padding: "1.5rem", marginTop: "1rem" }}>
+                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
+                            <Zap size={20} className="text-primary" />
+                            Questions Fréquentes & Règles d'Expert
+                        </h2>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
+                            {faqItems.map((item: any, i: number) => (
+                                <div key={i} style={{ padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "16px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                                        <div style={{ padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px" }}>{item.icon}</div>
+                                        <h4 style={{ fontSize: "0.9rem", fontWeight: 800 }}>{item.q}</h4>
+                                    </div>
+                                    <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.5 }}>{item.a}</p>
+                                </div>
+                            ))}
                         </div>
                     </section>
 

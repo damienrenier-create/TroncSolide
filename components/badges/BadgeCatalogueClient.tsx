@@ -26,36 +26,6 @@ export default function BadgeCatalogueClient({ groups, faqItems }: { groups: any
                 </p>
             </header>
 
-            {/* FAQ Logic - Accordion */}
-            <section style={{ marginBottom: "3rem" }} id="faq">
-                <div 
-                    onClick={() => setOpenFaq(!openFaq)}
-                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.5rem", background: "var(--primary)", borderRadius: "20px", cursor: "pointer", color: "white", boxShadow: "0 10px 25px rgba(217,119,6,0.2)" }}
-                >
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <Zap size={24} />
-                        <h3 style={{ fontSize: "1.25rem", fontWeight: "900", margin: 0 }}>Règles et Fonctionnement de l'XP</h3>
-                    </div>
-                    {openFaq ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-                </div>
-
-                {openFaq && (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem", marginTop: "1rem", animation: "slideDown 0.3s ease-out" }}>
-                        {faqItems.map((item, i) => (
-                            <div key={i} className="glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", display: "flex", flexDirection: "column", gap: "1rem" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                    <div style={{ width: "40px", height: "40px", background: "white", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 10px rgba(0,0,0,0.05)" }}>
-                                        {item.icon}
-                                    </div>
-                                    <h4 style={{ fontSize: "1rem", fontWeight: "800" }}>{item.q}</h4>
-                                </div>
-                                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.5", fontWeight: "500" }}>{item.a}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </section>
-
             <div style={{ width: "100%", height: "1px", background: "linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent)", marginBottom: "3rem" }} />
 
             {/* BADGES GROUPS - Accordions */}
