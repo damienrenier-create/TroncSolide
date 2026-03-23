@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Star, Trophy, Target, TreePine, Calendar, Zap, Shield, TrendingUp } from "lucide-react";
 import BadgeModal from "./BadgeModal";
-import styles from "@/app/badges/badges.module.css";
+import styles from "./badges.module.css";
 
 export default function BadgeCatalogueClient({ groups, faqItems }: { groups: any[], faqItems: any[] }) {
     const [selectedBadge, setSelectedBadge] = useState<any>(null);

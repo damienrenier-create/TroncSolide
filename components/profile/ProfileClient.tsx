@@ -46,7 +46,7 @@ export default function ProfileClient({ user }: { user: any }) {
                         <Link href="/stats" className="btn-primary" style={{ background: "var(--foreground)", padding: "0.85rem", fontSize: "0.9rem" }}>
                             <BarChart2 size={18} /> Stats Précises
                         </Link>
-                        <Link href="/badges" className="btn-primary" style={{ background: "linear-gradient(135deg, #10b981, #059669)", padding: "0.85rem", fontSize: "0.9rem" }}>
+                        <Link href="/faq#badges" className="btn-primary" style={{ background: "linear-gradient(135deg, #10b981, #059669)", padding: "0.85rem", fontSize: "0.9rem" }}>
                             <Award size={18} /> Tout le Palmarès
                         </Link>
                     </div>

@@ -261,7 +261,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
     // For now, it only materially impacts the user when it is STOLEN (deducted). 
 
     revalidatePath("/profile");
-    revalidatePath("/badges");
+    revalidatePath("/faq");
     revalidatePath("/league");
 }
 
