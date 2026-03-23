@@ -148,13 +148,15 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         const activeEvent = await getActiveEvents(user.leagueId);
         const bonusMultiplier = activeEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
 
+        const COMPETITIVE_EXERCISES: ExerciseType[] = ["PUSHUP", "SQUAT", "VENTRAL", "LATERAL_L", "LATERAL_R"];
         const createdSessions: { id: string, type: ExerciseType, value: number }[] = [];
 
         await prisma.$transaction(async (tx) => {
             let totalXPGained = 0;
 
             for (const ex of filteredExercises) {
-                const xp = Math.round(ex.value * bonusMultiplier);
+                const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
+                const xp = isCompetitive ? Math.round(ex.value * bonusMultiplier) : 0;
                 totalXPGained += xp;
 
                 const newSession = await tx.exerciseSession.create({
@@ -170,22 +172,23 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                 createdSessions.push({ id: newSession.id, type: ex.type, value: ex.value });
             }
 
-            await tx.user.update({
-                where: { id: session.user.id },
-                data: { totalXP: { increment: totalXPGained } },
-            });
+            if (totalXPGained > 0) {
+                await tx.user.update({
+                    where: { id: session.user.id },
+                    data: { totalXP: { increment: totalXPGained } },
+                });
+            }
         });
 
         // DÉCLENCHÉ HORS DE LA TRANSACTION 
-        // (Pour s'assurer que les données globales sont commitées et lisibles par les autres threads)
         const { checkGamification } = await import("@/lib/actions/gamification");
         const { updateUserStreak } = await import("@/lib/actions/streak");
         
         for (const s of createdSessions) {
-            // Recalcule les volumes totaux en incluant la session fraîchement commitée
-            await syncRecords(session.user.id, user.leagueId, s.type, s.value, entryDate);
-            // Vérifie les paliers de niveau et de records
-            await checkGamification(session.user.id, s.id);
+            if (COMPETITIVE_EXERCISES.includes(s.type)) {
+                await syncRecords(session.user.id, user.leagueId, s.type, s.value, entryDate);
+                await checkGamification(session.user.id, s.id);
+            }
         }
 
         // Met à jour la jauge d'assiduité du joueur (Streak)
@@ -219,7 +222,8 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                 await prisma.$transaction(async (tx) => {
                     let totalXP = 0;
                     for (const ex of filteredExercises) {
-                        const xp = Math.round(ex.value * twinMultiplier);
+                        const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
+                        const xp = isCompetitive ? Math.round(ex.value * twinMultiplier) : 0;
                         totalXP += xp;
                         const sm = await tx.exerciseSession.create({
                             data: {
@@ -233,15 +237,19 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                         });
                         twinSessions.push({ id: sm.id, type: sm.type, value: sm.value });
                     }
-                    await tx.user.update({
-                        where: { id: twin.id },
-                        data: { totalXP: { increment: totalXP } },
-                    });
+                    if (totalXP > 0) {
+                        await tx.user.update({
+                            where: { id: twin.id },
+                            data: { totalXP: { increment: totalXP } },
+                        });
+                    }
                 });
 
                 for (const s of twinSessions) {
-                    await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
-                    await checkGamification(twin.id, s.id);
+                    if (COMPETITIVE_EXERCISES.includes(s.type)) {
+                        await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
+                        await checkGamification(twin.id, s.id);
+                    }
                 }
                 await updateUserStreak(twin.id);
 
@@ -295,4 +303,41 @@ export async function getTodayProgress(userId: string) {
     });
 
     return sessions.reduce((acc: number, s: { value: number }) => acc + s.value, 0);
+}
+
+export async function getUserExerciseHistory() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return { error: "Non autorisé" };
+
+    try {
+        const history = await prisma.exerciseSession.findMany({
+            where: { userId: session.user.id },
+            orderBy: { date: 'desc' },
+            select: {
+                id: true,
+                type: true,
+                value: true,
+                xpGained: true,
+                date: true,
+                mood: true,
+            }
+        });
+
+        // Group by date (pure YYYY-MM-DD)
+        const grouped = history.reduce((acc: Record<string, any[]>, s) => {
+            const d = s.date;
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (!acc[dateStr]) acc[dateStr] = [];
+            acc[dateStr].push({
+                ...s,
+                date: s.date.toISOString(), // Serializing for client
+            });
+            return acc;
+        }, {});
+
+        return { success: true, history: grouped };
+    } catch (e) {
+        console.error(e);
+        return { error: "Erreur lors de la récupération de l'historique." };
+    }
 }

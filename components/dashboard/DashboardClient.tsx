@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import ExerciseBatchForm from "@/components/exercises/ExerciseBatchForm";
-import { Flame, Trophy, TrendingUp, History, Wallet, Award, Lock, TreePine, Calendar, Trash2 } from "lucide-react";
+import SecondaryExerciseForm from "@/components/exercises/SecondaryExerciseForm";
+import { Flame, Trophy, TrendingUp, History, Wallet, Award, Lock, TreePine, Calendar, Trash2, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { deleteSession } from "@/lib/actions/moderation";
@@ -22,6 +23,7 @@ export default function DashboardClient({
     stats
 }: DashboardProps) {
     const [showForm, setShowForm] = useState(false);
+    const [showSecondaryForm, setShowSecondaryForm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [lostBadges, setLostBadges] = useState<any[]>([]);
     const router = useRouter();
@@ -156,14 +158,27 @@ export default function DashboardClient({
                 )}
 
                 <div style={{ marginTop: "2rem" }}>
-                    {!showForm ? (
-                        <button
-                            className={`btn-primary start-button ${!isGoalReached ? 'btn-pulse' : ''}`}
-                            onClick={() => setShowForm(true)}
-                        >
-                            Loguer ma séance
-                        </button>
-                    ) : (
+                    {!showForm && !showSecondaryForm ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <button
+                                className={`btn-primary start-button ${!isGoalReached ? 'btn-pulse' : ''}`}
+                                onClick={() => setShowForm(true)}
+                            >
+                                Loguer ma séance
+                            </button>
+                            <button
+                                className="glass-hover"
+                                style={{ 
+                                    width: "100%", borderRadius: "16px", padding: "0.85rem", fontSize: "0.85rem", fontWeight: "900", 
+                                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(0,0,0,0.05)", color: "var(--foreground)",
+                                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", cursor: "pointer"
+                                }}
+                                onClick={() => setShowSecondaryForm(true)}
+                            >
+                                <PlusCircle size={16} className="text-primary" /> Pour en faire plus ✨
+                            </button>
+                        </div>
+                    ) : showForm ? (
                         <div className="form-portal glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", border: "1px solid var(--primary)" }}>
                             <header style={{ marginBottom: "1.5rem", textAlign: "center" }}>
                                 <h3 style={{ fontSize: "1.25rem", fontWeight: "900" }}>Enregistrer une séance</h3>
@@ -172,6 +187,17 @@ export default function DashboardClient({
                             <ExerciseBatchForm onSuccess={() => setShowForm(false)} />
                             <div style={{ textAlign: "center", marginTop: "1rem" }}>
                                 <button className="btn-ghost" style={{ fontSize: "0.75rem" }} onClick={() => setShowForm(false)}>Plus tard</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="form-portal glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", border: "1px solid var(--secondary)" }}>
+                            <header style={{ marginBottom: "1.5rem", textAlign: "center" }}>
+                                <h3 style={{ fontSize: "1.25rem", fontWeight: "900", color: "var(--secondary)" }}>Pour en faire plus</h3>
+                                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>Tractions, Course, Étirements...</p>
+                            </header>
+                            <SecondaryExerciseForm onSuccess={() => setShowSecondaryForm(false)} />
+                            <div style={{ textAlign: "center", marginTop: "1rem" }}>
+                                <button className="btn-ghost" style={{ fontSize: "0.75rem" }} onClick={() => setShowSecondaryForm(false)}>Plus tard</button>
                             </div>
                         </div>
                     )}

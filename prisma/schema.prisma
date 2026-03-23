@@ -19,6 +19,9 @@ enum ExerciseType {
   LATERAL_R
   SQUAT
   PUSHUP
+  PULLUP
+  RUNNING
+  STRETCHING
 }
 
 enum BadgeType {

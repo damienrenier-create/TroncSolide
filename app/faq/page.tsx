@@ -64,6 +64,16 @@ export default async function FAQPage() {
             q: "Les Tiers de Périodicité (Or, Argent..)",
             a: "Être le tout premier de ta ligue à atteindre 5000 pompes globales te donne le badge Platine (100% du bonus final). Le 2ème aura l'Or (80%), et ainsi de suite jusqu'à l'Argile ! Il ne faut surtout pas traîner.",
             icon: <TrendingUp size={20} className="text-secondary" />
+        },
+        {
+            q: "Le Carnet d'Entraînement 📖",
+            a: "Ton carnet personnel recense l'ensemble de tes activités, jour par jour. Tu peux y accéder via le Dashboard pour voir le détail de tes reps, tes durées de course ou d'étirement, ainsi que tes humeurs du jour.",
+            icon: <Calendar size={20} className="text-secondary" />
+        },
+        {
+            q: "Pour en faire plus ✨",
+            a: "Cette section te permet de loguer des tractions, de la course à pied ou des étirements. Pour l'instant, ces exercices ne rapportent pas d'XP et n'ont pas de badges dédiés, ils servent uniquement à ton suivi personnel.",
+            icon: <Star size={20} className="text-primary" />
         }
     ];
 
