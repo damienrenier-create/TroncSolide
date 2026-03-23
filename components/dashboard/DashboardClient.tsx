@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ExerciseBatchForm from "@/components/exercises/ExerciseBatchForm";
 import { Flame, Trophy, TrendingUp, History, Wallet, Award, Lock, TreePine, Calendar, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -23,7 +23,24 @@ export default function DashboardClient({
 }: DashboardProps) {
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [lostBadges, setLostBadges] = useState<any[]>([]);
     const router = useRouter();
+
+    useEffect(() => {
+        if (stats.recentLostBadges?.length > 0) {
+            const seen = JSON.parse(localStorage.getItem("seenLostBadges") || "[]");
+            const unseen = stats.recentLostBadges.filter((b: any) => !seen.includes(b.id));
+            if (unseen.length > 0) {
+                setLostBadges(unseen);
+            }
+        }
+    }, [stats.recentLostBadges]);
+
+    const dismissLostBadge = (id: string) => {
+        setLostBadges(prev => prev.filter(b => b.id !== id));
+        const seen = JSON.parse(localStorage.getItem("seenLostBadges") || "[]");
+        localStorage.setItem("seenLostBadges", JSON.stringify([...seen, id]));
+    };
 
     const progressPercent = Math.min((initialProgress / initialTarget) * 100, 100);
     const isGoalReached = initialProgress >= initialTarget;
@@ -48,6 +65,21 @@ export default function DashboardClient({
 
     return (
         <div className="container dashboard-container">
+
+            {/* LOST BADGE TOASTS */}
+            {lostBadges.length > 0 && (
+                <div style={{ position: "fixed", top: "80px", right: "20px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 9999 }}>
+                    {lostBadges.map(alert => (
+                        <div key={alert.id} className="glass" style={{ padding: "1rem", borderLeft: "4px solid #ef4444", background: "rgba(15, 23, 42, 0.95)", backdropFilter: "blur(10px)", boxShadow: "0 10px 25px rgba(0,0,0,0.5)", borderRadius: "12px", width: "300px", animation: "slideInRight 0.3s ease-out" }}>
+                            <div style={{ fontWeight: 900, color: "#ef4444", marginBottom: "4px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <Flame size={16} /> 🚨 BADGE VOLÉ !
+                            </div>
+                            <p style={{ fontSize: "0.80rem", margin: "0 0 10px 0", color: "white", lineHeight: 1.4 }}>On vient de t'arracher le titre : <br/><strong>{alert.badge?.icon} {alert.badge?.name}</strong>.</p>
+                            <button onClick={() => dismissLostBadge(alert.id)} style={{ width: "100%", background: "none", border: "1px solid #ef4444", color: "#ef4444", padding: "6px 8px", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer", fontWeight: 800, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"} onMouseOut={e => e.currentTarget.style.background = "none"}>Ça ne se passera pas comme ça !</button>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* 0. Active Event Banner (Anniversary) */}
             {stats.activeEvent && (

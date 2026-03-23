@@ -51,6 +51,7 @@ interface LeagueClientProps {
     currentUserId: string;
     initialFeedItems: any[];
     allRecords: any[];
+    top3AbsoluteRecords: Record<string, any[]>;
     onFilterChange: (exercise: ExerciseType, type: RecordType, timeframe: RecordTimeframe) => Promise<Ranking[]>;
 }
 
@@ -60,6 +61,7 @@ export default function LeagueClient({
     currentUserId,
     initialFeedItems,
     allRecords,
+    top3AbsoluteRecords,
     onFilterChange
 }: LeagueClientProps) {
     const [rankings, setRankings] = useState<Ranking[]>(initialRankings);
@@ -280,20 +282,19 @@ export default function LeagueClient({
                                     {[
                                         { l: "Record Jour", r: getRec("VOLUME", "DAY") },
                                         { l: "Record Semaine", r: getRec("VOLUME", "WEEK") },
-                                        { l: "Record Mois", r: getRec("VOLUME", "MONTH") },
-                                        { l: "Record Absolu", r: getRec("SERIES", "YEAR"), highlight: true }
+                                        { l: "Record Mois", r: getRec("VOLUME", "MONTH") }
                                     ].map((cell, idx) => (
-                                        <div key={idx} style={{ background: cell.highlight ? "rgba(217, 119, 6, 0.1)" : "rgba(0,0,0,0.2)", border: cell.highlight ? "1px solid rgba(217, 119, 6, 0.3)" : "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "6px" }}>
-                                            <div style={{ fontSize: "0.65rem", fontWeight: "900", letterSpacing: "0.05em", color: cell.highlight ? "var(--primary)" : "var(--text-muted)", textTransform: "uppercase" }}>
+                                        <div key={idx} style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "6px" }}>
+                                            <div style={{ fontSize: "0.65rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--text-muted)", textTransform: "uppercase" }}>
                                                 {cell.l}
                                             </div>
                                             {cell.r ? (
                                                 <>
-                                                    <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--foreground)", textShadow: cell.highlight ? "0 2px 10px rgba(217, 119, 6, 0.3)" : "none" }}>
+                                                    <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--foreground)" }}>
                                                         {cell.r.value}<span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{ex.unit}</span>
                                                     </div>
-                                                    <div style={{ fontSize: "0.75rem", fontWeight: "700", color: cell.highlight ? "white" : "var(--text-muted)", background: cell.highlight ? "var(--primary)" : "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: "8px", marginTop: "4px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                        <Link href={`/profile/${encodeURIComponent(cell.r.user?.nickname)}`} className={cell.highlight ? "profile-link-white" : "profile-link"}>
+                                                    <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", background: "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: "8px", marginTop: "4px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                        <Link href={`/profile/${encodeURIComponent(cell.r.user?.nickname || cell.r.user?.id || 'inconnu')}`} className="profile-link">
                                                             {cell.r.user?.nickname}
                                                         </Link>
                                                     </div>
@@ -303,6 +304,32 @@ export default function LeagueClient({
                                             )}
                                         </div>
                                     ))}
+
+                                    {/* Podium Absolu */}
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(217, 119, 6, 0.1)", border: "1px solid rgba(217, 119, 6, 0.3)", borderRadius: "16px", padding: "1rem", gridColumn: "1 / -1" }}>
+                                        <div style={{ fontSize: "0.7rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--primary)", textTransform: "uppercase", textAlign: "center" }}>Podium Absolu (1 série)</div>
+                                        <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", flexWrap: "wrap", alignItems: "flex-end" }}>
+                                            {top3AbsoluteRecords[ex.id]?.slice(0, 3).map((r: any, idx: number) => {
+                                                const colors = ["var(--primary)", "#94a3b8", "#d97706"];
+                                                const icons = ["🥇", "🥈", "🥉"];
+                                                return (
+                                                    <div key={idx} style={{ flex: 1, minWidth: "100px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "4px" }}>
+                                                        <div style={{ fontSize: idx===0 ? "1.6rem" : "1.2rem", fontWeight: "900", color: "var(--foreground)", textShadow: idx===0 ? "0 2px 10px rgba(217, 119, 6, 0.3)" : "none" }}>
+                                                            {r.value}<span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{ex.unit}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "white", background: colors[idx], padding: "2px 8px", borderRadius: "8px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                            <Link href={`/profile/${encodeURIComponent(r.nickname)}`} className="profile-link-white">
+                                                                {icons[idx]} {r.nickname}
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {(!top3AbsoluteRecords[ex.id] || top3AbsoluteRecords[ex.id].length === 0) && (
+                                                <div style={{ width: "100%", textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>Aucun record</div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         );

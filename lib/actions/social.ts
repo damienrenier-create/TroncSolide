@@ -17,7 +17,7 @@ export async function getFeedItems(leagueId: string) {
 
         where: { leagueId },
         orderBy: { createdAt: 'desc' },
-        take: 30,
+        take: 20,
         include: {
             user: { select: { nickname: true, id: true, totalXP: true } },
             badge: { select: { name: true, icon: true, description: true } },

@@ -93,6 +93,12 @@ export async function getUserStats() {
     // 5. Active Events
     const activeEvent = await getActiveEvents(user.leagueId);
 
+    // 6. Recent Lost Badges (last 2 days)
+    const recentLostBadges = await prisma.feedItem.findMany({
+        where: { userId, type: "BADGE_LOST", createdAt: { gte: subDays(new Date(), 2) } },
+        include: { badge: { select: { name: true, icon: true } } }
+    });
+
     return {
         ...user,
         streak,
@@ -104,6 +110,7 @@ export async function getUserStats() {
         },
         unpaidAmount,
         unpaidPenalties: unpaidPenaltiesList,
-        activeEvent
+        activeEvent,
+        recentLostBadges
     };
 }

@@ -41,6 +41,7 @@ enum RecordType {
 enum FeedItemType {
   LEVEL_UP
   BADGE_WON
+  BADGE_LOST
 }
 
 model League {

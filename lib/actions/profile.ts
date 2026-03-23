@@ -33,5 +33,11 @@ export async function getPublicProfile(nickname: string) {
         }
     });
 
-    return profileUser;
+    const leagueUsers = await prisma.user.findMany({
+        where: { leagueId: requestingUser.leagueId },
+        select: { nickname: true, totalXP: true },
+        orderBy: { totalXP: 'desc' }
+    });
+
+    return { ...profileUser, leagueContext: leagueUsers };
 }

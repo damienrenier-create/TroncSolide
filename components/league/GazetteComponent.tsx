@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { Heart, Trophy, Zap, User, ExternalLink } from "lucide-react";
+import { Heart, Trophy, Zap, User, ExternalLink, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { toggleLike } from "@/lib/actions/social";
 
@@ -40,6 +40,37 @@ export default function GazetteComponent({
         await toggleLike(itemId);
     }
 
+    const renderMessage = (item: any) => {
+        const sumChars = Array.from(item.id).reduce((acc: number, char: any) => acc + char.charCodeAt(0), 0);
+        
+        if (item.type === "LEVEL_UP") {
+            const msgs = [
+                `A grimpé au niveau ${item.level} ! Quelle ascension fulgurante. 🌲`,
+                `Niveau ${item.level} débloqué ! Il/Elle ne compte plus s'arrêter. 🚀`,
+                `Incroyable, niveau ${item.level} ! Les autres tremblent. 😰`,
+                `Ding ! Niveau ${item.level}. La légende s'écrit. 📜`
+            ];
+            return <strong>{msgs[sumChars % msgs.length]}</strong>;
+        } else if (item.type === "BADGE_LOST") {
+            const badgeName = `${item.badge?.icon || ''} ${item.badge?.name || ''}`;
+            const msgs = [
+                `S'est fait lâchement dérober le titre : ${badgeName} ! 💔`,
+                `Ateinte à la dignité ! Son record ${badgeName} a été battu. 🚨`,
+                `Coup dur... Le titre de ${badgeName} a changé de propriétaire sous son nez. 😭`
+            ];
+            return <span style={{ color: "#ef4444" }}><strong>{msgs[sumChars % msgs.length]}</strong></span>;
+        } else {
+            const badgeName = `${item.badge?.icon || ''} ${item.badge?.name || ''}`;
+            const msgs = [
+                `A fièrement décroché le titre : ${badgeName} ! 🏆`,
+                `C'est fait, le record ${badgeName} est à lui/elle ! 😎`,
+                `A obtenu ${badgeName}. Qui osera le/la défier ? ⚔️`,
+                `Bravo pour l'accomplissement majestueux : ${badgeName}. ✨`
+            ];
+            return <strong>{msgs[sumChars % msgs.length]}</strong>;
+        }
+    };
+
     return (
         <div className="gazette-container">
             <h3 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "1.5rem" }}>La Gazette & Live 📰</h3>
@@ -50,6 +81,8 @@ export default function GazetteComponent({
                         <div className="feed-icon">
                             {item.type === "LEVEL_UP" ? (
                                 <Zap size={18} color="var(--primary)" />
+                            ) : item.type === "BADGE_LOST" ? (
+                                <AlertTriangle size={18} color="#ef4444" />
                             ) : (
                                 <Trophy size={18} color="var(--accent)" />
                             )}
@@ -57,7 +90,7 @@ export default function GazetteComponent({
 
                         <div className="feed-content">
                             <div className="feed-header">
-                                <Link href="/profile" className="feed-user">
+                                <Link href={`/profile/${encodeURIComponent(item.user.nickname)}`} className="feed-user">
                                     @{item.user.nickname}
                                 </Link>
                                 <span className="feed-time">
@@ -66,11 +99,7 @@ export default function GazetteComponent({
                             </div>
 
                             <div className="feed-text">
-                                {item.type === "LEVEL_UP" ? (
-                                    <>A grimpé au niveau <strong>{item.level}</strong> ! 🌲</>
-                                ) : (
-                                    <>A remporté le badge <strong>{item.badge?.icon} {item.badge?.name}</strong></>
-                                )}
+                                {renderMessage(item)}
                             </div>
 
                             <div className="feed-actions">
@@ -102,6 +131,11 @@ export default function GazetteComponent({
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
+          max-height: 400px;
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: var(--primary) transparent;
+          padding-right: 6px;
         }
         .feed-card {
           display: flex;

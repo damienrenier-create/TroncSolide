@@ -209,8 +209,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
 
                         // Announce the theft
                         await tx.feedItem.create({
-                            data: { leagueId: user.leagueId, userId: oldUb.userId, type: "BADGE_WON", badgeId: badge.id } 
-                            // Using a feed item to notify loss could be an issue if there's no BADGE_LOST type. We reuse LEVEL_UP or just nothing.
+                            data: { leagueId: user.leagueId, userId: oldUb.userId, type: "BADGE_LOST", badgeId: badge.id } 
                         });
                     }
 

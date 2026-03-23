@@ -101,6 +101,17 @@ export async function getLeagueRecords(leagueId: string) {
     });
 }
 
+export async function getTop3AbsoluteRecords(leagueId: string) {
+    const exercises: ExerciseType[] = ["VENTRAL", "PUSHUP", "SQUAT", "LATERAL_L", "LATERAL_R"];
+    const results: Record<string, any[]> = {};
+    for (const ex of exercises) {
+        // Uses getLeagueRankings directly (session is verified inside)
+        const rankings = await getLeagueRankings(leagueId, ex, "SERIES", "YEAR");
+        results[ex] = rankings.slice(0, 3);
+    }
+    return results;
+}
+
 export async function syncAllRecordsForLeague(leagueId: string, exercise: ExerciseType) {
     const timeframes: RecordTimeframe[] = ["DAY", "WEEK", "MONTH", "YEAR"];
     const types: RecordType[] = ["SERIES", "VOLUME"];

@@ -6,6 +6,7 @@ import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import BadgeModal from "@/components/badges/BadgeModal";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import Link from "next/link";
 
 export default function PublicProfileClient({ profile }: { profile: any }) {
     const [selectedBadge, setSelectedBadge] = useState<any>(null);
@@ -61,11 +62,15 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
                     </div>
                 </div>
 
-                {/* 3 Stats Boxes */}
+                {/* 4 Stats Boxes */}
                 <div className="public-stats-grid">
                     <div className="public-stat-box">
                         <span className="stat-box-title">EXP TOTAL</span>
                         <div className="stat-box-value">{profile.totalXP} <span className="stat-box-unit">XP</span></div>
+                    </div>
+                    <div className="public-stat-box" style={{ background: "rgba(59, 130, 246, 0.1)", borderColor: "rgba(59, 130, 246, 0.3)" }}>
+                        <span className="stat-box-title" style={{ color: "#3b82f6" }}>REPS TOTALES</span>
+                        <div className="stat-box-value" style={{ color: "white" }}>{totalPompes + totalSquats} <span className="stat-box-unit">REPS</span></div>
                     </div>
                     <div className="public-stat-box">
                         <span className="stat-box-title">DISTINCTIONS</span>
@@ -176,6 +181,31 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
             </section>
 
             {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />}
+
+            {/* Floating Nav Bar */}
+            {profile.leagueContext && (
+                <div style={{ position: "fixed", bottom: "80px", left: "50%", transform: "translateX(-50%)", background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "100px", padding: "12px 24px", display: "flex", alignItems: "center", gap: "24px", zIndex: 100, boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }}>
+                    {(() => {
+                        const users = profile.leagueContext;
+                        const currentIndex = users.findIndex((u: any) => u.nickname.toLowerCase() === profile.nickname.toLowerCase());
+                        if (currentIndex === -1) return null;
+                        const prevUser = currentIndex > 0 ? users[currentIndex - 1] : users[users.length - 1];
+                        const nextUser = currentIndex < users.length - 1 ? users[currentIndex + 1] : users[0];
+                        
+                        return (
+                            <>
+                                <Link href={`/profile/${encodeURIComponent(prevUser.nickname)}`} style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
+                                    ← {prevUser.nickname}
+                                </Link>
+                                <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.2)" }}></div>
+                                <Link href={`/profile/${encodeURIComponent(nextUser.nickname)}`} style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
+                                    {nextUser.nickname} →
+                                </Link>
+                            </>
+                        );
+                    })()}
+                </div>
+            )}
 
             <style jsx>{`
                 /* Hero Card Styling */
