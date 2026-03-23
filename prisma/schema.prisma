@@ -92,6 +92,7 @@ model User {
   likesSent     Like[]
   feedItems     FeedItem[] @relation("FeedItemUser")
   messages      Message[]
+  messageLikes  MessageLike[]
   torchHolders  TorchHolder[]
 
   @@map("users")
@@ -254,8 +255,22 @@ model Message {
 
   league    League   @relation(fields: [leagueId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
+  likes     MessageLike[]
 
   @@map("messages")
+}
+
+model MessageLike {
+  id        String   @id @default(cuid())
+  userId    String
+  messageId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId])
+  @@map("message_likes")
 }
 
 model TorchHolder {

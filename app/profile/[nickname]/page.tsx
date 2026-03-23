@@ -4,14 +4,15 @@ import { redirect } from "next/navigation";
 import { getPublicProfile } from "@/lib/actions/profile";
 import PublicProfileClient from "@/components/profile/PublicProfileClient";
 
-export default async function PublicProfilePage({ params }: { params: { nickname: string } }) {
+export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
         redirect("/login");
     }
 
-    const decodedNickname = decodeURIComponent(params.nickname);
+    const awaitedParams = await params;
+    const decodedNickname = decodeURIComponent(awaitedParams.nickname);
     const profileData = await getPublicProfile(decodedNickname);
 
     if (!profileData) {

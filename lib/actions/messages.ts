@@ -31,8 +31,41 @@ export async function getRecentMessages(leagueId: string) {
         where: { leagueId },
         orderBy: { createdAt: 'desc' },
         take: 30,
-        include: { user: { select: { nickname: true } } }
+        include: { 
+            user: { select: { nickname: true } },
+            likes: { select: { userId: true } }
+        }
     });
 
     return messages;
+}
+
+export async function toggleMessageLike(messageId: string) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return { error: "Non autorisé" };
+
+    const existingLike = await prisma.messageLike.findUnique({
+        where: {
+            userId_messageId: {
+                userId: session.user.id,
+                messageId: messageId
+            }
+        }
+    });
+
+    if (existingLike) {
+        await prisma.messageLike.delete({
+            where: { id: existingLike.id }
+        });
+    } else {
+        await prisma.messageLike.create({
+            data: {
+                userId: session.user.id,
+                messageId: messageId
+            }
+        });
+    }
+
+    revalidatePath("/square");
+    return { success: true };
 }

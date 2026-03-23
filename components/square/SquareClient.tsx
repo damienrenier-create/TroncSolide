@@ -1,12 +1,15 @@
 "use client"
-import { useState } from "react";
-import { postMessage } from "@/lib/actions/messages";
-import { Megaphone, Shield, Flame, Flag, Clock } from "lucide-react";
+import { useState, useTransition } from "react";
+import { postMessage, toggleMessageLike } from "@/lib/actions/messages";
+import { Megaphone, Shield, Flame, Flag, Clock, Heart, Zap, Rocket } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function SquareClient({ league, torch, messages, activeEvent, dailyTarget, currentUser }: any) {
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
+    const [optimisticLikes, setOptimisticLikes] = useState<Record<string, { count: number, hasLiked: boolean }>>({});
+    const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
     async function handlePost() {
@@ -20,6 +23,33 @@ export default function SquareClient({ league, torch, messages, activeEvent, dai
             alert(res.error);
         }
         setLoading(false);
+    }
+
+    function handleToggleLike(msg: any) {
+        const currentCount = optimisticLikes[msg.id]?.count ?? msg.likes?.length ?? 0;
+        const currentHasLiked = optimisticLikes[msg.id]?.hasLiked ?? (msg.likes?.some((l: any) => l.userId === currentUser.id) || false);
+
+        // Optimistic update
+        setOptimisticLikes(prev => ({
+            ...prev,
+            [msg.id]: {
+                count: currentHasLiked ? currentCount - 1 : currentCount + 1,
+                hasLiked: !currentHasLiked
+            }
+        }));
+
+        startTransition(async () => {
+            await toggleMessageLike(msg.id);
+            // We don't necessarily need to refresh routing immediately as local state handles the view
+        });
+    }
+
+    function getLikeIcon(count: number, hasLiked: boolean) {
+        if (count === 0) return <Heart size={16} color={hasLiked ? "#ef4444" : "var(--text-muted)"} strokeWidth={hasLiked ? 3 : 2} />;
+        if (count <= 2) return <Heart size={16} fill="#ef4444" color="#ef4444" />;
+        if (count <= 4) return <Flame size={16} fill="#f97316" color="#f97316" />;
+        if (count <= 9) return <Zap size={16} fill="#fbbf24" color="#fbbf24" />;
+        return <Rocket size={16} fill="#a855f7" color="#a855f7" style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.5))" }} />;
     }
 
     return (
@@ -155,15 +185,47 @@ export default function SquareClient({ league, torch, messages, activeEvent, dai
                                     {msg.user.nickname.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <div style={{ fontWeight: 800, fontSize: "0.85rem", textTransform: "uppercase" }}>{msg.user.nickname}</div>
+                                    <div style={{ fontWeight: 800, fontSize: "0.85rem", textTransform: "uppercase" }}>
+                                        <Link href={`/profile/${encodeURIComponent(msg.user.nickname)}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                                            {msg.user.nickname}
+                                        </Link>
+                                    </div>
                                     <div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>
                                         {new Date(msg.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' })}
                                     </div>
                                 </div>
                             </div>
-                            <p style={{ fontSize: "0.85rem", color: "var(--foreground)", lineHeight: 1.5 }}>
+                            <p style={{ fontSize: "0.85rem", color: "var(--foreground)", lineHeight: 1.5, marginBottom: "0.75rem" }}>
                                 {msg.content}
                             </p>
+                            
+                            {/* NEW LIKE BUTTON */}
+                            {(() => {
+                                const currentCount = optimisticLikes[msg.id]?.count ?? msg.likes?.length ?? 0;
+                                const currentHasLiked = optimisticLikes[msg.id]?.hasLiked ?? (msg.likes?.some((l: any) => l.userId === currentUser.id) || false);
+                                
+                                return (
+                                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "4px" }}>
+                                        <button 
+                                            onClick={() => handleToggleLike(msg)}
+                                            style={{
+                                                display: "flex", alignItems: "center", gap: "6px",
+                                                background: currentHasLiked ? "rgba(239, 68, 68, 0.1)" : "rgba(0,0,0,0.03)",
+                                                border: "none", cursor: "pointer",
+                                                padding: "6px 12px", borderRadius: "20px",
+                                                transition: "all 0.2s ease"
+                                            }}
+                                        >
+                                            {getLikeIcon(currentCount, currentHasLiked)}
+                                            {currentCount > 0 && (
+                                                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: currentCount >= 10 ? "#a855f7" : currentCount >= 5 ? "#fbbf24" : currentCount >= 3 ? "#f97316" : currentHasLiked ? "#ef4444" : "var(--text-muted)" }}>
+                                                    {currentCount}
+                                                </span>
+                                            )}
+                                        </button>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     ))
                 )}
