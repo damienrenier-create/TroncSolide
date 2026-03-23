@@ -4,7 +4,7 @@ import { useState } from "react";
 import { logBatchExercises } from "@/lib/actions/exercise";
 import { format, subDays, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Plus, Minus, Check, MessageSquare } from "lucide-react";
+import { Plus, Minus, Check, MessageSquare, ShieldAlert } from "lucide-react";
 import { ExerciseType } from "@prisma/client";
 
 const EXERCISES = [
@@ -15,11 +15,24 @@ const EXERCISES = [
     { type: "LATERAL_R" as ExerciseType, label: "Gainage Latéral D", unit: "s", icon: "👉" },
 ];
 
+const THRESHOLDS: Record<string, number> = {
+    PUSHUP: 100,
+    SQUAT: 200,
+    VENTRAL: 600,
+    LATERAL_L: 600,
+    LATERAL_R: 600,
+    PULLUP: 40,
+    RUNNING: 120,
+    STRETCHING: 1800
+};
+
 export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [mood, setMood] = useState("");
+    const [showHonorModal, setShowHonorModal] = useState(false);
+    const [isHonorSworn, setIsHonorSworn] = useState(false);
     const [values, setValues] = useState<Record<string, number[]>>({
         PUSHUP: [0],
         SQUAT: [0],
@@ -31,10 +44,13 @@ export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void
     const dates = [0, 1, 2, 3].map(d => subDays(new Date(), d));
 
     const addSet = (type: string) => {
-        setValues(prev => ({
-            ...prev,
-            [type]: [...prev[type], 0]
-        }));
+        setValues(prev => {
+            const lastValue = prev[type][prev[type].length - 1] || 0;
+            return {
+                ...prev,
+                [type]: [...prev[type], lastValue]
+            };
+        });
     };
 
     const removeSet = (type: string, index: number) => {
@@ -81,6 +97,14 @@ export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void
 
         if (payload.length === 0) {
             setError("Ajoute au moins une série !");
+            setLoading(false);
+            return;
+        }
+
+        // Check thresholds
+        const hasSusValue = payload.some(ex => ex.value >= (THRESHOLDS[ex.type] || 999999));
+        if (hasSusValue && !isHonorSworn) {
+            setShowHonorModal(true);
             setLoading(false);
             return;
         }
@@ -190,6 +214,42 @@ export default function ExerciseBatchForm({ onSuccess }: { onSuccess: () => void
             >
                 {loading ? "Enregistrement..." : <>VALIDER LA SÉANCE</>}
             </button>
+
+            {/* Honor Modal */}
+            {showHonorModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1.5rem" }}>
+                    <div className="glass-premium" style={{ maxWidth: "400px", background: "white", padding: "2rem", borderRadius: "32px", textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}>
+                        <div style={{ width: "64px", height: "64px", background: "var(--primary-light)", color: "var(--primary)", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
+                            <ShieldAlert size={32} />
+                        </div>
+                        <h3 style={{ fontSize: "1.25rem", fontWeight: 900, marginBottom: "1rem" }}>Performance Herculéenne ?</h3>
+                        <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "2rem", fontWeight: 600, lineHeight: 1.5 }}>
+                            Tu as saisi des valeurs qui semblent hors du commun. Vérifie tes données pour éviter de fausser les records de la ligue.
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <button 
+                                onClick={() => {
+                                    setIsHonorSworn(true);
+                                    setShowHonorModal(false);
+                                    // Trigger submit again after swearing
+                                    setTimeout(() => handleSubmit(), 100);
+                                }}
+                                className="btn-primary"
+                                style={{ width: "100%", padding: "1rem", borderRadius: "16px", fontWeight: 900 }}
+                            >
+                                Je jure sur l'honneur ✋
+                            </button>
+                            <button 
+                                onClick={() => setShowHonorModal(false)}
+                                className="btn-ghost"
+                                style={{ fontWeight: 700 }}
+                            >
+                                Je vérifie mes chiffres
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

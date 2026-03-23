@@ -66,6 +66,11 @@ export default async function FAQPage() {
             icon: <TrendingUp size={20} className="text-secondary" />
         },
         {
+            q: "La Vérification d'Honneur ✋",
+            a: "Si tu saisis une performance qui semble hors-norme (ex: +100 pompes en une série), le système te demandera de 'jurer sur l'honneur'. C'est une sécurité pour éviter les erreurs de frappe et garder les records crédibles.",
+            icon: <Shield size={20} className="text-secondary" />
+        },
+        {
             q: "Le Carnet d'Entraînement 📖",
             a: "Ton carnet personnel recense l'ensemble de tes activités, jour par jour. Tu peux y accéder via le Dashboard pour voir le détail de tes reps, tes durées de course ou d'étirement, ainsi que tes humeurs du jour.",
             icon: <Calendar size={20} className="text-secondary" />
