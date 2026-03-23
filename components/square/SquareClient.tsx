@@ -135,7 +135,7 @@ export default function SquareClient({ league, torch, messages, activeEvent, dai
                 <textarea
                     value={content}
                     onChange={e => setContent(e.target.value)}
-                    placeholder={`Quoi de neuf ${currentUser.nickname} ?...`}
+                    placeholder={`Quoi de neuf ${currentUser.nickname || currentUser.name || "Champion"} ?...`}
                     maxLength={240}
                     style={{
                         width: "100%", background: "transparent", border: "none", color: "var(--foreground)", 
