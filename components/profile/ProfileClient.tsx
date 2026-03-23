@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { submitMedicalCertificate, exitCagnotte } from "@/lib/actions/economy";
 import { signOut, useSession } from "next-auth/react";
-import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info, HelpCircle } from "lucide-react";
+import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info, HelpCircle, BarChart2 } from "lucide-react";
 import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
@@ -41,10 +41,15 @@ export default function ProfileClient({ user }: { user: any }) {
                     <span>Niveau {levelInfo.level} : {levelInfo.name}</span>
                 </div>
                 
-                <div style={{ marginTop: "1rem", display: "flex", gap: "10px", justifyContent: "center" }}>
-                    <Link href="/faq" style={{ background: "rgba(255,255,255,0.05)", padding: "6px 16px", borderRadius: "100px", fontSize: "0.75rem", fontWeight: "800", color: "var(--foreground)", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
-                        <HelpCircle size={14} /> LIRE LA FAQ DE JEU
-                    </Link>
+                <div style={{ marginTop: "1rem" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "1.5rem" }}>
+                        <Link href="/stats" className="btn-primary" style={{ background: "var(--foreground)", padding: "0.85rem", fontSize: "0.9rem" }}>
+                            <BarChart2 size={18} /> Stats Précises
+                        </Link>
+                        <Link href="/badges" className="btn-primary" style={{ background: "linear-gradient(135deg, #10b981, #059669)", padding: "0.85rem", fontSize: "0.9rem" }}>
+                            <Award size={18} /> Tout le Palmarès
+                        </Link>
+                    </div>
                 </div>
             </header>
 

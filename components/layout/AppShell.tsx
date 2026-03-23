@@ -3,6 +3,8 @@
 import { useSession } from "next-auth/react";
 import BottomNav from "./BottomNav";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { HelpCircle, User } from "lucide-react";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -27,9 +29,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="app-shell">
             <header className="app-header glass">
                 <div className="container header-content">
-                    <h1 className="logo">Tronc <span>Solide 🌳</span></h1>
-                    <div className="user-badge-top">
-                        {session?.user?.name || session?.user?.email?.split('@')[0]}
+                    <Link href="/" className="logo">Tronc <span>Solide 🌳</span></Link>
+                    
+                    <div className="header-actions">
+                        <Link href="/faq" className="header-icon-btn">
+                            <HelpCircle size={22} />
+                        </Link>
+                        <Link href="/profile" className="header-user-btn">
+                            <User size={18} />
+                            <span className="header-user-name">
+                                {session?.user?.name || session?.user?.email?.split('@')[0]}
+                            </span>
+                        </Link>
                     </div>
                 </div>
             </header>

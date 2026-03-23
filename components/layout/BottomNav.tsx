@@ -2,15 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Trophy, BarChart2, User, Award, Megaphone } from "lucide-react";
+import { Home, Trophy, Megaphone } from "lucide-react";
 
 const navItems = [
     { label: "Home", href: "/", icon: Home },
     { label: "Ligue", href: "/league", icon: Trophy },
-    { label: "Stats", href: "/stats", icon: BarChart2 },
     { label: "La Place", href: "/square", icon: Megaphone },
-    { label: "Palmarès", href: "/badges", icon: Award },
-    { label: "Compte", href: "/profile", icon: User },
 ];
 
 export default function BottomNav() {
@@ -29,7 +26,7 @@ export default function BottomNav() {
                             href={item.href}
                             className={`nav-item ${isActive ? 'active' : ''}`}
                         >
-                            <Icon size={24} />
+                            <Icon size={26} strokeWidth={isActive ? 2.5 : 2} />
                             <span className="nav-label">{item.label}</span>
                         </Link>
                     );
