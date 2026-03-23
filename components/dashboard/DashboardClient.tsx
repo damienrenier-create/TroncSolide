@@ -42,8 +42,36 @@ export default function DashboardClient({
         localStorage.setItem("seenLostBadges", JSON.stringify([...seen, id]));
     };
 
-    const progressPercent = Math.min((initialProgress / initialTarget) * 100, 100);
+    const actualPercent = Math.round((initialProgress / initialTarget) * 100);
+    const progressPercent = Math.min(actualPercent, 100);
     const isGoalReached = initialProgress >= initialTarget;
+
+    let circleColor = "var(--primary)";
+    let reactionTitle = "OBJECTIF ATTEINT ! 🏆";
+    let reactionSub = `${actualPercent}% de l'objectif 🔥`;
+    let reactionColor = "var(--secondary)";
+
+    if (actualPercent >= 1000) {
+        circleColor = "#ef4444"; // Red
+        reactionTitle = "LÉGENDE VIVANTE ! 👑";
+        reactionSub = `${actualPercent}% de l'objectif 🌌`;
+        reactionColor = "#ef4444";
+    } else if (actualPercent >= 500) {
+        circleColor = "#8b5cf6"; // Purple
+        reactionTitle = "MODE DIVIN ACTIVÉ ! ⚡";
+        reactionSub = `${actualPercent}% de l'objectif 🌋`;
+        reactionColor = "#8b5cf6";
+    } else if (actualPercent >= 200) {
+        circleColor = "#3b82f6"; // Blue
+        reactionTitle = "OBJECTIF PULVÉRISÉ ! 🚀";
+        reactionSub = `${actualPercent}% de l'objectif 💎`;
+        reactionColor = "#3b82f6";
+    } else if (actualPercent >= 100) {
+        circleColor = "var(--secondary)"; // Green
+        reactionTitle = "OBJECTIF ATTEINT ! 🏆";
+        reactionSub = `${actualPercent}% de l'objectif 🔥`;
+        reactionColor = "var(--secondary)";
+    }
     const isEligible = stats.cagnotteProgress.isEligible && stats.inCagnotte;
 
     const levelInfo = getLevelInfo(stats.totalXP);
@@ -104,9 +132,9 @@ export default function DashboardClient({
                     <svg style={{ position: "absolute", width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
                         <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="12" />
                         <circle
-                            cx="110" cy="110" r="100" fill="none" stroke="var(--primary)" strokeWidth="12"
+                            cx="110" cy="110" r="100" fill="none" stroke={circleColor} strokeWidth="12"
                             strokeDasharray="628" strokeDashoffset={628 - (628 * progressPercent) / 100}
-                            strokeLinecap="round" style={{ transition: "stroke-dashoffset 1.5s ease-in-out" }}
+                            strokeLinecap="round" style={{ transition: "stroke-dashoffset 1.5s ease-in-out, stroke 0.5s ease" }}
                         />
                     </svg>
 
@@ -117,8 +145,13 @@ export default function DashboardClient({
                 </div>
 
                 {isGoalReached && (
-                    <div className="goal-reached" style={{ marginTop: "1.5rem", color: "var(--secondary)", fontWeight: 800 }}>
-                        OBJECTIF ATTEINT ! 🏆
+                    <div className="goal-reached" style={{ marginTop: "1.5rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "6px", animation: "slideDown 0.3s ease-out" }}>
+                        <div style={{ color: reactionColor, fontWeight: 900, fontSize: "1.15rem", textTransform: "uppercase", letterSpacing: "1px", filter: `drop-shadow(0 2px 8px ${reactionColor}40)` }}>
+                            {reactionTitle}
+                        </div>
+                        <div style={{ color: "var(--foreground)", fontWeight: 800, fontSize: "0.9rem", opacity: 0.9 }}>
+                            {reactionSub}
+                        </div>
                     </div>
                 )}
 
