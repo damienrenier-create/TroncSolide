@@ -65,38 +65,27 @@ export default async function FAQPage() {
     const faqItems = [
         {
             q: "Le Voleur de Record 🦹‍♂️",
-            a: "Les Trophées de Record (ex: Champion du Mois) te versent une rente quotidienne de 1% de leur valeur. Mais si quelqu'un bat ton record, il TE VOLE TON TROPHÉE et on te retire TOUT LE SALAIRE que tu avais accumulé !",
-            icon: <Shield size={20} className="text-accent" />
+            a: "Les Trophées de Record (ex : Champion du Jour) te versent une rente quotidienne de 1% de leur valeur. Mais attention : si quelqu'un bat ton record, il TE VOLE TON TROPHÉE et on te retire TOUT L'XP que tu avais accumulé avec cette rente ! Ton trône n'est jamais acquis.",
+            icon: <Shield size={20} className="text-accent" />,
+            id: "voleur"
         },
         {
             q: "Les Tiers de Périodicité (Or, Argent..)",
-            a: "Être le tout premier de ta ligue à atteindre 5000 pompes globales te donne le badge Platine (100% du bonus final). Le 2ème aura l'Or (80%), et ainsi de suite jusqu'à l'Argile ! Il ne faut surtout pas traîner.",
-            icon: <TrendingUp size={20} className="text-secondary" />
-        },
-        {
-            q: "La Vérification d'Honneur ✋",
-            a: "Si tu saisis une performance qui semble hors-norme (ex: +100 pompes en une série), le système te demandera de 'jurer sur l'honneur'. C'est une sécurité pour éviter les erreurs de frappe et garder les records crédibles.",
-            icon: <Shield size={20} className="text-secondary" />
+            a: "Être le tout premier de ta ligue à atteindre un JALON (ex : 100 pompes cumulées, 5000 squats ou 5min de gainage d'une traite) te donne le badge Platine (100% du bonus final). Le 2ème aura l'Or (80%), et ainsi de suite jusqu'à l'Argile ! Il ne faut surtout pas traîner.",
+            icon: <TrendingUp size={20} className="text-secondary" />,
+            id: "tiers"
         },
         {
             q: "Le Carnet d'Entraînement 📖",
             a: "Ton carnet personnel recense l'ensemble de tes activités, jour par jour. Tu peux y accéder via le Dashboard pour voir le détail de tes reps, tes durées de course ou d'étirement, ainsi que tes humeurs du jour.",
-            icon: <Calendar size={20} className="text-secondary" />
+            icon: <Calendar size={20} className="text-secondary" />,
+            id: "carnet"
         },
         {
-            q: "Pour en faire plus ✨",
-            a: "Cette section te permet de loguer des tractions, de la course à pied ou des étirements. Pour l'instant, ces exercices ne rapportent pas d'XP et n'ont pas de badges dédiés, ils servent uniquement à ton suivi personnel.",
-            icon: <Star size={20} className="text-primary" />
-        },
-        {
-            q: "Le Duel d'Anniversaire 🎂",
-            a: "Lors de l'anniversaire d'un membre, la ligue entre en mode 'Duel'. Si la star finit la journée avec le plus de reps, elle gagne un badge royal et ses XP du jour sont multipliés par 5 ! Mais si un autre membre la bat, ce chasseur gagne un badge et voit ses XP multipliés par 3. La star, elle, garde un bonus de 1.5x.",
-            icon: <Award size={20} className="text-accent" />
-        },
-        {
-            q: "La Cagnotte & L'Objectif Quotidien 💰",
-            a: "Pour maintenir l'assiduité, un objectif de répétitions (ou secondes) est fixé chaque jour (1 de plus que la veille). Tu n'entres dans la 'Cagnotte' qu'après avoir réussi une première série de 21 jours consécutifs. Une fois dedans, chaque jour manqué te coûte 2€ pour le pot commun. Tous les exercices (Pompes, Squats, Gainage) comptent pour valider ton objectif !",
-            icon: <Zap size={20} className="text-primary" />
+            q: "La Cagnotte & L'Infirmerie 💰",
+            a: "L'objectif quotidien augmente de 1 par jour. Pas d'excuses, tous les exercices comptent ! Si tu es blessé ou empêché, l'Infirmerie te permet de poser un certificat médical pour protéger ta série et ton portefeuille (2€ d'amende après 21j de streak).",
+            icon: <Shield size={20} className="text-primary" />,
+            id: "cagnotte-rules"
         }
     ];
 

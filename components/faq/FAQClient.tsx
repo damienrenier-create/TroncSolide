@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { BookOpen, HelpCircle, ShieldAlert, Trophy, Award, Zap, Calendar } from "lucide-react";
+import { BookOpen, HelpCircle, ShieldAlert, Trophy, Award, Zap, Calendar, TrendingUp } from "lucide-react";
 import { NATURE_LEVELS } from "@/lib/constants/levels";
 import BadgeCatalogueClient from "@/components/badges/BadgeCatalogueClient";
 
@@ -69,39 +69,43 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                 ))}
             </div>
 
-            {/* TAB CONTENT: RULES */}
+            {/* TAB CONTENT: RULES (LE MANUEL) */}
             {activeTab === "rules" && (
-                <div style={{ animation: "fadeIn 0.3s ease-out" }}>
+                <div style={{ animation: "fadeIn 0.3s ease-out", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                    
+                    {/* A. Concept Principal */}
                     <section className="glass" id="concept" style={{ padding: "1.5rem" }}>
-                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
-                            <HelpCircle size={20} className="text-primary" />
-                            Le Concept & La Salle
+                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>A. LE CONCEPT PRINCIPAL</div>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <HelpCircle size={22} className="text-primary" />
+                            Le Défi Quotidien
                         </h2>
-                        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem", lineHeight: 1.6 }}>
                             <p><strong>Tronc Solide</strong> est un défi communautaire de gainage quotidien. Le but ultime ? Ne jamais rompre la chaîne et persévérer quoi qu'il arrive.</p>
-                            <p>Chaque jour, un objectif en secondes t'est assigné. Tu dois le réaliser en une ou plusieurs fois, et surtout le <strong>loguer obligatoirement</strong> dans La Place avant minuit pour qu'il soit comptabilisé.</p>
-                            <div className="glass-premium" style={{ padding: "1rem", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", marginTop: "0.5rem" }}>
-                                <div style={{ fontWeight: 800, color: "var(--foreground)", marginBottom: "4px" }}>💡 À Savoir :</div>
-                                <p style={{ fontSize: "0.75rem" }}>La difficulté augmente de <strong>1 seconde par jour</strong>. C'est l'essence même de la progression lente mais inéluctable du Tronc.</p>
+                            <p>Chaque jour, un objectif t’est assigné. Tu dois le réaliser en une ou plusieurs fois, sur le même exercice ou sur plusieurs (Pompes, Squats, Gainage), mais surtout le <strong>loguer obligatoirement</strong> sur la page principale avant minuit pour qu'il soit comptabilisé.</p>
+                            <div className="glass-premium" style={{ padding: "1.25rem", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)", marginTop: "0.5rem" }}>
+                                <div style={{ fontWeight: 900, color: "var(--foreground)", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <Zap size={16} className="text-primary" /> 💡 À Savoir :
+                                </div>
+                                <p style={{ fontSize: "0.80rem" }}>La difficulté augmente de <strong>1 seconde ou répétition par jour</strong>. C'est l'essence même de la progression lente mais inéluctable du Tronc.</p>
                             </div>
                         </div>
                     </section>
 
-                    <section className="glass" id="regles" style={{ padding: "1.5rem", marginTop: "1rem" }}>
-                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
-                            <Zap size={20} className="text-primary" />
-                            Questions Fréquentes & Règles d'Expert
+                    {/* B. XP et Niveau */}
+                    <section className="glass" id="niveaux-info" style={{ padding: "1.5rem" }}>
+                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>B. LES XP ET LE NIVEAU</div>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <TrendingUp size={22} className="text-secondary" />
+                            Le Concept Fun (mais secondaire)
                         </h2>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
-                            {faqItems.map((item: any, i: number) => (
-                                <div key={i} style={{ padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "16px" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                                        <div style={{ padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px" }}>{item.icon}</div>
-                                        <h4 style={{ fontSize: "0.9rem", fontWeight: 800 }}>{item.q}</h4>
-                                    </div>
-                                    <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.5 }}>{item.a}</p>
-                                </div>
-                            ))}
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem", lineHeight: 1.6 }}>
+                            <p>Les <a href="#niveaux" onClick={(e) => { e.preventDefault(); setActiveTab("progression"); }} style={{ color: "var(--secondary)", fontWeight: 800, textDecoration: "underline" }}>niveaux</a> sont un jeu dans l’application pour stimuler les utilisateurs. La base des niveaux se fait avec des XP qui sont gagnés à chaque répétition :</p>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                                <div className="glass-premium" style={{ padding: "0.75rem", borderRadius: "12px", textAlign: "center", fontWeight: 800, fontSize: "0.8rem" }}>1 Squat / Pompe = 1 XP</div>
+                                <div className="glass-premium" style={{ padding: "0.75rem", borderRadius: "12px", textAlign: "center", fontWeight: 800, fontSize: "0.8rem" }}>1 Seconde Gainage = 1 XP</div>
+                            </div>
+                            <p>Comme dans tout jeu, il existe des raccourcis pour gagner des XP supplémentaires : en étant <a href="#jalons" onClick={(e) => { e.preventDefault(); setActiveTab("badges"); }} style={{ color: "var(--primary)", fontWeight: 800 }}>constant</a>, en établissant des <a href="#voleur" style={{ color: "var(--accent)", fontWeight: 800 }}>records</a>, ou via des défis spéciaux. Ces victoires s'accompagnent souvent de badges prestigieux.</p>
                         </div>
                     </section>
 
