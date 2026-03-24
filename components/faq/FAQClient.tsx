@@ -244,56 +244,65 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
 
             {/* TAB CONTENT: TROPHÉES & BADGES */}
             {activeTab === "badges" && (
-                <div style={{ animation: "fadeIn 0.3s ease-out" }}>
-                    <section className="glass" id="jalons" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
-                            <Trophy size={20} className="text-primary" />
-                            Jalons & Séries (La Constance pure)
+                <div style={{ animation: "fadeIn 0.3s ease-out", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                    
+                    {/* 1. Trophées Périodiques & Records (La Bataille Sanglante) */}
+                    <section className="glass" id="periodiques" style={{ padding: "1.5rem" }}>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <Award size={22} className="text-primary" />
+                            Trophées Périodiques
                         </h2>
-                        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                            <p>Celui qui ne rompt jamais la chaîne est grassement récompensé. Des Badges de Jalon exclusifs existent pour témoigner de ta volonté de fer, offrant au passage d'importants bonus forfaitaires d'XP qui te catapulteront dans le classement.</p>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "0.5rem" }}>
-                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
-                                    <span style={{ fontSize: "1.5rem" }}>🥉</span>
-                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>7 Jours</div>
-                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#b45309" }}>+200 XP</div>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <p style={{ lineHeight: 1.6 }}>
+                                Attention, terrain miné ! Les trophées <strong>Champion de la Semaine</strong> et <strong>Champion du Mois</strong> ne sont pas des acquis. Ils sont remis en jeu à la fin de chaque période au joueur ayant le plus grand volume (Pompes + Squats).
+                            </p>
+                            <div className="glass-premium" style={{ padding: "1.25rem", borderRadius: "16px", border: "1px solid rgba(245, 158, 11, 0.1)" }}>
+                                <div style={{ fontWeight: 900, color: "var(--accent)", marginBottom: "6px" }}>👑 Le Salaire du Roi</div>
+                                <p style={{ fontSize: "0.8rem" }}>Tant que tu possèdes un Trophée, il te rapporte une <strong>rente quotidienne en XP</strong>. Mais si quelqu'un te le vole, tu perds toute la rente accumulée !</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* 2. Jalons & Séries (La Constance pure) */}
+                    <section className="glass" id="jalons" style={{ padding: "1.5rem" }}>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+                            <Trophy size={22} className="text-secondary" />
+                            Jalons & Séries
+                        </h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <p>Celui qui ne rompt jamais la chaîne est grassement récompensé. Des bonus massifs d'XP te propulsent dans le classement :</p>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                                <div className="glass-premium" style={{ padding: "1rem", borderRadius: "16px", textAlign: "center" }}>
+                                    <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>🥉</div>
+                                    <div style={{ fontWeight: 900, color: "var(--foreground)" }}>7 Jours</div>
+                                    <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)" }}>+200 XP</div>
                                 </div>
-                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
-                                    <span style={{ fontSize: "1.5rem" }}>🥈</span>
-                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>30 Jours</div>
-                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#94a3b8" }}>+500 XP</div>
+                                <div className="glass-premium" style={{ padding: "1rem", borderRadius: "16px", textAlign: "center" }}>
+                                    <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>🥈</div>
+                                    <div style={{ fontWeight: 900, color: "var(--foreground)" }}>30 Jours</div>
+                                    <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)" }}>+500 XP</div>
                                 </div>
-                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
-                                    <span style={{ fontSize: "1.5rem" }}>🥇</span>
-                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>100 Jours</div>
-                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#eab308" }}>+1,000 XP</div>
+                                <div className="glass-premium" style={{ padding: "1rem", borderRadius: "16px", textAlign: "center" }}>
+                                    <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>🥇</div>
+                                    <div style={{ fontWeight: 900, color: "var(--foreground)" }}>100 Jours</div>
+                                    <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)" }}>+1,000 XP</div>
                                 </div>
-                                <div style={{ background: "rgba(255,255,255,0.03)", padding: "10px", borderRadius: "12px", textAlign: "center", border: "1px solid rgba(0,0,0,0.05)" }}>
-                                    <span style={{ fontSize: "1.5rem" }}>💎</span>
-                                    <div style={{ fontWeight: "800", margin: "4px 0", color: "var(--foreground)" }}>365 Jours</div>
-                                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#06b6d4" }}>+5,000 XP</div>
+                                <div className="glass-premium" style={{ padding: "1rem", borderRadius: "16px", textAlign: "center" }}>
+                                    <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>💎</div>
+                                    <div style={{ fontWeight: 900, color: "var(--foreground)" }}>365 Jours</div>
+                                    <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)" }}>+5,000 XP</div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <section className="glass" id="periodiques" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
-                        <h3 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "var(--primary)" }}>
-                            <Award size={20} />
-                            Trophées Périodiques (Bataille Sanglante)
-                        </h3>
-                        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
-                            Attention, terrain miné ! Les trophées <strong>Champion de la Semaine</strong> et <strong>Champion du Mois</strong> ne sont pas des acquis. Ils sont décernés et remis en jeu à la fin de chaque période ! Ils reviennent de droit au joueur ayant accumulé le plus grand volume d'entraînement total (Pompes + Squats confondus) durant ladite période.<br/><br/>Tant que tu possèdes un Trophée, il te rapporte de l'expertise quotidiennement (le "Salaire du Roi"). Mais **si quelqu'un te le vole**, il te dépouille par la même occasion de la rente que tu étais censé toucher ! Ton trône n'est jamais acquis.
-                        </p>
-                    </section>
-
-                    {/* Catalogue des Badges Complet */}
-                    <div id="badges" style={{ animation: "fadeIn 0.5s ease-out" }}>
+                    {/* 3. Catalogue complet */}
+                    <div id="badges-list" style={{ marginTop: "1rem" }}>
                         {badges ? (
                             <BadgeCatalogueClient groups={groups} faqItems={faqItems} />
                         ) : (
                             <div className="glass" style={{ textAlign: "center", padding: "3rem 2rem", borderRadius: "20px" }}>
-                                <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", fontWeight: "800" }}>Connecte-toi pour explorer l'encyclopédie des hauts faits secrets et publics de ta ligue.</div>
+                                <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", fontWeight: "800" }}>Connecte-toi pour explorer l'encyclopédie des hauts faits.</div>
                             </div>
                         )}
                     </div>

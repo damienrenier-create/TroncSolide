@@ -15,18 +15,7 @@ export default function BadgeCatalogueClient({ groups, faqItems }: { groups: any
     };
 
     return (
-        <div className="container" style={{ paddingBottom: "120px" }}>
-            <header style={{ textAlign: "center", padding: "3rem 0 2rem" }}>
-                <div style={{ display: "inline-flex", padding: "0.5rem 1rem", background: "rgba(217, 119, 6, 0.1)", borderRadius: "20px", color: "var(--primary)", fontSize: "0.75rem", fontWeight: "900", marginBottom: "1rem", letterSpacing: "0.1em" }}>
-                    RÈGLES & RÉCOMPENSES
-                </div>
-                <h2 style={{ fontSize: "2.5rem", fontWeight: "900", color: "var(--foreground)" }}>Badges & FAQ</h2>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", maxWidth: "450px", margin: "0.5rem auto", fontWeight: "500" }}>
-                    Découvre tous les exploits possibles et les secrets pour devenir un véritable Tronc Solide.
-                </p>
-            </header>
-
-            <div style={{ width: "100%", height: "1px", background: "linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent)", marginBottom: "3rem" }} />
+        <div style={{ width: "100%" }}>
 
             {/* BADGES GROUPS - Accordions */}
             {groups.map((group, idx) => group.items.length > 0 && (
