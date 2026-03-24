@@ -108,15 +108,52 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                             <p>Comme dans tout jeu, il existe des raccourcis pour gagner des XP supplémentaires : en étant <a href="#jalons" onClick={(e) => { e.preventDefault(); setActiveTab("badges"); }} style={{ color: "var(--primary)", fontWeight: 800 }}>constant</a>, en établissant des <a href="#voleur" style={{ color: "var(--accent)", fontWeight: 800 }}>records</a>, ou via des défis spéciaux. Ces victoires s'accompagnent souvent de badges prestigieux.</p>
                         </div>
                     </section>
-
-                    <section className="glass" id="cagnotte" style={{ padding: "1.5rem", marginTop: "1rem" }}>
-                        <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "#ef4444" }}>
-                            <ShieldAlert size={20} />
-                            La Cagnotte & L'Infirmerie
+                    <section className="glass" id="expert" style={{ padding: "1.5rem" }}>
+                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>B bis. QUESTIONS FRÉQUENTES & RÈGLES D'EXPERT</div>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
+                            <Trophy size={22} className="text-accent" />
+                            Mécaniques Avancées
                         </h2>
-                        <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                            <p>C'est l'outil de dissuasion radical. Si tu es inscrit dans le pot de cagnotte (participation optionnelle), <strong>chaque jour manqué ou oublié te coûte exactement 2€</strong> d’amende incontestable.</p>
-                            <p>Tu es blessé, malade, ou dans l'impossibilité physique de participer ? Aucun problème, le but n'est pas de se détruire. Déclare tes dates en avance dans la rubrique <strong>Certificats Médicaux</strong> de ton Profil privé. Les jours couverts par la durée de ton repos seront validés automatiquement dans le système (ils te rapporteront 0 XP, mais te sauveront de la moindre amende ou de la casse de ta série).</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                            {faqItems.map((item: any, i: number) => (
+                                <div key={i} id={item.id} style={{ padding: "1.25rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "20px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+                                        <div style={{ padding: "10px", background: "rgba(255,255,255,0.05)", borderRadius: "12px" }}>{item.icon}</div>
+                                        <h4 style={{ fontSize: "1rem", fontWeight: 900 }}>{item.q}</h4>
+                                    </div>
+                                    <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.6 }}>{item.a}</p>
+                                    {item.id === "voleur" && (
+                                        <div style={{ marginTop: "1rem", fontSize: "0.75rem", background: "rgba(245, 158, 11, 0.1)", color: "var(--accent)", padding: "8px 12px", borderRadius: "8px", fontWeight: 700 }}>
+                                            💡 Retrouvez les records en direct dans l'onglet <a href="#badges" onClick={(e) => { e.preventDefault(); setActiveTab("badges"); }} style={{ color: "inherit", textDecoration: "underline" }}>Trophées & Badges</a>.
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* C. Pour en savoir plus */}
+                    <section className="glass" id="plus" style={{ padding: "1.5rem" }}>
+                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>C. POUR EN SAVOIR PLUS</div>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                            <BookOpen size={22} className="text-primary" />
+                            Outils & Suivi
+                        </h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>
+                            <p>Ton <strong>Carnet d’entraînement</strong> recense l'ensemble de tes activités. Il te permet de suivre ta progression, de voir le détail de tes reps, tes durées de course ou d'étirement, ainsi que tes humeurs du jour. C'est ton journal de bord vers la version la plus solide de toi-même.</p>
+                        </div>
+                    </section>
+
+                    {/* D. Cagnotte, Objectif et Infirmerie */}
+                    <section className="glass" id="cagnotte" style={{ padding: "1.5rem" }}>
+                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "#ef4444", marginBottom: "0.5rem", letterSpacing: "1px" }}>D. CAGNOTTE & SANTÉ</div>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "#ef4444" }}>
+                            <ShieldAlert size={22} />
+                            La Discipline de Fer
+                        </h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem", lineHeight: 1.6 }}>
+                            <p><strong>La Cagnotte</strong> est l'outil de dissuasion radical. Une fois ton streak de 21 jours atteint, chaque jour manqué te coûte 2€.</p>
+                            <p><strong>L’Infirmerie</strong> : Tu es blessé ou malade ? Déclare tes dates dans ton Profil via les <strong>Certificats Médicaux</strong>. Ces jours seront validés automatiquement (0 XP) pour sauver ta série et t'éviter les amendes.</p>
                         </div>
                     </section>
                 </div>
