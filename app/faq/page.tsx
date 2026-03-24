@@ -92,6 +92,11 @@ export default async function FAQPage() {
             q: "Le Duel d'Anniversaire 🎂",
             a: "Lors de l'anniversaire d'un membre, la ligue entre en mode 'Duel'. Si la star finit la journée avec le plus de reps, elle gagne un badge royal et ses XP du jour sont multipliés par 5 ! Mais si un autre membre la bat, ce chasseur gagne un badge et voit ses XP multipliés par 3. La star, elle, garde un bonus de 1.5x.",
             icon: <Award size={20} className="text-accent" />
+        },
+        {
+            q: "La Cagnotte & L'Objectif Quotidien 💰",
+            a: "Pour maintenir l'assiduité, un objectif de répétitions (ou secondes) est fixé chaque jour (1 de plus que la veille). Tu n'entres dans la 'Cagnotte' qu'après avoir réussi une première série de 21 jours consécutifs. Une fois dedans, chaque jour manqué te coûte 2€ pour le pot commun. Tous les exercices (Pompes, Squats, Gainage) comptent pour valider ton objectif !",
+            icon: <Zap size={20} className="text-primary" />
         }
     ];
 

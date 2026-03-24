@@ -30,11 +30,11 @@ export async function checkEligibility(userId: string) {
 
     const days = eachDayOfInterval({ start: windowStart, end: today });
 
-    // Fetch all sessions in the window
+    // Fetch all sessions in the window (All competitive exercises count!)
     const sessions = await prisma.exerciseSession.findMany({
         where: {
             userId,
-            type: "VENTRAL",
+            type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"] },
             date: { gte: windowStart, lte: today }
         }
     });
@@ -56,8 +56,6 @@ export async function checkEligibility(userId: string) {
 
         if (isMedical) continue;
 
-        // Calculate target for that specific day
-        // Target = 1s * (Days since signup + 1)
         const daysSinceSignup = Math.floor((day.getTime() - user.joinedAt.getTime()) / (1000 * 60 * 60 * 24));
         const targetValue = daysSinceSignup + 1;
 
@@ -68,7 +66,65 @@ export async function checkEligibility(userId: string) {
         if (dayValue < targetValue) return false;
     }
 
+    // Goal met for 21 days! Update user status if they weren't in yet.
+    if (!user.inCagnotte) {
+        await prisma.user.update({
+            where: { id: userId },
+            data: { inCagnotte: true }
+        });
+    }
+
     return true;
+}
+
+/**
+ * Finds the first date a user reached a 21-day streak.
+ */
+export async function getFirstCagnotteDate(userId: string) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { joinedAt: true, inCagnotte: true }
+    });
+    if (!user) return null;
+
+    const sessions = await prisma.exerciseSession.findMany({ 
+        where: { 
+            userId, 
+            type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"] } 
+        } 
+    });
+    const certificates = await prisma.medicalCertificate.findMany({ where: { userId } });
+    
+    const today = startOfDay(new Date());
+    const startDate = startOfDay(user.joinedAt);
+    const days = eachDayOfInterval({ start: startDate, end: today });
+
+    let consecutiveDays = 0;
+    for (const day of days) {
+        const isMedical = certificates.some(cert =>
+            isWithinInterval(day, { start: startOfDay(cert.startDate), end: startOfDay(cert.endDate) })
+        );
+        
+        let met = isMedical;
+        if (!met) {
+            const daysSinceSignup = Math.floor((day.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const targetValue = daysSinceSignup + 1;
+            const dayValue = sessions
+                .filter(s => startOfDay(s.date).getTime() === day.getTime())
+                .reduce((acc, s) => acc + s.value, 0);
+            met = dayValue >= targetValue;
+        }
+
+        if (met) {
+            consecutiveDays++;
+            if (consecutiveDays >= 21) {
+                return day; // Date the 21st day was completed
+            }
+        } else {
+            consecutiveDays = 0;
+        }
+    }
+    return null;
 }
 
 /**
@@ -86,13 +142,23 @@ export async function syncPenalties() {
 
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { joinedAt: true, active: true }
+        select: { joinedAt: true, active: true, inCagnotte: true }
     });
 
     if (!user || !user.active) return;
 
+    // If not in cagnotte, check if they cross the threshold now
+    let inCagnotte = user.inCagnotte;
+    if (!inCagnotte) {
+        inCagnotte = await checkEligibility(userId);
+    }
+    if (!inCagnotte) return; // Still not in the Cagnotte, no penalties
+
+    const firstDate = await getFirstCagnotteDate(userId);
+    if (!firstDate) return;
+
     const yesterday = subDays(startOfDay(new Date()), 1);
-    const startDate = startOfDay(user.joinedAt);
+    const startDate = startOfDay(firstDate); // Penalties only AFTER the 21st day is finished
 
     if (startDate > yesterday) return;
 
@@ -100,7 +166,12 @@ export async function syncPenalties() {
 
     // Performance: batch fetch everything
     const [sessions, certificates, existingPenalties] = await Promise.all([
-        prisma.exerciseSession.findMany({ where: { userId, type: "VENTRAL" } }),
+        prisma.exerciseSession.findMany({ 
+            where: { 
+                userId, 
+                type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"] } 
+            } 
+        }),
         prisma.medicalCertificate.findMany({ where: { userId } }),
         prisma.penalty.findMany({ where: { userId } })
     ]);

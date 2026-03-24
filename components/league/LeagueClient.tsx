@@ -174,14 +174,14 @@ export default function LeagueClient({
                                 {top3[1] && (
                                     <div className="podium-step rank-2">
                                         <div className="player-avatar-ring silver">
-                                            <span>🥈</span>
+                                            <span>🥇</span>
                                         </div>
                                         <div className="player-name-pop">
                                             <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} className="profile-link">{top3[1].nickname}</Link>
                                             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[1].currentStreak} /></div>
                                         </div>
                                         <div className="step-bar-3d silver">
-                                            <span className="rank-label">2ND</span>
+                                            <span className="rank-label">OR</span>
                                             <div className="val-badge">{top3[1].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
                                         </div>
                                     </div>
@@ -193,14 +193,14 @@ export default function LeagueClient({
                                         <Trophy size={28} className="gold-icon" />
                                     </div>
                                     <div className="player-avatar-ring gold">
-                                        <span>🥇</span>
+                                        <span>💎</span>
                                     </div>
                                     <div className="player-name-pop" style={{ fontSize: "1rem" }}>
                                         <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} className="profile-link">{top3[0].nickname}</Link>
                                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[0].currentStreak} /></div>
                                     </div>
                                     <div className="step-bar-3d gold">
-                                        <span className="rank-label">1ST</span>
+                                        <span className="rank-label">DIAMANT</span>
                                         <div className="val-badge main">{top3[0].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
                                     </div>
                                 </div>
@@ -209,14 +209,14 @@ export default function LeagueClient({
                                 {top3[2] && (
                                     <div className="podium-step rank-3">
                                         <div className="player-avatar-ring bronze">
-                                            <span>🥉</span>
+                                            <span>🥈</span>
                                         </div>
                                         <div className="player-name-pop">
                                             <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} className="profile-link">{top3[2].nickname}</Link>
                                             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[2].currentStreak} /></div>
                                         </div>
                                         <div className="step-bar-3d bronze">
-                                            <span className="rank-label">3RD</span>
+                                            <span className="rank-label">ARGENT</span>
                                             <div className="val-badge">{top3[2].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
                                         </div>
                                     </div>

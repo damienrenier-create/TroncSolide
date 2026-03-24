@@ -85,6 +85,7 @@ model User {
   // Status flags
   inCagnotte    Boolean   @default(true)
   active        Boolean   @default(true) // For "Abandon project"
+  hasSeenOnboarding Boolean @default(false)
   
   league        League    @relation(fields: [leagueId], references: [id])
   sessions      ExerciseSession[]

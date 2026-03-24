@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { BadgeType, FeedItemType, ExerciseType } from "@prisma/client";
+import { BadgeType, FeedItemType, ExerciseType, RecordType, RecordTimeframe } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { differenceInDays, startOfDay } from "date-fns";
@@ -10,6 +10,39 @@ import { getBrusselsToday } from "@/lib/date-utils";
 
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import { processAnniversarySettlement } from "./settlement";
+
+/**
+ * Revokes a badge from a user and reverts their XP.
+ */
+export async function revokeBadge(userId: string, badgeId: string, tx?: any) {
+    const client = tx || prisma;
+    const ub = await client.userBadge.findUnique({
+        where: { userId_badgeId: { userId, badgeId } },
+        include: { badge: true }
+    });
+
+    if (!ub) return;
+
+    const totalToSubtract = (ub.baseXP || 0) + (ub.rank === 1 ? 200 : 0); // Revert base XP and Casseur Bonus if rank 1
+
+    await client.$transaction(async (innerTx: any) => {
+        await innerTx.userBadge.delete({ where: { id: ub.id } });
+        if (totalToSubtract > 0) {
+            await innerTx.user.update({
+                where: { id: userId },
+                data: { totalXP: { decrement: totalToSubtract } }
+            });
+        }
+        await innerTx.feedItem.create({
+            data: {
+                leagueId: ub.user?.leagueId || (await innerTx.user.findUnique({ where: { id: userId }, select: { leagueId: true } })).leagueId,
+                userId,
+                type: "BADGE_LOST",
+                badgeId: badgeId
+            }
+        });
+    });
+}
 
 export async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: string) {
     const isFirstCome = def.type === "FIRST_COME";
@@ -173,8 +206,21 @@ export async function checkGamification(userId: string, lastSessionId: string) {
         });
     }
 
-    // --- LOGIQUE BRAQUAGE DE RECORDS ---
-    const allRecords = await prisma.record.findMany({ where: { leagueId: user.leagueId } });
+    // --- LOGIQUE BRAQUAGE DE RECORDS (TOP 3) ---
+    await reSyncLeagueRecords(user.leagueId);
+
+    revalidatePath("/profile");
+    revalidatePath("/faq");
+    revalidatePath("/league");
+}
+
+/**
+ * Re-evaluates all records for a league and updates the Top 3 badges.
+ * 1st = Diamond, 2nd = Gold, 3rd = Silver.
+ */
+export async function reSyncLeagueRecords(leagueId: string) {
+    const { getLeagueRankings } = await import("./record");
+    const today = getBrusselsToday();
 
     const recordMapping = [
         { id: "RECORD_DAY_PUSHUP", type: "VOLUME", tf: "DAY", ex: "PUSHUP", coef: 0.5 },
@@ -186,68 +232,94 @@ export async function checkGamification(userId: string, lastSessionId: string) {
     ];
 
     for (const mapping of recordMapping) {
-        const topRecord = allRecords.find(r => r.type === mapping.type && r.timeframe === mapping.tf && r.exercise === mapping.ex);
-        
-        if (topRecord && topRecord.userId === userId) {
-            const def = BADGE_DEFINITIONS.find(b => b.id === mapping.id);
-            if (!def) continue;
+        const def = BADGE_DEFINITIONS.find(b => b.id === mapping.id);
+        if (!def) continue;
 
-            const badge = await ensureBadgeExists(def, user.leagueId);
-            
-            await prisma.$transaction(async (tx) => {
-                const myUb = await tx.userBadge.findUnique({ where: { userId_badgeId: { userId, badgeId: badge.id } } });
-                
-                if (!myUb) {
-                    const oldUb = await tx.userBadge.findFirst({ where: { badgeId: badge.id } });
-                    const newBaseXP = Math.floor(topRecord.value * mapping.coef);
-                    const newRateXP = Math.max(1, Math.floor(newBaseXP * 0.01));
-                    const CASSEUR_BONUS = 200;
+        const badge = await ensureBadgeExists(def, leagueId);
+        const currentRankings = await getLeagueRankings(leagueId, mapping.ex as ExerciseType, mapping.type as RecordType, mapping.tf as RecordTimeframe);
+        const top3 = currentRankings.slice(0, 3);
 
-                    if (oldUb) {
-                        await tx.userBadge.delete({ where: { id: oldUb.id } });
-                        await tx.feedItem.create({
-                            data: { leagueId: user.leagueId, userId: oldUb.userId, type: "BADGE_LOST", badgeId: badge.id } 
-                        });
+        await prisma.$transaction(async (tx) => {
+            // Get all current holders of this badge in the league
+            const currentHolders = await tx.userBadge.findMany({
+                where: { badgeId: badge.id },
+                select: { id: true, userId: true, rank: true, baseXP: true }
+            });
+
+            // Handle cases where people dropped out of Top 3
+            for (const holder of currentHolders) {
+                const isStillInTop3 = top3.some(r => r.userId === holder.userId);
+                if (!isStillInTop3) {
+                    // Dropped out
+                    const totalToSubtract = (holder.baseXP || 0) + (holder.rank === 1 ? 200 : 0);
+                    await tx.userBadge.delete({ where: { id: holder.id } });
+                    if (totalToSubtract > 0) {
+                        await tx.user.update({ where: { id: holder.userId }, data: { totalXP: { decrement: totalToSubtract } } });
                     }
+                    await tx.feedItem.create({
+                        data: { leagueId, userId: holder.userId, type: "BADGE_LOST", badgeId: badge.id }
+                    });
+                }
+            }
 
+            // Award/Update badges for Top 3
+            for (let i = 0; i < top3.length; i++) {
+                const player = top3[i];
+                const rank = i + 1; // 1=Diamond, 2=Gold, 3=Silver
+                const existing = currentHolders.find(h => h.userId === player.userId);
+
+                // Multipliers for Top 3: Diamond=100%, Gold=50%, Silver=25%
+                const rankMultiplier = rank === 1 ? 1.0 : rank === 2 ? 0.5 : 0.25;
+                const newBaseXP = Math.floor(player.value * mapping.coef * rankMultiplier);
+                const newRateXP = Math.max(1, Math.floor(newBaseXP * 0.01));
+                const CASSEUR_BONUS = rank === 1 ? 200 : 0;
+
+                if (!existing) {
+                    // New entry in Top 3
                     await tx.userBadge.create({
                         data: {
-                            userId,
+                            userId: player.userId,
                             badgeId: badge.id,
-                            rank: 1,
+                            rank,
                             baseXP: newBaseXP,
                             rateXP: newRateXP,
                             awardedAt: today
                         }
                     });
-
                     await tx.user.update({
-                        where: { id: userId },
+                        where: { id: player.userId },
                         data: { totalXP: { increment: newBaseXP + CASSEUR_BONUS } }
                     });
-
                     await tx.feedItem.create({
-                        data: { leagueId: user.leagueId, userId: userId, type: "BADGE_WON", badgeId: badge.id }
+                        data: { leagueId, userId: player.userId, type: "BADGE_WON", badgeId: badge.id }
                     });
                 } else {
-                    const newBaseXP = Math.floor(topRecord.value * mapping.coef);
-                    if (newBaseXP > (myUb.baseXP || 0)) {
-                        const diff = newBaseXP - (myUb.baseXP || 0);
-                        const newRateXP = Math.max(1, Math.floor(newBaseXP * 0.01));
-                        
-                        await tx.userBadge.update({
-                            where: { id: myUb.id },
-                            data: { baseXP: newBaseXP, rateXP: newRateXP }
-                        });
+                    // Already in Top 3, check if rank or XP changed
+                    const oldTotal = (existing.baseXP || 0) + (existing.rank === 1 ? 200 : 0);
+                    const newTotal = newBaseXP + CASSEUR_BONUS;
 
-                        await tx.user.update({
-                            where: { id: userId },
-                            data: { totalXP: { increment: diff } }
+                    if (existing.rank !== rank || oldTotal !== newTotal) {
+                        const diff = newTotal - oldTotal;
+                        await tx.userBadge.update({
+                            where: { id: existing.id },
+                            data: { rank, baseXP: newBaseXP, rateXP: newRateXP }
                         });
+                        if (diff !== 0) {
+                            await tx.user.update({
+                                where: { id: player.userId },
+                                data: { totalXP: { increment: diff } }
+                            });
+                        }
+                        // Only add feed item if rank improved to 1
+                        if (existing.rank !== 1 && rank === 1) {
+                            await tx.feedItem.create({
+                                data: { leagueId, userId: player.userId, type: "BADGE_WON", badgeId: badge.id }
+                            });
+                        }
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     revalidatePath("/profile");
@@ -313,4 +385,181 @@ export async function awardBadge(userId: string, badgeId: string, leagueId: stri
             data: { leagueId, userId, type: "BADGE_WON", badgeId: badge.id }
         });
     });
+}
+
+/**
+ * Re-evaluates all badges for user (except records which are handled by reSyncLeagueRecords)
+ * and revokes those no longer met.
+ */
+export async function reSyncUserBadges(userId: string) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { badges: { include: { badge: true } } }
+    });
+    if (!user) return;
+
+    const userBadges = user.badges.filter(ub => !ub.badge.id.startsWith("RECORD_"));
+    const { getLevelInfo } = await import("@/lib/constants/levels");
+    
+    // Aggregates for cumulative checks
+    const aggregates = await prisma.exerciseSession.groupBy({ by: ['type'], where: { userId }, _sum: { value: true } });
+    const totalPumps = aggregates.find(a => a.type === "PUSHUP")?._sum.value || 0;
+    const totalSquats = aggregates.find(a => a.type === "SQUAT")?._sum.value || 0;
+    const totalPlank = (aggregates.find(a => a.type === "VENTRAL")?._sum.value || 0) +
+        (aggregates.find(a => a.type === "LATERAL_L")?._sum.value || 0) +
+        (aggregates.find(a => a.type === "LATERAL_R")?._sum.value || 0);
+
+    for (const ub of userBadges) {
+        const bid = ub.badge.id;
+        let stillEarned = true;
+
+        if (bid === "CENTURION") {
+            const maxVal = await prisma.exerciseSession.aggregate({ where: { userId }, _max: { value: true } });
+            stillEarned = (maxVal._max.value || 0) >= 100;
+        } else if (bid === "MOOD_MASTER") {
+            const moodCount = await prisma.exerciseSession.count({ where: { userId, mood: { not: null } } });
+            stillEarned = moodCount >= 10;
+        } else if (bid === "SQUAT_LOVER") {
+            const squatCount = await prisma.exerciseSession.count({ where: { userId, type: "SQUAT" } });
+            stillEarned = squatCount >= 5;
+        } else if (bid.startsWith("LEVEL_")) {
+            const req = bid === "LEVEL_SEED" ? 1 : bid === "LEVEL_SPROUT" ? 5 : bid === "LEVEL_TREE" ? 20 : 50;
+            const tempLevelInfo = getLevelInfo(user.totalXP);
+            stillEarned = tempLevelInfo.level >= req;
+        } else if (bid.startsWith("PUMP_")) {
+            const req = parseInt(bid.split("_")[1]);
+            if (!isNaN(req)) stillEarned = totalPumps >= req;
+        } else if (bid.startsWith("SQUAT_")) {
+            const req = parseInt(bid.split("_")[1]);
+            if (!isNaN(req)) stillEarned = totalSquats >= req;
+        } else if (bid.startsWith("PLANK_")) {
+            const req = parseInt(bid.split("_")[1].replace("S", ""));
+            if (!isNaN(req)) stillEarned = totalPlank >= req;
+        } else if (bid.startsWith("SERIE_PUMP_")) {
+            const req = parseInt(bid.split("_")[2]);
+            const maxPump = await prisma.exerciseSession.aggregate({ where: { userId, type: "PUSHUP" }, _max: { value: true } });
+            if (!isNaN(req)) stillEarned = (maxPump._max.value || 0) >= req;
+        } else if (bid.startsWith("SERIE_PLANK_")) {
+            const reqStr = bid.split("_")[2];
+            let req = 0;
+            if (reqStr === "30S") req = 30;
+            else if (reqStr === "1M") req = 60;
+            else if (reqStr === "1M30") req = 90;
+            else if (reqStr === "2M") req = 120;
+            else if (reqStr === "3M") req = 180;
+            else if (reqStr === "5M") req = 300;
+            else if (reqStr === "10M") req = 600;
+            const maxPlank = await prisma.exerciseSession.aggregate({ 
+                where: { userId, type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R"] } }, 
+                _max: { value: true } 
+            });
+            if (req > 0) stillEarned = (maxPlank._max.value || 0) >= req;
+        }
+
+        if (!stillEarned) {
+            await prisma.userBadge.delete({ where: { id: ub.id } });
+            await prisma.feedItem.create({
+                data: { leagueId: user.leagueId, userId, type: "BADGE_LOST", badgeId: bid }
+            });
+        }
+    }
+}
+
+/**
+ * Resets and recalculates a user's total XP from logs and current badges.
+ */
+export async function recalculateTotalXP(userId: string) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { badges: true }
+    });
+    if (!user) return;
+
+    const sessionXP = await prisma.exerciseSession.aggregate({
+        where: { userId },
+        _sum: { xpGained: true }
+    });
+
+    const totalSessionXP = sessionXP._sum.xpGained || 0;
+    const totalBadgeXP = user.badges.reduce((acc, ub) => {
+        const casseurBonus = ub.rank === 1 && ub.badgeId.startsWith("RECORD_") ? 200 : 0;
+        return acc + (ub.baseXP || 0) + casseurBonus;
+    }, 0);
+
+    const newTotalXP = totalSessionXP + totalBadgeXP;
+    
+    const { getLevelInfo } = await import("@/lib/constants/levels");
+    const levelInfo = getLevelInfo(newTotalXP);
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { 
+            totalXP: newTotalXP,
+            level: levelInfo.level
+        }
+    });
+
+    return newTotalXP;
+}
+
+/**
+ * Global harmonization: re-syncs all leagues and all users.
+ */
+export async function harmonizeGlobalXP() {
+    console.log("Starting global harmonization...");
+    const leagues = await prisma.league.findMany({ select: { id: true } });
+    
+    for (const league of leagues) {
+        await reSyncLeagueRecords(league.id);
+        await reSyncCumulativeRanks(league.id);
+    }
+
+    const users = await prisma.user.findMany({ select: { id: true } });
+    for (const user of users) {
+        await reSyncUserBadges(user.id);
+        await recalculateTotalXP(user.id);
+    }
+    
+    console.log("Global harmonization complete.");
+    return { success: true };
+}
+
+/**
+ * Re-evaluates ranks for FIRST_COME cumulative badges in a league.
+ * If someone lost a badge, others move up.
+ */
+export async function reSyncCumulativeRanks(leagueId: string) {
+    const badges = await prisma.badge.findMany({
+        where: { type: "FIRST_COME", leagueId },
+        include: { users: { orderBy: { awardedAt: 'asc' } } }
+    });
+
+    for (const badge of badges) {
+        if (badge.id.startsWith("RECORD_")) continue; // Records are handled separately
+
+        const holders = badge.users;
+        for (let i = 0; i < holders.length; i++) {
+            const holder = holders[i];
+            const newRank = i + 1;
+            if (newRank > 5) {
+                // Too many winners now? (Shouldn't happen if we revoke correctly, but let's be safe)
+                await prisma.userBadge.delete({ where: { id: holder.id } });
+                continue;
+            }
+
+            if (holder.rank !== newRank) {
+                const def = BADGE_DEFINITIONS.find(b => b.id === badge.id);
+                if (!def) continue;
+
+                const multiplier = 1.2 - (0.2 * newRank);
+                const newBaseXP = Math.floor(def.xpValue * multiplier);
+
+                await prisma.userBadge.update({
+                    where: { id: holder.id },
+                    data: { rank: newRank, baseXP: newBaseXP }
+                });
+                // XP total will be corrected by recalculateTotalXP later
+            }
+        }
+    }
 }

@@ -182,27 +182,86 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
 
             {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />}
 
-            {/* Floating Nav Bar */}
-            {profile.leagueContext && (
-                <div style={{ position: "fixed", bottom: "80px", left: "50%", transform: "translateX(-50%)", background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "100px", padding: "12px 24px", display: "flex", alignItems: "center", gap: "24px", zIndex: 100, boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }}>
+            {/* Floating Nav Bar - Improved 5-User Carousel */}
+            {profile.leagueContext && profile.leagueContext.length > 0 && (
+                <div style={{ 
+                    position: "fixed", 
+                    bottom: "110px", 
+                    left: "50%", 
+                    transform: "translateX(-50%)", 
+                    background: "rgba(15, 23, 42, 0.95)", 
+                    backdropFilter: "blur(12px)", 
+                    border: "1px solid rgba(255,255,255,0.1)", 
+                    borderRadius: "100px", 
+                    padding: "8px 16px", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: "12px", 
+                    zIndex: 100, 
+                    boxShadow: "0 15px 35px rgba(0,0,0,0.6)",
+                    width: "fit-content",
+                    maxWidth: "90vw"
+                }}>
                     {(() => {
                         const users = profile.leagueContext;
                         const currentIndex = users.findIndex((u: any) => u.nickname.toLowerCase() === profile.nickname.toLowerCase());
                         if (currentIndex === -1) return null;
-                        const prevUser = currentIndex > 0 ? users[currentIndex - 1] : users[users.length - 1];
-                        const nextUser = currentIndex < users.length - 1 ? users[currentIndex + 1] : users[0];
+
+                        const getCircularIndex = (idx: number, len: number) => (idx + len) % len;
+                        const offsets = [-2, -1, 0, 1, 2];
+                        const windowIndices = offsets.map(offset => getCircularIndex(currentIndex + offset, users.length));
                         
-                        return (
-                            <>
-                                <Link href={`/profile/${encodeURIComponent(prevUser.nickname)}`} style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
-                                    ← {prevUser.nickname}
+                        // Handle cases with < 5 users
+                        const uniqueIndices = Array.from(new Set(windowIndices));
+                        const displayUsers = uniqueIndices.map(i => users[i]);
+
+                        return displayUsers.map((u, i) => {
+                            const isCurrent = u.nickname.toLowerCase() === profile.nickname.toLowerCase();
+                            return (
+                                <Link 
+                                    key={u.id} 
+                                    href={`/profile/${encodeURIComponent(u.nickname)}`}
+                                    style={{ 
+                                        textDecoration: "none",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        opacity: isCurrent ? 1 : 0.6,
+                                        transform: isCurrent ? "scale(1.1)" : "scale(0.9)",
+                                        transition: "all 0.2s ease"
+                                    }}
+                                >
+                                    <div style={{ 
+                                        width: "36px", 
+                                        height: "36px", 
+                                        borderRadius: "50%", 
+                                        background: isCurrent ? "var(--primary)" : "#1e293b",
+                                        border: isCurrent ? "2px solid white" : "1px solid rgba(255,255,255,0.1)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "0.8rem",
+                                        fontWeight: 900,
+                                        color: "white"
+                                    }}>
+                                        {u.nickname.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span style={{ 
+                                        fontSize: "0.5rem", 
+                                        fontWeight: 900, 
+                                        color: "white", 
+                                        textTransform: "uppercase",
+                                        marginTop: "4px",
+                                        maxWidth: "50px",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap"
+                                    }}>
+                                        {u.nickname}
+                                    </span>
                                 </Link>
-                                <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.2)" }}></div>
-                                <Link href={`/profile/${encodeURIComponent(nextUser.nickname)}`} style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
-                                    {nextUser.nickname} →
-                                </Link>
-                            </>
-                        );
+                            );
+                        });
                     })()}
                 </div>
             )}

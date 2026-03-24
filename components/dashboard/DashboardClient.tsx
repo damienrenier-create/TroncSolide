@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import ExerciseBatchForm from "@/components/exercises/ExerciseBatchForm";
 import SecondaryExerciseForm from "@/components/exercises/SecondaryExerciseForm";
-import { Flame, Trophy, TrendingUp, History, Wallet, Award, Lock, TreePine, Calendar, Trash2, PlusCircle } from "lucide-react";
+import { Flame, Trophy, TrendingUp, History, Wallet, Award, Lock, TreePine, Calendar, Trash2, PlusCircle, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { deleteSession } from "@/lib/actions/moderation";
 import { useRouter } from "next/navigation";
+import OnboardingModal from "./OnboardingModal";
 
 interface DashboardProps {
     userId: string;
@@ -26,6 +27,7 @@ export default function DashboardClient({
     const [showSecondaryForm, setShowSecondaryForm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [lostBadges, setLostBadges] = useState<any[]>([]);
+    const [showOnboarding, setShowOnboarding] = useState(!stats.hasSeenOnboarding);
     const router = useRouter();
 
     useEffect(() => {
@@ -95,6 +97,43 @@ export default function DashboardClient({
 
     return (
         <div className="container dashboard-container">
+            {showOnboarding && <OnboardingModal onComplete={() => setShowOnboarding(false)} />}
+
+            {/* NEW USER FAQ NOTIFICATION */}
+            {(() => {
+                const joinedAt = new Date(stats.joinedAt);
+                const diffDays = Math.floor((new Date().getTime() - joinedAt.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 3) {
+                    return (
+                        <div className="glass-premium" style={{ 
+                            padding: "1rem 1.5rem", 
+                            background: "linear-gradient(90deg, var(--primary) 0%, #3b82f6 100%)", 
+                            color: "white", 
+                            borderRadius: "16px", 
+                            marginBottom: "1.5rem", 
+                            display: "flex", 
+                            justifyContent: "space-between", 
+                            alignItems: "center",
+                            boxShadow: "0 10px 20px rgba(59, 130, 246, 0.2)",
+                            animation: "pulseShadow 2s infinite"
+                        }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{ background: "rgba(255,255,255,0.2)", padding: "8px", borderRadius: "10px" }}>
+                                    <HelpCircle size={20} />
+                                </div>
+                                <div>
+                                    <h4 style={{ fontSize: "0.9rem", fontWeight: "900", margin: 0 }}>BIENVENUE SUR TRONC SOLIDE ! 🌳</h4>
+                                    <p style={{ fontSize: "0.75rem", margin: 0, opacity: 0.9, fontWeight: "600" }}>Pense à lire les règles dans la FAQ pour bien commencer.</p>
+                                </div>
+                            </div>
+                            <Link href="/faq" style={{ background: "white", color: "var(--primary)", padding: "8px 16px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: "900", textDecoration: "none" }}>
+                                LIRE LA FAQ
+                            </Link>
+                        </div>
+                    );
+                }
+                return null;
+            })()}
 
             {/* LOST BADGE TOASTS */}
             {lostBadges.length > 0 && (
@@ -184,7 +223,7 @@ export default function DashboardClient({
 
                     <div className="progress-display" style={{ zIndex: 1, position: "relative" }}>
                         <div className="progress-value">{initialProgress}</div>
-                        <div className="progress-total">SUR {initialTarget}s</div>
+                        <div className="progress-total">SUR {initialTarget}sec</div>
                     </div>
                 </div>
 

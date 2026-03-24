@@ -50,7 +50,7 @@ export async function getUserStats() {
 
     const [windowSessions, certificates] = await Promise.all([
         prisma.exerciseSession.findMany({
-            where: { userId, type: "VENTRAL", date: { gte: windowStart } }
+            where: { userId, type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"] }, date: { gte: windowStart } }
         }),
         prisma.medicalCertificate.findMany({
             where: { userId, OR: [{ startDate: { lte: new Date() }, endDate: { gte: windowStart } }] }

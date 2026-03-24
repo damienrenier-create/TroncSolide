@@ -51,6 +51,12 @@ export async function deleteSession(sessionId: string) {
         const { syncAllRecordsForLeague } = await import("./record");
         await syncAllRecordsForLeague(sessionData.user.leagueId, sessionData.type);
 
+        const { reSyncLeagueRecords, reSyncCumulativeRanks, reSyncUserBadges, recalculateTotalXP } = await import("./gamification");
+        await reSyncLeagueRecords(sessionData.user.leagueId);
+        await reSyncCumulativeRanks(sessionData.user.leagueId);
+        await reSyncUserBadges(sessionData.userId);
+        await recalculateTotalXP(sessionData.userId);
+
         revalidatePath("/");
         revalidatePath("/league");
         revalidatePath("/stats");
