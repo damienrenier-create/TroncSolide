@@ -94,7 +94,6 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
 
                     {/* B. XP et Niveau */}
                     <section className="glass" id="niveaux-info" style={{ padding: "1.5rem" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>B. LES XP ET LE NIVEAU</div>
                         <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
                             <TrendingUp size={22} className="text-secondary" />
                             Le Concept Fun (mais secondaire)
@@ -132,28 +131,45 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                         </div>
                     </section>
 
-                    {/* C. Pour en savoir plus */}
+                    {/* C. Les Outils : Pour en faire plus & Suivi */}
                     <section className="glass" id="plus" style={{ padding: "1.5rem" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>C. POUR EN SAVOIR PLUS</div>
+                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>C. LES OUTILS</div>
                         <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
                             <BookOpen size={22} className="text-primary" />
                             Outils & Suivi
                         </h2>
-                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                            <p>Ton <strong>Carnet d’entraînement</strong> recense l'ensemble de tes activités. Il te permet de suivre ta progression, de voir le détail de tes reps, tes durées de course ou d'étirement, ainsi que tes humeurs du jour. C'est ton journal de bord vers la version la plus solide de toi-même.</p>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1.25rem", lineHeight: 1.6 }}>
+                            <div className="glass-premium" style={{ padding: "1.25rem", borderRadius: "20px" }}>
+                                <div style={{ fontWeight: 900, color: "var(--foreground)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <Zap size={18} className="text-primary" /> Pour en faire plus ✨
+                                </div>
+                                <p style={{ fontSize: "0.85rem" }}>
+                                    Cette section permet de loguer des <strong>tractions</strong>, de la <strong>course à pied</strong> ou des <strong>étirements</strong>. Pour l'instant, ces exercices ne rapportent pas d'XP et n'ont pas de badges dédiés, ils servent uniquement à ton suivi personnel.
+                                </p>
+                            </div>
+                            
+                            <p>Ton <strong>Carnet d’entraînement</strong> recense l'ensemble de tes activités, jour par jour. C'est ton journal de bord personnel vers la version la plus solide de toi-même. Tu peux y accéder via le Dashboard pour voir le détail de tes reps, tes durées de course ou d'étirement, ainsi que tes humeurs du jour.</p>
                         </div>
                     </section>
 
                     {/* D. Cagnotte, Objectif et Infirmerie */}
                     <section className="glass" id="cagnotte" style={{ padding: "1.5rem" }}>
                         <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "#ef4444", marginBottom: "0.5rem", letterSpacing: "1px" }}>D. CAGNOTTE & SANTÉ</div>
-                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem", color: "#ef4444" }}>
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem", color: "#ef4444" }}>
                             <ShieldAlert size={22} />
                             La Discipline de Fer
                         </h2>
-                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem", lineHeight: 1.6 }}>
-                            <p><strong>La Cagnotte</strong> est l'outil de dissuasion radical. Une fois ton streak de 21 jours atteint, chaque jour manqué te coûte 2€.</p>
-                            <p><strong>L’Infirmerie</strong> : Tu es blessé ou malade ? Déclare tes dates dans ton Profil via les <strong>Certificats Médicaux</strong>. Ces jours seront validés automatiquement (0 XP) pour sauver ta série et t'éviter les amendes.</p>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1.25rem", lineHeight: 1.6 }}>
+                            <div className="glass-premium" style={{ padding: "1.25rem", borderRadius: "20px", border: "1px solid rgba(239, 68, 68, 0.1)" }}>
+                                <div style={{ fontWeight: 900, color: "var(--foreground)", marginBottom: "8px" }}>📈 L'Objectif Quotidien</div>
+                                <p style={{ fontSize: "0.85rem" }}>L'objectif augmente de <strong>1 par jour</strong>. Pas d'excuses, tous les exercices (Pompes, Squats, Gainage) comptent pour valider ta journée !</p>
+                            </div>
+
+                            <p><strong>La Cagnotte</strong> est l'outil de dissuasion radical. Une fois ton premier streak de 21 jours atteint, chaque jour manqué te coûte 2€ pour le pot commun.</p>
+                            
+                            <p>
+                                <strong>L’Infirmerie 🏥</strong> : Tu es blessé ou malade ? Déclare tes dates dans ton Profil via les <strong>Certificats Médicaux</strong>. Ces jours seront validés automatiquement (0 XP) pour protéger ta série et ton portefeuille.
+                            </p>
                         </div>
                     </section>
                 </div>
