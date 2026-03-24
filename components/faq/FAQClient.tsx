@@ -108,7 +108,6 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                         </div>
                     </section>
                     <section className="glass" id="expert" style={{ padding: "1.5rem" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>B bis. QUESTIONS FRÉQUENTES & RÈGLES D'EXPERT</div>
                         <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.5rem" }}>
                             <Trophy size={22} className="text-accent" />
                             Mécaniques Avancées
