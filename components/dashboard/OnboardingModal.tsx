@@ -23,7 +23,7 @@ const slides = [
     },
     {
         title: "La Ligue & Ses Records 💎",
-        content: "Décroche les records de Diamant, d'Or ou d'Argent. Mais attention : si quelqu'un te dépasse, il te vole ton titre et tes gains !",
+        content: "L'app est dotée de niveaux gagnés via tes XP. Libre à toi de grimper les échelons le plus vite possible en relevant les défis... parfois au détriment des autres joueurs !",
         icon: <Award size={48} style={{ color: "var(--accent)" }} />,
         color: "var(--accent)"
     },
