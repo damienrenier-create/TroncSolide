@@ -37,7 +37,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
         { id: "rules", label: "Le Manuel", icon: <BookOpen size={18} /> },
         { id: "agenda", label: "Agenda", icon: <Calendar size={18} /> },
         { id: "progression", label: "Niveaux", icon: <Zap size={18} /> },
-        { id: "badges", label: "Trophées & Badges", icon: <Trophy size={18} /> }
+        { id: "badges", label: "Trophées", icon: <Trophy size={18} /> }
     ];
 
     return (
@@ -87,7 +87,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                                 <div style={{ fontWeight: 900, color: "var(--foreground)", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
                                     <Zap size={16} className="text-primary" /> 💡 À Savoir :
                                 </div>
-                                <p style={{ fontSize: "0.80rem" }}>La difficulté augmente de <strong>1 seconde ou répétition par jour</strong>. C'est l'essence même de la progression lente mais inéluctable du Tronc.</p>
+                                <p style={{ fontSize: "0.80rem" }}>La difficulté augmente de <strong>1 en volume d'effort par jour</strong>. C'est l'essence même de la progression lente mais inéluctable du Tronc.</p>
                             </div>
                         </div>
                     </section>
@@ -104,7 +104,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                                 <div className="glass-premium" style={{ padding: "0.75rem", borderRadius: "12px", textAlign: "center", fontWeight: 800, fontSize: "0.8rem" }}>1 Squat / Pompe = 1 XP</div>
                                 <div className="glass-premium" style={{ padding: "0.75rem", borderRadius: "12px", textAlign: "center", fontWeight: 800, fontSize: "0.8rem" }}>1 Seconde Gainage = 1 XP</div>
                             </div>
-                            <p>Comme dans tout jeu, il existe des raccourcis pour gagner des XP supplémentaires : en étant <a href="#jalons" onClick={(e) => { e.preventDefault(); setActiveTab("badges"); }} style={{ color: "var(--primary)", fontWeight: 800 }}>constant</a>, en établissant des <a href="#voleur" style={{ color: "var(--accent)", fontWeight: 800 }}>records</a>, ou via des défis spéciaux. Ces victoires s'accompagnent souvent de badges prestigieux.</p>
+                            <p>Comme dans tout jeu, il existe des raccourcis pour gagner des XP supplémentaires : en franchissant des <a href="#jalons" onClick={(e) => { e.preventDefault(); setActiveTab("badges"); }} style={{ color: "var(--primary)", fontWeight: 800 }}>paliers</a>, en établissant des <a href="#voleur" style={{ color: "var(--accent)", fontWeight: 800 }}>records</a>, ou via des défis spéciaux. Ces victoires s'accompagnent souvent de trophées prestigieux.</p>
                         </div>
                     </section>
                     <section className="glass" id="expert" style={{ padding: "1.5rem" }}>
@@ -122,7 +122,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                                     <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.6 }}>{item.a}</p>
                                     {item.id === "voleur" && (
                                         <div style={{ marginTop: "1rem", fontSize: "0.75rem", background: "rgba(245, 158, 11, 0.1)", color: "var(--accent)", padding: "8px 12px", borderRadius: "8px", fontWeight: 700 }}>
-                                            💡 Retrouvez les records en direct dans l'onglet <a href="#badges" onClick={(e) => { e.preventDefault(); setActiveTab("badges"); }} style={{ color: "inherit", textDecoration: "underline" }}>Trophées & Badges</a>.
+                                            💡 Retrouvez les records en direct dans l'onglet <a href="#badges" onClick={(e) => { e.preventDefault(); setActiveTab("badges"); }} style={{ color: "inherit", textDecoration: "underline" }}>Trophées</a>.
                                         </div>
                                     )}
                                 </div>
@@ -161,7 +161,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                         <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1.25rem", lineHeight: 1.6 }}>
                             <div className="glass-premium" style={{ padding: "1.25rem", borderRadius: "20px", border: "1px solid rgba(239, 68, 68, 0.1)" }}>
                                 <div style={{ fontWeight: 900, color: "var(--foreground)", marginBottom: "8px" }}>📈 L'Objectif Quotidien</div>
-                                <p style={{ fontSize: "0.85rem" }}>L'objectif augmente de <strong>1 par jour</strong>. Pas d'excuses, tous les exercices (Pompes, Squats, Gainage) comptent pour valider ta journée !</p>
+                                <p style={{ fontSize: "0.85rem" }}>L'objectif augmente de <strong>1 par jour</strong>. Pas d'excuses, tout ton volume d'effort (Pompes, Squats, Gainage) compte pour valider ta journée !</p>
                             </div>
 
                             <p><strong>La Cagnotte</strong> est l'outil de dissuasion radical. Une fois ton premier streak de 21 jours atteint, chaque jour manqué te coûte 2€ pour le pot commun.</p>
@@ -263,11 +263,11 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                         </div>
                     </section>
 
-                    {/* 2. Jalons & Séries (La Constance pure) */}
+                    {/* 2. Paliers & Séries (La Constance pure) */}
                     <section className="glass" id="jalons" style={{ padding: "1.5rem" }}>
                         <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
                             <Trophy size={22} className="text-secondary" />
-                            Jalons & Séries
+                            Paliers & Séries
                         </h2>
                         <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
                             <p>Celui qui ne rompt jamais la chaîne est grassement récompensé. Des bonus massifs d'XP te propulsent dans le classement :</p>

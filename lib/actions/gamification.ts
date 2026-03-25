@@ -5,7 +5,13 @@ import { revalidatePath } from "next/cache";
 import { BadgeType, FeedItemType, ExerciseType, RecordType, RecordTimeframe } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { differenceInDays, startOfDay } from "date-fns";
+import { 
+    differenceInDays, 
+    startOfDay, 
+    startOfWeek, 
+    startOfMonth, 
+    startOfYear 
+} from "date-fns";
 import { getBrusselsToday } from "@/lib/date-utils";
 
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
@@ -562,4 +568,101 @@ export async function reSyncCumulativeRanks(leagueId: string) {
             }
         }
     }
+}
+
+/**
+ * Récupère toutes les données nécessaires pour la Salle des Trophées.
+ * Inclut les badges (avec détenteurs de rang 1) et les stats personnelles du joueur.
+ */
+export async function getTrophiesRoomData() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return null;
+    const userId = session.user.id;
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { leagueId: true }
+    });
+    if (!user) return null;
+
+    // 1. Récupérer tous les badges de la ligue (ou globaux) et leurs détenteurs de Rang 1 (Platine/Record)
+    const badges = await prisma.badge.findMany({
+        where: { OR: [{ leagueId: user.leagueId }, { leagueId: null }] },
+        include: {
+            users: {
+                where: { rank: 1 },
+                include: { user: { select: { nickname: true } } }
+            }
+        }
+    });
+
+    // 2. Récupérer les records de la ligue pour les badges dynamiques
+    const records = await prisma.record.findMany({
+        where: { leagueId: user.leagueId }
+    });
+
+    // 3. Récupérer les totaux et max de l'utilisateur (All-time)
+    const aggregates = await prisma.exerciseSession.groupBy({
+        by: ['type'],
+        where: { userId },
+        _sum: { value: true },
+        _max: { value: true }
+    });
+
+    // 3. Récupérer les stats de l'utilisateur pour les périodes en cours (pour les calculs d'écarts de record)
+    const today = getBrusselsToday();
+    const startWeek = startOfWeek(today, { weekStartsOn: 1 });
+    const startMonth = startOfMonth(today);
+
+    // Volume sur le mois en cours (pour couvrir JOUR, SEMAINE, MOIS)
+    const monthStats = await prisma.exerciseSession.groupBy({
+        by: ['type'],
+        where: {
+            userId,
+            date: { gte: startMonth }
+        },
+        _sum: { value: true }
+    });
+
+    // Volume sur la semaine en cours
+    const weekStats = await prisma.exerciseSession.groupBy({
+        by: ['type'],
+        where: {
+            userId,
+            date: { gte: startWeek }
+        },
+        _sum: { value: true }
+    });
+
+    // Volume sur la journée en cours
+    const dayStats = await prisma.exerciseSession.groupBy({
+        by: ['type'],
+        where: {
+            userId,
+            date: { gte: today }
+        },
+        _sum: { value: true }
+    });
+
+    // Max série sur la journée en cours (pour les records de série)
+    const dayMax = await prisma.exerciseSession.groupBy({
+        by: ['type'],
+        where: {
+            userId,
+            date: { gte: today }
+        },
+        _max: { value: true }
+    });
+
+    return {
+        badges,
+        records,
+        userStats: {
+            aggregates,
+            monthStats,
+            weekStats,
+            dayStats,
+            dayMax
+        }
+    };
 }

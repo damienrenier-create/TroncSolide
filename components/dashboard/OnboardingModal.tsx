@@ -17,13 +17,13 @@ const slides = [
     },
     {
         title: "L'Objectif Quotidien 📈",
-        content: "Chaque jour, ton objectif augmente de 1 (seconde ou rep). Pompes, Squats ou Gainage : tout compte pour valider ta journée !",
+        content: "Chaque jour, ton objectif augmente de 1 en volume d'effort. Pompes, Squats ou Gainage : tout compte pour valider ta journée !",
         icon: <Trophy size={48} style={{ color: "var(--secondary)" }} />,
         color: "var(--secondary)"
     },
     {
-        title: "La Ligue & Ses Records 💎",
-        content: "L'app est dotée de niveaux gagnés via tes XP. Libre à toi de grimper les échelons le plus vite possible en relevant les défis... parfois au détriment des autres joueurs !",
+        title: "La Ligue & Ses Paliers 💎",
+        content: "Gagne des niveaux via tes XP et franchis des paliers de performance. Sois le premier à atteindre un palier pour devenir un Pionnier et marquer l'histoire !",
         icon: <Award size={48} style={{ color: "var(--accent)" }} />,
         color: "var(--accent)"
     },

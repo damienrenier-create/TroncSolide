@@ -174,7 +174,7 @@ export default function LeagueClient({
                                 {top3[1] && (
                                     <div className="podium-step rank-2">
                                         <div className="player-avatar-ring silver">
-                                            <span>🥇</span>
+                                            <span>⭐</span>
                                         </div>
                                         <div className="player-name-pop">
                                             <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} className="profile-link">{top3[1].nickname}</Link>
@@ -193,7 +193,7 @@ export default function LeagueClient({
                                         <Trophy size={28} className="gold-icon" />
                                     </div>
                                     <div className="player-avatar-ring gold">
-                                        <span>💎</span>
+                                        <span>🏆</span>
                                     </div>
                                     <div className="player-name-pop" style={{ fontSize: "1rem" }}>
                                         <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} className="profile-link">{top3[0].nickname}</Link>
@@ -209,7 +209,7 @@ export default function LeagueClient({
                                 {top3[2] && (
                                     <div className="podium-step rank-3">
                                         <div className="player-avatar-ring bronze">
-                                            <span>🥈</span>
+                                            <span>✨</span>
                                         </div>
                                         <div className="player-name-pop">
                                             <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} className="profile-link">{top3[2].nickname}</Link>

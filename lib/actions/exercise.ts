@@ -192,7 +192,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                 },
                 sources: sessionsToCreate.map(s => ({
                     type: "base",
-                    label: `${s.ex.type === 'PUSHUP' ? 'Pompes' : s.ex.type === 'SQUAT' ? 'Squats' : 'Gainage'} (${s.ex.value}${s.ex.type === 'VENTRAL' ? 's' : ''})`,
+                    label: `${s.ex.type === 'PUSHUP' ? 'Pompes' : s.ex.type === 'SQUAT' ? 'Squats' : 'Gainage'} (${s.ex.value}${s.ex.type === 'PUSHUP' || s.ex.type === 'SQUAT' ? ' reps' : 's'})`,
                     xp: s.xpBase
                 }))
             };
@@ -368,7 +368,7 @@ export async function getTodayProgress(userId: string) {
                 gte: today,
                 lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
             },
-            type: "VENTRAL",
+            type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"] },
         },
         select: { value: true },
     });

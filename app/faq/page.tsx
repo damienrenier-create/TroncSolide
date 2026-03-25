@@ -21,23 +21,23 @@ export default async function FAQPage() {
     }) : [];
 
     const agenda = [
-        { date: "Flexible", name: "Anniversaire d'un Membre 🎂", bonus: "Duel: XP x5 pour la Star", award: "Badge Royal ou Chasseur" },
-        { date: "01/04", name: "Poisson d'Avril 🐟", bonus: "🏆 Compétition de Reps", award: "Badges Poissons (Top 5)" },
-        { date: "05/04", name: "Fête de Pâques 🥚", bonus: "🏆 Chasse aux Œufs (Reps)", award: "Badges Œufs (Top 5)" },
+        { date: "Flexible", name: "Anniversaire d'un Membre 🎂", bonus: "Duel: XP x5 pour la Star", award: "Trophée Royal ou Chasseur" },
+        { date: "01/04", name: "Poisson d'Avril 🐟", bonus: "🏆 Compétition de Reps", award: "Trophées Poissons (Top 5)" },
+        { date: "05/04", name: "Fête de Pâques 🥚", bonus: "🏆 Chasse aux Œufs (Reps)", award: "Trophées Œufs (Top 5)" },
         { date: "01/05", name: "Fête du Travail 💪", bonus: "🚀 XP x5 sur la séance", award: "Honneur & Volume" },
-        { date: "10/05", name: "Fête des Mères 💖", bonus: "🚀 XP x5 (Gainage & Squats)", award: "Top 3 Badges" },
-        { date: "14/06", name: "Fête des Pères 💙", bonus: "🚀 XP x5 (Pompes)", award: "Top 3 Badges" },
+        { date: "10/05", name: "Fête des Mères 💖", bonus: "🚀 XP x5 (Gainage & Squats)", award: "Top 3 Trophées" },
+        { date: "14/06", name: "Fête des Pères 💙", bonus: "🚀 XP x5 (Pompes)", award: "Top 3 Trophées" },
     ];
 
     const groups = [
         {
-            title: "Les Records Absolus de la Ligue 🏆",
+            title: "Les Trophées Records de la Ligue 🏆",
             icon: <Trophy size={18} color="white" />,
             color: "var(--primary)",
             items: catalogue.filter(b => b.id.startsWith("RECORD_"))
         },
         {
-            title: "Pionniers : Milestones Cumulés (Tiers)",
+            title: "Pionniers : Paliers de Performance",
             icon: <Target size={18} color="white" />,
             color: "var(--accent)",
             items: catalogue.filter(b => b.type === "FIRST_COME" && !b.id.startsWith("RECORD_"))
@@ -64,14 +64,14 @@ export default async function FAQPage() {
 
     const faqItems = [
         {
-            q: "Le Voleur de Record 🦹‍♂️",
+            q: "Le Voleur de Trophée 🦹‍♂️",
             a: "Les Trophées de Record (ex : Champion du Jour) te versent une rente quotidienne de 1% de leur valeur. Mais attention : si quelqu'un bat ton record, il TE VOLE TON TROPHÉE et on te retire TOUT L'XP que tu avais accumulé avec cette rente ! Ton trône n'est jamais acquis.",
             icon: <Shield size={20} className="text-accent" />,
             id: "voleur"
         },
         {
-            q: "Les Tiers de Périodicité (Or, Argent..)",
-            a: "Être le tout premier de ta ligue à atteindre un JALON (ex : 100 pompes cumulées, 5000 squats ou 5min de gainage d'une traite) te donne le badge Platine (100% du bonus final). Le 2ème aura l'Or (80%), et ainsi de suite jusqu'à l'Argile ! Il ne faut surtout pas traîner.",
+            q: "Les Rangs d'Acquisition (Platine, Or..)",
+            a: "Être le tout premier de ta ligue à atteindre un PALIER (ex : 1000 pompes cumulées) te donne le rang Platine (100% du bonus final). Le 2ème aura l'Or (80%), et ainsi de suite jusqu'à l'Argile ! Il ne faut surtout pas traîner.",
             icon: <TrendingUp size={20} className="text-secondary" />,
             id: "tiers"
         },

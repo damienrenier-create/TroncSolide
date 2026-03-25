@@ -156,7 +156,7 @@ export default function DashboardClient({
                     {lostBadges.map(alert => (
                         <div key={alert.id} className="glass" style={{ padding: "1rem", borderLeft: "4px solid #ef4444", background: "rgba(15, 23, 42, 0.95)", backdropFilter: "blur(10px)", boxShadow: "0 10px 25px rgba(0,0,0,0.5)", borderRadius: "12px", width: "300px", animation: "slideInRight 0.3s ease-out" }}>
                             <div style={{ fontWeight: 900, color: "#ef4444", marginBottom: "4px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <Flame size={16} /> 🚨 BADGE VOLÉ !
+                                <Flame size={16} /> 🚨 TROPHÉE VOLÉ !
                             </div>
                             <p style={{ fontSize: "0.80rem", margin: "0 0 10px 0", color: "white", lineHeight: 1.4 }}>On vient de t'arracher le titre : <br/><strong>{alert.badge?.icon} {alert.badge?.name}</strong>.</p>
                             <button onClick={() => dismissLostBadge(alert.id)} style={{ width: "100%", background: "none", border: "1px solid #ef4444", color: "#ef4444", padding: "6px 8px", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer", fontWeight: 800, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"} onMouseOut={e => e.currentTarget.style.background = "none"}>Ça ne se passera pas comme ça !</button>
@@ -195,8 +195,8 @@ export default function DashboardClient({
                     </div>
                     
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "800" }}>
-                        <div style={{ color: "var(--accent)" }}>{stats.activeEvent.star.nickname} : {stats.activeEvent.star.reps} RP</div>
-                        <div style={{ color: "var(--text-muted)" }}>Meilleur Challenger : {stats.activeEvent.topChallenger?.value || 0} RP</div>
+                        <div style={{ color: "var(--accent)" }}>{stats.activeEvent.star.nickname} : {stats.activeEvent.star.reps} reps</div>
+                        <div style={{ color: "var(--text-muted)" }}>Meilleur Challenger : {stats.activeEvent.topChallenger?.value || 0} reps</div>
                     </div>
 
                     <p style={{ fontSize: "0.7rem", marginTop: "1rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", fontWeight: "600", margin: "1rem 0 0" }}>
@@ -237,8 +237,8 @@ export default function DashboardClient({
                     </svg>
 
                     <div className="progress-display" style={{ zIndex: 1, position: "relative" }}>
-                        <div className="progress-value">{initialProgress}</div>
-                        <div className="progress-total">SUR {initialTarget}sec</div>
+                        <div className="progress-value">{initialProgress} / {initialTarget}</div>
+                        <div className="progress-total">VOLUME D'EFFORT</div>
                     </div>
                 </div>
 

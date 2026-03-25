@@ -62,9 +62,9 @@ export default function GazetteComponent({
         } else {
             const badgeName = `${item.badge?.icon || ''} ${item.badge?.name || ''}`;
             const msgs = [
-                `A fièrement décroché le titre : ${badgeName} ! 🏆`,
+                `A fièrement décroché le trophée : ${badgeName} ! 🏆`,
                 `C'est fait, le record ${badgeName} est à lui/elle ! 😎`,
-                `A obtenu ${badgeName}. Qui osera le/la défier ? ⚔️`,
+                `A obtenu le trophée : ${badgeName}. Qui osera le/la défier ? ⚔️`,
                 `Bravo pour l'accomplissement majestueux : ${badgeName}. ✨`
             ];
             return <strong>{msgs[sumChars % msgs.length]}</strong>;
@@ -113,7 +113,7 @@ export default function GazetteComponent({
 
                                 <Link href="/faq" className="feed-link">
                                     <ExternalLink size={12} />
-                                    Voir {item.type === "LEVEL_UP" ? "niveaux" : "badge"}
+                                    Voir {item.type === "LEVEL_UP" ? "niveaux" : "trophée"}
                                 </Link>
                             </div>
                         </div>

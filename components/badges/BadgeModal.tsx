@@ -23,11 +23,11 @@ export default function BadgeModal({ badge, onClose }: { badge: any, onClose: ()
 
     const getRankName = (rank: number) => {
         switch (rank) {
-            case 1: return "Platine 🥇";
-            case 2: return "Or 🥈";
-            case 3: return "Argent 🥉";
-            case 4: return "Bronze 🏅";
-            case 5: return "Argile 🪨";
+            case 1: return "💎 Platine";
+            case 2: return "🥇 Or";
+            case 3: return "🥈 Argent";
+            case 4: return "🥉 Bronze";
+            case 5: return "🏺 Argile";
             default: return `Classé #${rank}`;
         }
     };
@@ -58,7 +58,7 @@ export default function BadgeModal({ badge, onClose }: { badge: any, onClose: ()
                 {/* HISTORIQUE / POSSÉSSEURS */}
                 <div style={{ marginTop: "1.5rem" }}>
                     <h3 style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--secondary)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                        <Trophy size={14} /> Possesseurs Actuels
+                        <Trophy size={14} /> {isRecord ? "Détenteur actuel" : "Joueurs sur ce palier"}
                     </h3>
 
                     {badge.users && badge.users.length > 0 ? (

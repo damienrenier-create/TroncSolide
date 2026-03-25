@@ -32,9 +32,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <Link href="/" className="logo">Tronc <span>Solide 🌳</span></Link>
                     
                     <div className="header-actions">
-                        <Link href="/faq" className="header-icon-btn" style={{ display: "flex", alignItems: "center", gap: "6px", textDecoration: "none", color: "inherit", padding: "6px 12px", borderRadius: "8px", background: "rgba(255,255,255,0.05)" }}>
+                        <Link href="/faq" className="header-user-btn">
                             <HelpCircle size={18} />
-                            <span style={{ fontSize: "0.8rem", fontWeight: "800", textTransform: "uppercase" }}>FAQ</span>
+                            <span className="header-user-name">FAQ</span>
                         </Link>
                         <Link href="/profile" className="header-user-btn">
                             <User size={18} />
