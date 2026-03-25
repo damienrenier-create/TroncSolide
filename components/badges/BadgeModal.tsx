@@ -3,8 +3,10 @@ import { X, Trophy, TrendingUp, Zap, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 
 export default function BadgeModal({ badge, onClose, userStats, records }: { badge: any, onClose: () => void, userStats?: any, records?: any[] }) {
+    const router = useRouter();
     if (!badge) return null;
 
     const isRecord = badge.id?.startsWith("RECORD_");
@@ -47,9 +49,10 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
             targetValue = match ? parseInt(match[0]) : 0;
         } else if (isRecord && records) {
             const exercise = badge.id.includes("PUSHUP") ? "pushups" : badge.id.includes("SQUAT") ? "squats" : "plank";
-            const timeframe = badge.id.includes("DAY") ? "day" : badge.id.includes("WEEK") ? "week" : badge.id.includes("MONTH") ? "month" : "allTime";
+            const timeframe = badge.id.includes("DAY") ? "today" : badge.id.includes("WEEK") ? "week" : badge.id.includes("MONTH") ? "month" : "allTime";
             
-            const recordObj = records.find((r: any) => r.type === timeframe.toUpperCase());
+            // Correction matching type
+            const recordObj = records.find((r: any) => r.type === timeframe.toUpperCase() || (timeframe === "today" && r.type === "DAY"));
             targetValue = recordObj?.[exercise] || 0;
         }
 
@@ -89,7 +92,7 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
     const isOwnedByMe = badge.users?.some((ub: any) => ub.userId === userStats?.userId);
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 10020 }}>
             <div className="modal-content glass-premium" onClick={e => e.stopPropagation()}>
                 <button className="modal-close-btn" onClick={onClose}>
                     <X size={20} />
@@ -192,21 +195,6 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
                     )}
                 </div>
 
-                {isRecord && badge.feedItems && badge.feedItems.length > 1 && (
-                    <div style={{ marginTop: "1.5rem" }}>
-                        <h3 style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                            <TrendingUp size={14} /> Historique du Record
-                        </h3>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingLeft: "1rem", borderLeft: "2px solid rgba(255,255,255,0.05)" }}>
-                            {badge.feedItems.slice(1, 4).map((feed: any, i: number) => (
-                                <div key={i} style={{ fontSize: "0.75rem", color: "var(--text-muted)", padding: "0.25rem 0" }}>
-                                    <span style={{ color: "var(--foreground)", fontWeight: 800 }}>{feed.user?.nickname}</span> le {new Date(feed.createdAt).toLocaleDateString("fr-FR")}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 <div style={{ marginTop: "2rem", display: "flex", flexDirection: "column", gap: "10px" }}>
                     <Link 
                         href={`/trophies?highlight=${badge.id}`}
@@ -217,9 +205,9 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
                     </Link>
                     
                     <button 
-                        onClick={() => { onClose(); window.location.hash = "volume"; }} 
+                        onClick={() => { onClose(); router.push("/faq#volume"); }} 
                         className="btn-ghost"
-                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", width: "100%" }}>
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", width: "100%", cursor: "pointer" }}>
                         <ExternalLink size={14} /> Règlement & FAQ
                     </button>
                 </div>
@@ -233,7 +221,7 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        z-index: 1000;
+                        z-index: 10020;
                         padding: 1rem;
                         animation: fadeIn 0.2s ease-out;
                     }

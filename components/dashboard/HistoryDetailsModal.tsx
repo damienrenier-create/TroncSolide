@@ -82,7 +82,7 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 9999,
+        zIndex: 10020,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
