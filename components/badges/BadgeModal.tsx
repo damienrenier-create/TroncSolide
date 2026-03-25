@@ -92,9 +92,34 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
     const isOwnedByMe = badge.users?.some((ub: any) => ub.userId === userStats?.userId);
     const faqAnchor = isRecord ? "#records" : isMilestone ? "#pionniers" : "#xp-trophees";
 
+    const modalOverlayStyle: React.CSSProperties = {
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: "rgba(15, 23, 42, 0.8)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        zIndex: 100000,
+        padding: "1rem",
+        animation: "fadeIn 0.3s ease-out"
+    };
+
+    const modalContentStyle: React.CSSProperties = {
+        background: "white",
+        width: "100%", 
+        maxWidth: "380px",
+        borderRadius: "32px",
+        padding: "2rem",
+        position: "relative",
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+        animation: "modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+    };
+
     return (
-        <div className="badge-modal-overlay" onClick={onClose}>
-            <div className="badge-modal-content glass-premium" onClick={e => e.stopPropagation()}>
+        <div style={modalOverlayStyle} onClick={onClose}>
+            <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
                 <button className="badge-modal-close" onClick={onClose}><X size={20} /></button>
 
                 <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
@@ -170,25 +195,6 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
                 </div>
 
                 <style jsx>{`
-                    .badge-modal-overlay {
-                        position: fixed;
-                        top: 0; left: 0; right: 0; bottom: 0;
-                        background: rgba(15, 23, 42, 0.8);
-                        backdrop-filter: blur(12px);
-                        display: flex; align-items: center; justify-content: center;
-                        z-index: 100000;
-                        padding: 1rem;
-                        animation: fadeIn 0.3s ease-out;
-                    }
-                    .badge-modal-content {
-                        background: white;
-                        width: 100%; max-width: 380px;
-                        border-radius: 32px;
-                        padding: 2rem;
-                        position: relative;
-                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-                        animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                    }
                     .badge-modal-close {
                         position: absolute; top: 1.25rem; right: 1.25rem;
                         background: rgba(0,0,0,0.05); border: none;

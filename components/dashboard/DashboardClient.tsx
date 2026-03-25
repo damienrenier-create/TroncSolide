@@ -101,13 +101,21 @@ export default function DashboardClient({
         const { userStats, records } = trophiesData;
         const myBadgeNames = new Set(stats.badges?.map((b: any) => b.badge?.name) || []);
 
-        // Helper to get total or max from aggregate arrays
-        const getValue = (arr: any[], exType: string | string[], field: '_sum' | '_max' = '_sum') => {
-            if (!arr) return 0;
-            const types = Array.isArray(exType) ? exType : [exType];
-            return arr
-                .filter(a => types.includes(a.type))
-                .reduce((acc, curr) => acc + (curr[field]?.value || 0), 0);
+        const getValue = (exType: string | string[], field: 'allTime' | 'month' | 'week' | 'today' | 'dayMax' = 'allTime', isMax: boolean = false) => {
+            if (!userStats || !userStats[field]) return 0;
+            const statsObj = userStats[field];
+            
+            if (isMax) {
+                if (exType === "PUSHUP") return statsObj.maxPushups || 0;
+                if (exType === "SQUAT") return statsObj.maxSquats || 0;
+                if (exType === "PLANK" || Array.isArray(exType)) return statsObj.maxPlank || 0;
+                return 0;
+            }
+
+            if (exType === "PUSHUP") return statsObj.pushups || 0;
+            if (exType === "SQUAT") return statsObj.squats || 0;
+            if (exType === "PLANK" || Array.isArray(exType)) return statsObj.plank || 0;
+            return 0;
         };
 
         const categories = [
@@ -157,53 +165,34 @@ export default function DashboardClient({
                     else if (badge.id === "CENTURION") targetValue = 100;
                 }
 
-                // 2. DÉTERMINATION DU CURRENT
+                // 2. DÉTERMINATION DU CURRENT (Match logic with BadgeModal.tsx)
                 if (badge.id.includes("PUMP") || badge.id.includes("PUSHUP")) {
                     unit = "pompes";
-                    if (badge.id.startsWith("SERIE_PUMP_") || badge.id === "RECORD_SERIES_PUSHUP") {
-                        currentValue = getValue(userStats.aggregates, "PUSHUP", "_max");
-                    } else if (badge.id === "RECORD_DAY_PUSHUP") {
-                        currentValue = getValue(userStats.dayStats, "PUSHUP");
-                    } else if (badge.id === "RECORD_WEEK_PUSHUP") {
-                        currentValue = getValue(userStats.weekStats, "PUSHUP");
-                    } else if (badge.id === "RECORD_MONTH_PUSHUP") {
-                        currentValue = getValue(userStats.monthStats, "PUSHUP");
-                    } else {
-                        currentValue = getValue(userStats.aggregates, "PUSHUP");
-                    }
+                    if (badge.id.startsWith("SERIE_") || badge.id.includes("SERIES")) currentValue = getValue("PUSHUP", "allTime", true);
+                    else if (badge.id.includes("DAY")) currentValue = getValue("PUSHUP", "today");
+                    else if (badge.id.includes("WEEK")) currentValue = getValue("PUSHUP", "week");
+                    else if (badge.id.includes("MONTH")) currentValue = getValue("PUSHUP", "month");
+                    else currentValue = getValue("PUSHUP", "allTime");
                 } else if (badge.id.includes("SQUAT")) {
                     unit = "squats";
-                    if (badge.id.startsWith("SERIE_SQUAT_") || badge.id === "RECORD_SERIES_SQUAT") {
-                        currentValue = getValue(userStats.aggregates, "SQUAT", "_max");
-                    } else if (badge.id === "RECORD_DAY_SQUAT") {
-                        currentValue = getValue(userStats.dayStats, "SQUAT");
-                    } else if (badge.id === "RECORD_WEEK_SQUAT") {
-                        currentValue = getValue(userStats.weekStats, "SQUAT");
-                    } else if (badge.id === "RECORD_MONTH_SQUAT") {
-                        currentValue = getValue(userStats.monthStats, "SQUAT");
-                    } else {
-                        currentValue = getValue(userStats.aggregates, "SQUAT");
-                    }
+                    if (badge.id.startsWith("SERIE_") || badge.id.includes("SERIES")) currentValue = getValue("SQUAT", "allTime", true);
+                    else if (badge.id.includes("DAY")) currentValue = getValue("SQUAT", "today");
+                    else if (badge.id.includes("WEEK")) currentValue = getValue("SQUAT", "week");
+                    else if (badge.id.includes("MONTH")) currentValue = getValue("SQUAT", "month");
+                    else currentValue = getValue("SQUAT", "allTime");
                 } else if (badge.id.includes("PLANK")) {
                     unit = badge.id.includes("SERIE") ? "secondes" : "s";
-                    const plankTypes = ["VENTRAL", "LATERAL_L", "LATERAL_R"];
-                    if (badge.id.startsWith("SERIE_PLANK_") || badge.id === "RECORD_SERIES_PLANK") {
-                        currentValue = getValue(userStats.aggregates, plankTypes, "_max");
-                    } else if (badge.id === "RECORD_DAY_PLANK") {
-                        currentValue = getValue(userStats.dayStats, plankTypes);
-                    } else if (badge.id === "RECORD_WEEK_PLANK") {
-                        currentValue = getValue(userStats.weekStats, plankTypes);
-                    } else if (badge.id === "RECORD_MONTH_PLANK") {
-                        currentValue = getValue(userStats.monthStats, plankTypes);
-                    } else {
-                        currentValue = getValue(userStats.aggregates, plankTypes);
-                    }
+                    if (badge.id.startsWith("SERIE_") || badge.id.includes("SERIES")) currentValue = getValue("PLANK", "allTime", true);
+                    else if (badge.id.includes("DAY")) currentValue = getValue("PLANK", "today");
+                    else if (badge.id.includes("WEEK")) currentValue = getValue("PLANK", "week");
+                    else if (badge.id.includes("MONTH")) currentValue = getValue("PLANK", "month");
+                    else currentValue = getValue("PLANK", "allTime");
                 }
 
                 currentValue = currentValue || 0;
                 const percent = targetValue > 0 ? Math.min(100, Math.floor((currentValue / targetValue) * 100)) : 0;
                 return { ...badge, currentValue, targetValue, unit, percent };
-            }).filter(b => b.percent < 100).sort((a, b) => b.percent - a.percent);
+            }).filter(badge => (badge as any).percent < 100).sort((a: any, b: any) => b.percent - a.percent);
 
             if (processed.length > 0) output.push(processed[0]);
         });
