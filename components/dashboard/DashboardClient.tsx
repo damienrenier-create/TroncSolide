@@ -99,7 +99,7 @@ export default function DashboardClient({
     const getNextObjectives = () => {
         if (!trophiesData || !trophiesData.userStats) return [];
         const { userStats, records } = trophiesData;
-        const myBadgeIds = new Set(stats.badges?.map((b: any) => b.badgeId || b.id) || []);
+        const myBadgeNames = new Set(stats.badges?.map((b: any) => b.badge?.name) || []);
 
         // Helper to get total or max from aggregate arrays
         const getValue = (arr: any[], exType: string | string[], field: '_sum' | '_max' = '_sum') => {
@@ -122,7 +122,7 @@ export default function DashboardClient({
             const candidates = BADGE_DEFINITIONS.filter(b => 
                 (cat.key === "RECORD" ? b.id.startsWith("RECORD_") : 
                  cat.tags.some(tag => b.id.includes(tag)) && !b.id.startsWith("RECORD_")) &&
-                !myBadgeIds.has(b.id)
+                !myBadgeNames.has(b.name)
             );
 
             const processed = candidates.map(badge => {
