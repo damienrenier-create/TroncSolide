@@ -112,9 +112,12 @@ model ExerciseSession {
   date      DateTime     // Date of the exercise (can be retroactive)
   createdAt DateTime     @default(now())
   mood      String?      @db.VarChar(50)
+  batchId   String?
+  xpDetails Json?        @map("xp_details")
 
   user      User         @relation(fields: [userId], references: [id])
 
+  @@index([batchId])
   @@map("exercise_sessions")
 }
 

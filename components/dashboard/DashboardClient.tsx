@@ -9,6 +9,8 @@ import { getLevelInfo } from "@/lib/constants/levels";
 import { deleteSession } from "@/lib/actions/moderation";
 import { useRouter } from "next/navigation";
 import OnboardingModal from "./OnboardingModal";
+import HistoryDetailsModal from "./HistoryDetailsModal";
+import { getRecentBatches } from "@/lib/actions/exercise";
 
 interface DashboardProps {
     userId: string;
@@ -28,6 +30,8 @@ export default function DashboardClient({
     const [loading, setLoading] = useState(false);
     const [lostBadges, setLostBadges] = useState<any[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(!stats.hasSeenOnboarding);
+    const [recentBatches, setRecentBatches] = useState<any[]>([]);
+    const [selectedBatch, setSelectedBatch] = useState<any | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -45,6 +49,17 @@ export default function DashboardClient({
         const seen = JSON.parse(localStorage.getItem("seenLostBadges") || "[]");
         localStorage.setItem("seenLostBadges", JSON.stringify([...seen, id]));
     };
+    
+    // Chargement initial des lots groupés
+    useEffect(() => {
+        async function loadBatches() {
+            const res = await getRecentBatches();
+            if (res.success && res.batches) {
+                setRecentBatches(res.batches);
+            }
+        }
+        loadBatches();
+    }, []);
 
     const actualPercent = Math.round((initialProgress / initialTarget) * 100);
     const progressPercent = Math.min(actualPercent, 100);
@@ -245,7 +260,7 @@ export default function DashboardClient({
                                 className={`btn-primary start-button ${!isGoalReached ? 'btn-pulse' : ''}`}
                                 onClick={() => setShowForm(true)}
                             >
-                                Loguer ma séance
+                                LOGGER UNE SÉANCE
                             </button>
                             <button
                                 className="glass-hover"
@@ -380,44 +395,50 @@ export default function DashboardClient({
                     <span>Historique Récent</span>
                 </div>
                 <div className="history-list">
-                    {stats.sessions.length > 0 ? stats.sessions.map((s: any) => (
-                        <div key={s.id} className="history-item">
+                    {recentBatches.length > 0 ? recentBatches.map((batch: any) => (
+                        <div 
+                            key={batch.id} 
+                            className="history-item clickable-card"
+                            onClick={() => setSelectedBatch(batch)}
+                            style={{ cursor: "pointer" }}
+                        >
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                                    <div className="history-icon">{s.type === 'PUSHUP' ? '💪' : s.type === 'SQUAT' ? '🦵' : '🛡️'}</div>
+                                    <div className="history-icon" style={{ fontSize: "1.2rem" }}>
+                                        {batch.exercises.length > 1 ? '📦' : (batch.exercises[0]?.type === 'PUSHUP' ? '💪' : batch.exercises[0]?.type === 'SQUAT' ? '🦵' : '🛡️')}
+                                    </div>
                                     <div>
-                                        <div style={{ fontWeight: "700", fontSize: "0.85rem" }}>
-                                            {s.type === 'PUSHUP' ? 'Pompes' : s.type === 'SQUAT' ? 'Squats' : 'Gainage'}
+                                        <div style={{ fontWeight: "800", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                            {batch.exercises.length > 1 ? `${batch.exercises.length} EXERCICES` : (batch.exercises[0]?.type === 'PUSHUP' ? 'Pompes' : batch.exercises[0]?.type === 'SQUAT' ? 'Squats' : 'Gainage')}
                                         </div>
                                         <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "600" }}>
-                                            {s.value} {s.type === 'PUSHUP' || s.type === 'SQUAT' ? 'reps' : 's'} • {new Date(s.date).toLocaleDateString()}
+                                            {new Date(batch.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {batch.exercises.reduce((acc: number, ex: any) => acc + ex.value, 0)} {batch.exercises[0]?.type === 'PUSHUP' || batch.exercises[0]?.type === 'SQUAT' ? 'reps' : 's'}
                                         </div>
                                     </div>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                                    <div style={{ fontSize: "0.75rem", fontWeight: "900", color: "var(--primary)" }}>+{s.xpGained} XP</div>
-                                    {(s.userId === currentUserId || stats.role === "MODERATOR") && (
-                                        <button
-                                            onClick={() => handleDeleteSession(s.id)}
-                                            disabled={loading}
-                                            style={{ background: "none", border: "none", padding: "4px", cursor: "pointer", color: loading ? "#ccc" : "#ef4444", opacity: 0.6 }}
-                                            title={s.userId === currentUserId ? "Supprimer mon erreur" : "Supprimer (Modérateur)"}
-                                        >
-                                            {s.userId === currentUserId ? <Trash2 size={16} /> : <Lock size={14} />}
-                                        </button>
-                                    )}
+                                    <div style={{ fontSize: "0.85rem", fontWeight: "900", color: "var(--primary)" }}>+{batch.xpTotal} XP</div>
+                                    <div className="text-muted" style={{ opacity: 0.3 }}><History size={14} /></div>
                                 </div>
                             </div>
-                            {s.mood && (
-                                <div style={{ marginTop: "0.5rem", paddingLeft: "3rem", fontSize: "0.7rem", fontStyle: "italic", color: "var(--text-muted)", opacity: 0.8 }}>
-                                    "{s.mood}"
+                            {batch.mood && (
+                                <div style={{ marginTop: "0.4rem", paddingLeft: "3rem", fontSize: "0.7rem", fontStyle: "italic", color: "var(--text-muted)", opacity: 0.7 }}>
+                                    "{batch.mood}"
                                 </div>
                             )}
                         </div>
                     )) : (
-                        <p className="empty-text" style={{ fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center", padding: "1rem" }}>Aucune séance récente.</p>
+                        <p className="empty-text" style={{ fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center", padding: "1.5rem" }}>Chargement de l'historique...</p>
                     )}
                 </div>
+
+                {selectedBatch && (
+                    <HistoryDetailsModal 
+                        isOpen={!!selectedBatch}
+                        batch={selectedBatch}
+                        onClose={() => setSelectedBatch(null)}
+                    />
+                )}
             </section>
 
             <style jsx>{`
