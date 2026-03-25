@@ -1,4 +1,4 @@
-import { getBadgeCatalogue } from "@/lib/actions/gamification";
+import { getBadgeCatalogue, getTrophiesRoomData } from "@/lib/actions/gamification";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import FAQClient from "@/components/faq/FAQClient";
 import { Trophy, Target, Star, TreePine, Calendar, Zap, Shield, TrendingUp, Award } from "lucide-react";
@@ -10,6 +10,7 @@ export const metadata = {
 
 export default async function FAQPage() {
     const badges = await getBadgeCatalogue();
+    const trophiesData = await getTrophiesRoomData();
     
     const catalogue = badges ? BADGE_DEFINITIONS.map(def => {
         const dbBadge = badges.find(b => b.name === def.name);
@@ -96,6 +97,8 @@ export default async function FAQPage() {
             groups={groups} 
             faqItems={faqItems} 
             agenda={agenda}
+            userStats={trophiesData?.userStats}
+            records={trophiesData?.records}
         />
     );
 }

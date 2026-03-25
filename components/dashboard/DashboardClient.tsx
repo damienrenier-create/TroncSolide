@@ -11,19 +11,23 @@ import { useRouter } from "next/navigation";
 import OnboardingModal from "./OnboardingModal";
 import HistoryDetailsModal from "./HistoryDetailsModal";
 import { getRecentBatches } from "@/lib/actions/exercise";
+import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
+import BadgeModal from "@/components/badges/BadgeModal";
 
 interface DashboardProps {
     userId: string;
     initialTarget: number;
     initialProgress: number;
     stats: any;
+    trophiesData?: any;
 }
 
 export default function DashboardClient({
     userId,
     initialTarget,
     initialProgress,
-    stats
+    stats,
+    trophiesData
 }: DashboardProps) {
     const [showForm, setShowForm] = useState(false);
     const [showSecondaryForm, setShowSecondaryForm] = useState(false);
@@ -32,6 +36,7 @@ export default function DashboardClient({
     const [showOnboarding, setShowOnboarding] = useState(!stats.hasSeenOnboarding);
     const [recentBatches, setRecentBatches] = useState<any[]>([]);
     const [selectedBatch, setSelectedBatch] = useState<any | null>(null);
+    const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -49,6 +54,50 @@ export default function DashboardClient({
         const seen = JSON.parse(localStorage.getItem("seenLostBadges") || "[]");
         localStorage.setItem("seenLostBadges", JSON.stringify([...seen, id]));
     };
+
+    // 3. Logic for Next Objectives
+    const getNextObjectives = () => {
+        if (!trophiesData || !trophiesData.userStats) return [];
+        
+        const userStats = trophiesData.userStats;
+        const myBadgeIds = new Set(stats.badges?.map((b: any) => b.badgeId) || []);
+
+        const milestones = BADGE_DEFINITIONS.filter(b => 
+            b.type === "FIRST_COME" && 
+            !b.id.startsWith("RECORD_") && 
+            !myBadgeIds.has(b.id)
+        );
+
+        const objectives = milestones.map(badge => {
+            const match = badge.id.match(/\d+/);
+            const targetValue = match ? parseInt(match[0]) : 0;
+            let currentValue = 0;
+            let unit = "";
+
+            if (badge.id.includes("PUMP") || badge.id.includes("PUSHUP")) {
+                unit = "pompes";
+                if (badge.id.startsWith("SERIE_")) currentValue = userStats.allTime?.maxPushups || 0;
+                else currentValue = userStats.allTime?.pushups || 0;
+            } else if (badge.id.includes("SQUAT")) {
+                unit = "squats";
+                if (badge.id.startsWith("SERIE_")) currentValue = userStats.allTime?.maxSquats || 0;
+                else currentValue = userStats.allTime?.squats || 0;
+            } else if (badge.id.includes("PLANK")) {
+                unit = "s";
+                if (badge.id.startsWith("SERIE_")) currentValue = userStats.allTime?.maxPlank || 0;
+                else currentValue = userStats.allTime?.plank || 0;
+            }
+
+            const percent = targetValue > 0 ? Math.min(100, Math.floor((currentValue / targetValue) * 100)) : 0;
+            return { ...badge, currentValue, targetValue, unit, percent };
+        });
+
+        return objectives
+            .sort((a, b) => b.percent - a.percent)
+            .slice(0, 3);
+    };
+
+    const nextObjectives = getNextObjectives();
     
     // Chargement initial des lots groupés
     useEffect(() => {
@@ -389,6 +438,39 @@ export default function DashboardClient({
                 </div>
             </div>
 
+            {/* PROCHAINS OBJECTIFS - Motivation Booster */}
+            {nextObjectives.length > 0 && (
+                <section className="glass" style={{ marginBottom: "1.5rem", padding: "1.25rem" }}>
+                    <div className="card-header" style={{ marginBottom: "1rem" }}>
+                        <TrendingUp size={18} className="text-secondary" />
+                        <span>Prochains objectifs</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        {nextObjectives.map((badge: any) => (
+                            <div 
+                                key={badge.id} 
+                                className="glass-premium clickable-card"
+                                onClick={() => setSelectedBadge(badge)}
+                                style={{ padding: "0.85rem", borderRadius: "16px", background: "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", gap: "12px" }}
+                            >
+                                <div style={{ fontSize: "1.5rem", width: "45px", height: "45px", borderRadius: "12px", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    {badge.icon}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
+                                        <div style={{ fontWeight: 800, fontSize: "0.85rem" }}>{badge.name}</div>
+                                        <div style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--text-muted)" }}>{badge.currentValue} / {badge.targetValue} {badge.unit}</div>
+                                    </div>
+                                    <div style={{ height: "4px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", overflow: "hidden" }}>
+                                        <div style={{ height: "100%", width: `${badge.percent}%`, background: "var(--secondary)", transition: "width 1s ease-out" }} />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {/* 4. Recent History */}
             <section className="glass history-card">
                 <div className="card-header">
@@ -438,6 +520,15 @@ export default function DashboardClient({
                         isOpen={!!selectedBatch}
                         batch={selectedBatch}
                         onClose={() => setSelectedBatch(null)}
+                    />
+                )}
+
+                {selectedBadge && (
+                    <BadgeModal 
+                        badge={selectedBadge} 
+                        onClose={() => setSelectedBadge(null)} 
+                        userStats={trophiesData?.userStats}
+                        records={trophiesData?.records}
                     />
                 )}
             </section>

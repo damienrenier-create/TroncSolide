@@ -1,6 +1,7 @@
 import { getTrophiesRoomData } from "@/lib/actions/gamification";
 import TrophiesClient from "@/components/badges/TrophiesClient";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 export const metadata = {
     title: "Salle des Trophées | Tronc Solide",
@@ -21,10 +22,13 @@ export default async function TrophiesRoomPage() {
                 <p className="log-subtitle">Tes vitrines d'exploits et les records à conquérir.</p>
             </header>
 
-            <TrophiesClient 
-                initialBadges={data.badges} 
-                userStats={data.userStats} 
-            />
+            <Suspense fallback={<div className="glass" style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)", borderRadius: "20px" }}>Chargement des trophées...</div>}>
+                <TrophiesClient 
+                    initialBadges={data.badges} 
+                    userStats={data.userStats}
+                    records={data.records}
+                />
+            </Suspense>
         </div>
     );
 }

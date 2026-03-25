@@ -5,7 +5,7 @@ import { BookOpen, HelpCircle, ShieldAlert, Trophy, Award, Zap, Calendar, Trendi
 import { NATURE_LEVELS } from "@/lib/constants/levels";
 import BadgeCatalogueClient from "@/components/badges/BadgeCatalogueClient";
 
-export default function FAQClient({ badges, groups, catalogue, faqItems, agenda }: any) {
+export default function FAQClient({ badges, groups, catalogue, faqItems, agenda, userStats, records }: any) {
     const [activeTab, setActiveTab] = useState("rules"); // 'rules', 'agenda', 'progression', 'badges'
 
     // Automatically switch tabs based on hash in URL
@@ -99,7 +99,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                             Le Concept Fun (mais secondaire)
                         </h2>
                         <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "1rem", lineHeight: 1.6 }}>
-                            <p>Les <a href="#niveaux" onClick={(e) => { e.preventDefault(); setActiveTab("progression"); }} style={{ color: "var(--secondary)", fontWeight: 800, textDecoration: "underline" }}>niveaux</a> sont un jeu dans l’application pour stimuler les utilisateurs. La base des niveaux se fait avec des XP qui sont gagnés à chaque répétition :</p>
+                            <p id="xp-trophees">Les <a href="#niveaux" onClick={(e) => { e.preventDefault(); setActiveTab("progression"); }} style={{ color: "var(--secondary)", fontWeight: 800, textDecoration: "underline" }}>niveaux</a> sont un jeu dans l’application pour stimuler les utilisateurs. La base des niveaux se fait avec des XP qui sont gagnés à chaque répétition :</p>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                                 <div className="glass-premium" style={{ padding: "0.75rem", borderRadius: "12px", textAlign: "center", fontWeight: 800, fontSize: "0.8rem" }}>1 Squat / Pompe = 1 XP</div>
                                 <div className="glass-premium" style={{ padding: "0.75rem", borderRadius: "12px", textAlign: "center", fontWeight: 800, fontSize: "0.8rem" }}>1 Seconde Gainage = 1 XP</div>
@@ -299,7 +299,12 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                     {/* 3. Catalogue complet */}
                     <div id="badges-list" style={{ marginTop: "1rem" }}>
                         {badges ? (
-                            <BadgeCatalogueClient groups={groups} faqItems={faqItems} />
+                            <BadgeCatalogueClient 
+                                groups={groups} 
+                                faqItems={faqItems} 
+                                userStats={userStats}
+                                records={records}
+                            />
                         ) : (
                             <div className="glass" style={{ textAlign: "center", padding: "3rem 2rem", borderRadius: "20px" }}>
                                 <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", fontWeight: "800" }}>Connecte-toi pour explorer l'encyclopédie des hauts faits.</div>

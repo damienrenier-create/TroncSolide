@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDailyTarget, getTodayProgress } from "@/lib/actions/exercise";
 import { getUserStats } from "@/lib/actions/dashboard";
+import { getTrophiesRoomData } from "@/lib/actions/gamification";
 import { syncPenalties } from "@/lib/actions/economy";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 
@@ -16,10 +17,11 @@ export default async function DashboardPage() {
   // Sync penalties on load (simple "cron" replacement)
   await syncPenalties();
 
-  const [target, progress, stats] = await Promise.all([
+  const [target, progress, stats, trophiesData] = await Promise.all([
     getDailyTarget(session.user.id),
     getTodayProgress(session.user.id),
-    getUserStats()
+    getUserStats(),
+    getTrophiesRoomData()
   ]);
 
   if (!stats) return (
@@ -38,6 +40,7 @@ export default async function DashboardPage() {
       initialTarget={target}
       initialProgress={progress}
       stats={stats}
+      trophiesData={trophiesData}
     />
   );
 }

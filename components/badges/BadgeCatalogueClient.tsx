@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp, Star, Trophy, Target, TreePine, Calendar, Zap, 
 import BadgeModal from "./BadgeModal";
 import styles from "./badges.module.css";
 
-export default function BadgeCatalogueClient({ groups, faqItems }: { groups: any[], faqItems: any[] }) {
+export default function BadgeCatalogueClient({ groups, faqItems, userStats, records }: { groups: any[], faqItems: any[], userStats?: any, records?: any[] }) {
     const [selectedBadge, setSelectedBadge] = useState<any>(null);
     const [openFaq, setOpenFaq] = useState(false);
     const [openGroups, setOpenGroups] = useState<Record<number, boolean>>({ 0: true }); // Premier groupe ouvert par défaut
@@ -79,7 +79,14 @@ export default function BadgeCatalogueClient({ groups, faqItems }: { groups: any
                 </section>
             ))}
 
-            {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />}
+            {selectedBadge && (
+                <BadgeModal 
+                    badge={selectedBadge} 
+                    onClose={() => setSelectedBadge(null)} 
+                    userStats={userStats}
+                    records={records}
+                />
+            )}
 
             <style jsx>{`
                 @keyframes slideDown {

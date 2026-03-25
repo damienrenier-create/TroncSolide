@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { Badge, ExerciseType, BadgeType, Record as LeagueRecord } from "@prisma/client";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import { Flame, CheckCircle, Trophy as TrophyIcon } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 interface TrophiesClientProps {
     initialBadges: any[];
@@ -12,6 +13,9 @@ interface TrophiesClientProps {
 }
 
 export default function TrophiesClient({ initialBadges, userStats, records = [] }: TrophiesClientProps) {
+    const searchParams = useSearchParams();
+    const highlightId = searchParams.get("highlight");
+
     // 1. Catégorisation des badges (Vitrines)
     const vitrines = useMemo(() => {
         const categories = [
@@ -136,7 +140,7 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
                             const holderNickname = item.badge?.users?.[0]?.user?.nickname;
 
                             return (
-                                <div key={item.id} className={`trophy-card glass ${info.isDone ? 'done' : ''}`} style={{
+                                <div key={item.id} id={`badge-${item.id}`} className={`trophy-card glass ${info.isDone ? 'done' : ''} ${highlightId === item.id ? 'highlighted-badge' : ''}`} style={{
                                     padding: "1rem",
                                     borderRadius: "20px",
                                     display: "flex",
@@ -145,8 +149,8 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
                                     position: "relative",
                                     overflow: "hidden",
                                     background: info.isDone ? "rgba(5, 150, 105, 0.05)" : "rgba(255,255,255,0.6)",
-                                    border: info.isNear ? "2px solid var(--primary)" : "1px solid rgba(0,0,0,0.05)",
-                                    transition: "transform 0.2s"
+                                    border: highlightId === item.id ? "2px solid var(--primary)" : (info.isNear ? "2px solid var(--primary)" : "1px solid rgba(0,0,0,0.05)"),
+                                    transition: "transform 0.2s, box-shadow 0.3s"
                                 }}>
                                     {info.isNear && (
                                         <div style={{ position: "absolute", top: "5px", right: "5px", color: "var(--primary)" }}>
@@ -213,6 +217,16 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
                 }
                 .trophy-card.done {
                     border-color: rgba(5, 150, 105, 0.2) !important;
+                }
+                .highlighted-badge {
+                    animation: pulseHighlight 2s infinite;
+                    z-index: 10;
+                    background: rgba(139, 92, 246, 0.05) !important;
+                }
+                @keyframes pulseHighlight {
+                    0% { box-shadow: 0 0 0px rgba(139, 92, 246, 0); }
+                    50% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); transform: scale(1.02); }
+                    100% { box-shadow: 0 0 0px rgba(139, 92, 246, 0); }
                 }
             `}</style>
         </div>
