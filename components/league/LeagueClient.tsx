@@ -153,8 +153,9 @@ export default function LeagueClient({
                     </section>
 
                     <div style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start", marginBottom: "2.5rem" }}>
-                        {/* 2. VERTICAL TIMEFRAME TOGGLE */}
-                        <div className="vertical-time-toggle">
+                        {/* 2. VERTICAL TIMEFRAME TOGGLE (LEFT CONTROL POD) */}
+                        <div className="control-pod left">
+                            <div className="pod-label">TEMPS</div>
                             {[
                                 { id: "DAY", label: "Jour", icon: "☀️" },
                                 { id: "WEEK", label: "Sem.", icon: "🗓️" },
@@ -163,14 +164,12 @@ export default function LeagueClient({
                                 <button
                                     key={tf.id}
                                     onClick={() => handleUpdate(exercise, type, tf.id as RecordTimeframe)}
-                                    className={`time-node ${timeframe === tf.id ? 'active' : ''}`}
-                                    title={tf.label}
+                                    className={`pod-node ${timeframe === tf.id ? 'active' : ''}`}
                                 >
-                                    <span className="time-icon">{tf.icon}</span>
-                                    <span className="time-label">{tf.label}</span>
+                                    <span className="pod-icon">{tf.icon}</span>
+                                    <span className="pod-text">{tf.label}</span>
                                 </button>
                             ))}
-                            <div className="time-line"></div>
                         </div>
 
                         {/* 3. PODIUM PRESTIGE */}
@@ -183,18 +182,18 @@ export default function LeagueClient({
                                             <div className="player-meta">
                                                 <div className="player-avatar-ring silver" onClick={(e) => { e.stopPropagation(); }}>
                                                     <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} style={{ textDecoration: 'none' }}>
-                                                        <span>🥈</span>
+                                                        <span className="rank-emoji">🥈</span>
                                                     </Link>
                                                 </div>
-                                                <div className="player-name-pop">
+                                                <div className="player-name-bubble">
                                                     <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} className="profile-link">{top3[1].nickname}</Link>
-                                                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[1].currentStreak} /></div>
+                                                    <div className="streak-cont"><StreakFlame streak={top3[1].currentStreak} /></div>
                                                 </div>
                                             </div>
                                             <div className="step-bar-3d silver">
                                                 <span className="rank-label">ARGENT</span>
                                                 <div className="val-badge">{top3[1].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
-                                                <div className="click-hint">RÉCOMPENSES 🎁</div>
+                                                <div className="click-hint">LOT 🎁</div>
                                             </div>
                                         </div>
                                     )}
@@ -203,22 +202,22 @@ export default function LeagueClient({
                                     <div className="podium-step rank-1 interactive" onClick={() => setRewardModal({ rank: 1, label: "OR" })}>
                                         <div className="player-meta">
                                             <div className="crown-premium">
-                                                <Trophy size={28} className="gold-icon" />
+                                                <Trophy size={32} className="gold-icon-glow" />
                                             </div>
                                             <div className="player-avatar-ring gold" onClick={(e) => { e.stopPropagation(); }}>
                                                 <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} style={{ textDecoration: 'none' }}>
-                                                    <span>🥇</span>
+                                                    <span className="rank-emoji">🥇</span>
                                                 </Link>
                                             </div>
-                                            <div className="player-name-pop" style={{ fontSize: "1rem" }}>
+                                            <div className="player-name-bubble main">
                                                 <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} className="profile-link">{top3[0].nickname}</Link>
-                                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[0].currentStreak} /></div>
+                                                <div className="streak-cont"><StreakFlame streak={top3[0].currentStreak} /></div>
                                             </div>
                                         </div>
                                         <div className="step-bar-3d gold">
                                             <span className="rank-label">OR</span>
                                             <div className="val-badge main">{top3[0].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
-                                            <div className="click-hint">RÉCOMPENSES ⭐️</div>
+                                            <div className="click-hint">LOT ⭐️</div>
                                         </div>
                                     </div>
 
@@ -228,18 +227,18 @@ export default function LeagueClient({
                                             <div className="player-meta">
                                                 <div className="player-avatar-ring bronze" onClick={(e) => { e.stopPropagation(); }}>
                                                     <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} style={{ textDecoration: 'none' }}>
-                                                        <span>🥉</span>
+                                                        <span className="rank-emoji">🥉</span>
                                                     </Link>
                                                 </div>
-                                                <div className="player-name-pop">
+                                                <div className="player-name-bubble">
                                                     <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} className="profile-link">{top3[2].nickname}</Link>
-                                                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[2].currentStreak} /></div>
+                                                    <div className="streak-cont"><StreakFlame streak={top3[2].currentStreak} /></div>
                                                 </div>
                                             </div>
                                             <div className="step-bar-3d bronze">
                                                 <span className="rank-label">BRONZE</span>
                                                 <div className="val-badge">{top3[2].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
-                                                <div className="click-hint">RÉCOMPENSES 🥉</div>
+                                                <div className="click-hint">LOT 🥉</div>
                                             </div>
                                         </div>
                                     )}
@@ -253,19 +252,22 @@ export default function LeagueClient({
                             )}
                         </div>
 
-                        {/* 4. TYPE SELECTOR (MINI) */}
-                        <div className="type-toggle-vertical">
+                        {/* 4. TYPE SELECTOR (RIGHT CONTROL POD) */}
+                        <div className="control-pod right">
+                            <div className="pod-label">MODE</div>
                             <button 
                                 onClick={() => handleUpdate(exercise, "VOLUME", timeframe)}
-                                className={type === "VOLUME" ? 'active' : ''}
+                                className={`pod-node ${type === "VOLUME" ? 'active' : ''}`}
                             >
-                                VOLUME
+                                <span className="pod-icon">📊</span>
+                                <span className="pod-text">VOL.</span>
                             </button>
                             <button 
                                 onClick={() => handleUpdate(exercise, "SERIES", timeframe)}
-                                className={type === "SERIES" ? 'active' : ''}
+                                className={`pod-node ${type === "SERIES" ? 'active' : ''}`}
                             >
-                                RECORD
+                                <span className="pod-icon">🏆</span>
+                                <span className="pod-text">REC.</span>
                             </button>
                         </div>
                     </div>
@@ -521,23 +523,35 @@ export default function LeagueClient({
         .swipe-icon { font-size: 1.2rem; }
         .swipe-label { font-weight: 900; font-size: 0.85rem; letter-spacing: 0.02em; }
 
-        /* 2. VERTICAL TIMEFRAME TOGGLE */
-        .vertical-time-toggle {
+        /* 2. CONTROL PODS (Vertical side bars) */
+        .control-pod {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
-          position: relative;
-          padding: 8px;
-          background: rgba(0,0,0,0.03);
-          border-radius: 30px;
+          gap: 10px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          padding: 10px 8px;
+          border-radius: 20px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+          border: 1px solid rgba(0,0,0,0.03);
           align-self: center;
+          min-width: 50px;
         }
-        .time-node {
+        .pod-label {
+          font-size: 0.5rem;
+          font-weight: 950;
+          color: var(--text-muted);
+          text-align: center;
+          letter-spacing: 0.1em;
+          margin-bottom: 2px;
+          opacity: 0.6;
+        }
+        .pod-node {
           width: 44px;
           height: 44px;
-          border-radius: 50%;
+          border-radius: 16px;
           border: none;
-          background: white;
+          background: rgba(0,0,0,0.03);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -545,27 +559,24 @@ export default function LeagueClient({
           color: var(--text-muted);
           cursor: pointer;
           transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-          z-index: 2;
-          overflow: hidden;
         }
-        .time-node.active {
+        .pod-node.active {
           background: var(--foreground);
           color: white;
-          transform: scale(1.1);
-          box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+          transform: scale(1.05);
+          box-shadow: 0 8px 15px rgba(0,0,0,0.15);
         }
-        .time-icon { font-size: 1rem; line-height: 1; }
-        .time-label { font-size: 0.55rem; font-weight: 900; text-transform: uppercase; margin-top: 2px; }
+        .pod-icon { font-size: 1.1rem; line-height: 1; }
+        .pod-text { font-size: 0.55rem; font-weight: 950; text-transform: uppercase; margin-top: 1px; }
 
         /* 3. PODIUM STYLING */
-        .podium-area { max-width: 380px; margin: 0 auto; }
+        .podium-area { max-width: 420px; margin: 0 auto; }
         .podium {
           display: flex;
           align-items: flex-end;
           justify-content: center;
-          gap: 6px;
-          height: 280px;
+          gap: 8px;
+          height: 300px;
           padding-bottom: 2rem;
         }
         .podium-step {
@@ -574,129 +585,190 @@ export default function LeagueClient({
           align-items: center;
           flex: 1;
           transition: transform 0.3s ease;
+          position: relative;
         }
         .podium-step.interactive { cursor: pointer; }
-        .podium-step.interactive:hover { transform: translateY(-5px); }
-        .podium-step.interactive:hover .click-hint { opacity: 1; }
+        .podium-step.interactive:hover { transform: translateY(-8px); }
+        .podium-step.interactive:hover .click-hint { opacity: 1; transform: translateY(0); }
 
         .player-meta {
           display: flex;
           flex-direction: column;
           align-items: center;
-          z-index: 2;
-          margin-bottom: -10px;
+          z-index: 10;
+          margin-bottom: -15px;
         }
         .player-avatar-ring {
-          width: 54px;
-          height: 54px;
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.6rem;
           background: white;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15);
           border: 4px solid white;
           transition: all 0.2s ease;
+          position: relative;
+          z-index: 2;
         }
+        .rank-emoji { font-size: 1.8rem; }
         .player-avatar-ring:hover { transform: scale(1.1); }
         .player-avatar-ring.gold { border-color: #fbbf24; background: linear-gradient(135deg, #fffbeb, #fbbf24); }
         .player-avatar-ring.silver { border-color: #94a3b8; background: linear-gradient(135deg, #f8fafc, #94a3b8); }
         .player-avatar-ring.bronze { border-color: #ca8a04; background: linear-gradient(135deg, #fef9c3, #ca8a04); }
 
-        .player-name-pop {
-          font-weight: 950;
-          font-size: 0.8rem;
-          margin: 6px 0;
+        .player-name-bubble {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(4px);
+          padding: 6px 12px;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+          margin: 8px 0;
           text-align: center;
+          max-width: 110px;
+          position: relative;
+          z-index: 1;
+        }
+        .player-name-bubble.main {
+           transform: scale(1.1);
+           background: white;
+           box-shadow: 0 8px 20px rgba(217, 119, 6, 0.15);
+           border: 1px solid rgba(217, 119, 6, 0.1);
+        }
+        .player-name-bubble .profile-link {
+          font-weight: 950;
+          font-size: 0.85rem;
           color: var(--foreground);
-          text-shadow: 0 2px 4px rgba(255,255,255,0.8);
-          max-width: 90px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          display: block;
         }
+        .streak-cont { display: flex; justify-content: center; margin-top: 2px; }
 
         .step-bar-3d {
           width: 100%;
-          border-radius: 20px 20px 8px 8px;
+          border-radius: 24px 24px 12px 12px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 1.5rem 0.5rem 0.5rem;
+          padding: 2.5rem 0.5rem 0.5rem;
           position: relative;
-          box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.12);
           overflow: hidden;
         }
-        .step-bar-3d.gold { height: 160px; background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%); border-top: 4px solid #fde68a; }
-        .step-bar-3d.silver { height: 110px; background: linear-gradient(180deg, #94a3b8 0%, #475569 100%); border-top: 4px solid #cbd5e1; }
-        .step-bar-3d.bronze { height: 80px; background: linear-gradient(180deg, #ca8a04 0%, #854d0e 100%); border-top: 4px solid #fef08a; }
+        .step-bar-3d.gold { height: 180px; background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%); border-top: 5px solid #fde68a; }
+        .step-bar-3d.silver { height: 130px; background: linear-gradient(180deg, #94a3b8 0%, #475569 100%); border-top: 5px solid #cbd5e1; }
+        .step-bar-3d.bronze { height: 95px; background: linear-gradient(180deg, #ca8a04 0%, #854d0e 100%); border-top: 5px solid #fef08a; }
 
-        .rank-label { font-weight: 900; font-size: 0.65rem; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; margin-bottom: auto; }
-        .val-badge { background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); padding: 5px 10px; border-radius: 100px; color: white; font-weight: 950; font-size: 0.8rem; margin-bottom: 20px; }
-        .val-badge.main { font-size: 1.1rem; padding: 6px 14px; background: rgba(255,255,255,0.35); }
-        .click-hint { position: absolute; bottom: 8px; font-size: 0.5rem; font-weight: 950; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 4px; opacity: 0.4; transition: opacity 0.2s; }
+        .rank-label { font-weight: 950; font-size: 0.7rem; color: rgba(255,255,255,0.6); letter-spacing: 0.15em; margin-bottom: auto; }
+        .val-badge { background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); padding: 5px 12px; border-radius: 100px; color: white; font-weight: 950; font-size: 0.85rem; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2); }
+        .val-badge.main { font-size: 1.2rem; padding: 8px 16px; background: rgba(255,255,255,0.35); }
+        .click-hint { 
+          position: absolute; bottom: 12px; font-size: 0.55rem; font-weight: 950; 
+          color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 4px; 
+          opacity: 0; transform: translateY(10px); transition: all 0.3s ease; 
+        }
 
         .crown-premium {
           position: absolute;
-          top: -35px;
-          z-index: 3;
-          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+          top: -45px;
+          z-index: 20;
+          filter: drop-shadow(0 8px 15px rgba(217, 119, 6, 0.4));
+          animation: float 3s ease-in-out infinite;
         }
-        .gold-icon { color: #fbbf24; fill: #fbbf24; }
+        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
+        .gold-icon-glow { color: #fbbf24; fill: #fbbf24; filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8)); }
 
-        /* 4. TYPE SELECTOR (MINI VERTICAL) */
-        .type-toggle-vertical {
-          display: flex;
-          flex-direction: column;
-          background: rgba(0,0,0,0.03);
-          border-radius: 16px;
-          padding: 4px;
-          gap: 4px;
-        }
-        .type-toggle-vertical button {
-          border: none;
-          background: transparent;
-          padding: 8px 4px;
-          font-size: 0.55rem;
-          font-weight: 950;
-          color: var(--text-muted);
-          writing-mode: vertical-lr;
-          transform: rotate(180deg);
-          border-radius: 12px;
-          cursor: pointer;
-        }
-        .type-toggle-vertical button.active { background: white; color: var(--foreground); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-
-        /* 5. REWARD MODAL Styles */
+        /* REWARD MODAL Styles (Ensuring High Contrast) */
         .reward-modal-overlay {
           position: fixed; inset: 0;
-          background: rgba(15, 23, 42, 0.7);
-          backdrop-filter: blur(8px);
-          z-index: 20000;
+          background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(12px);
+          z-index: 100000;
           display: flex; align-items: center; justify-content: center;
           padding: 1.5rem;
           animation: fadeIn 0.3s ease;
         }
         .reward-modal-content {
-          background: white; width: 100%; max-width: 320px;
-          border-radius: 28px; padding: 2rem;
+          background: white; width: 100%; max-width: 360px;
+          border-radius: 36px; padding: 2.5rem;
           animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           text-align: center;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .rank-medal { font-size: 3rem; margin-bottom: 1rem; }
-        .reward-body { display: flex; flex-direction: column; gap: 12px; margin: 1.5rem 0; }
+        .rank-medal { font-size: 4rem; margin-bottom: 1rem; }
+        .reward-body { display: flex; flex-direction: column; gap: 15px; margin: 2rem 0; }
         .reward-item {
-          display: flex; align-items: center; gap: 12px;
-          background: rgba(0,0,0,0.02); padding: 12px 16px; border-radius: 16px; text-align: left;
+          display: flex; align-items: center; gap: 15px;
+          background: #f8fafc; padding: 15px 20px; border-radius: 20px; text-align: left;
+          border: 1px solid #f1f5f9;
         }
-        .reward-val { display: block; font-weight: 950; color: var(--foreground); font-size: 1rem; }
-        .reward-desc { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-top: -2px; }
+        .reward-val { display: block; font-weight: 950; color: #0f172a; font-size: 1.1rem; }
+        .reward-desc { display: block; font-size: 0.75rem; color: #64748b; font-weight: 800; margin-top: -1px; }
         .btn-close-reward {
-          width: 100%; padding: 12px; border: none; border-radius: 100px;
-          background: var(--foreground); color: white; font-weight: 900;
-          letter-spacing: 0.05em; cursor: pointer;
+          width: 100%; padding: 14px; border: none; border-radius: 100px;
+          background: #0f172a; color: white; font-weight: 900;
+          letter-spacing: 0.05em; cursor: pointer; transition: transform 0.2s;
         }
+        .btn-close-reward:active { transform: scale(0.98); }
+
+        /* Generic cleanup */
+        .premium-rank-card {
+          display: flex; align-items: center; gap: 12px; padding: 1rem;
+          background: white; border-radius: 20px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+          transition: transform 0.2s ease;
+        }
+        .rank-circle { width: 32px; height: 32px; background: rgba(0,0,0,0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; color: var(--text-muted); }
+        .user-letter { width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; }
+        .self-tag { font-size: 0.6rem; background: var(--primary); color: white; padding: 2px 6px; border-radius: 6px; font-weight: 900; }
+        .rank-score { font-weight: 900; color: var(--foreground); font-size: 1.1rem; text-align: right; }
+        .rank-score span { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 700; margin-top: -2px; }
+        .segmented-control .gazette-tag { font-size: 0.5rem; background: #f97316; color: white; padding: 1px 4px; border-radius: 4px; font-weight: 900; vertical-align: middle; }
+
+        .segmented-control {
+            display: flex;
+            background: rgba(0,0,0,0.04);
+            padding: 4px;
+            border-radius: 14px;
+            position: relative;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .segmented-control::-webkit-scrollbar { display: none; }
+        
+        .segmented-control button {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: none;
+            background: transparent;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .segmented-control button.active {
+            color: var(--foreground);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .profile-link { color: inherit; text-decoration: none; transition: color 0.2s; }
+        .profile-link:hover { color: var(--primary); text-decoration: underline; }
+        .profile-link-white { color: white; text-decoration: none; }
+        .profile-link-white:hover { text-decoration: underline; }
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modalPop { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
