@@ -131,19 +131,30 @@ export default function DashboardClient({
                 let unit = "reps";
 
                 // 1. DÉTERMINATION DU TARGET
-                const match = badge.id.match(/\d+/);
-                if (match) {
-                    targetValue = parseInt(match[0]);
-                } else if (badge.id === "SQUAT_LOVER") targetValue = 5;
-                else if (badge.id === "MOOD_MASTER") targetValue = 10;
-                else if (badge.id === "CENTURION") targetValue = 100;
-                else if (badge.id.startsWith("RECORD_")) {
+                if (badge.id.startsWith("SERIE_PLANK_")) {
+                    const timeStr = badge.id.split("_")[2];
+                    if (timeStr === "30S") targetValue = 30;
+                    else if (timeStr === "1M") targetValue = 60;
+                    else if (timeStr === "1M30") targetValue = 90;
+                    else if (timeStr === "2M") targetValue = 120;
+                    else if (timeStr === "3M") targetValue = 180;
+                    else if (timeStr === "5M") targetValue = 300;
+                    else if (timeStr === "10M") targetValue = 600;
+                    else targetValue = parseInt(timeStr) || 0;
+                } else if (badge.id.startsWith("RECORD_")) {
                     const exercise = badge.id.includes("PUSHUP") ? "PUSHUP" : badge.id.includes("SQUAT") ? "SQUAT" : "VENTRAL";
                     const tf = badge.id.includes("DAY") ? "DAY" : badge.id.includes("WEEK") ? "WEEK" : badge.id.includes("MONTH") ? "MONTH" : "YEAR";
                     const type = badge.id.includes("SERIES") ? "SERIES" : "VOLUME";
                     
                     const rec = records.find((r: any) => r.exercise === exercise && r.timeframe === tf && r.type === type);
                     targetValue = (rec?.value || 0) + 1;
+                } else {
+                    const match = badge.id.match(/\d+/);
+                    if (match) {
+                        targetValue = parseInt(match[0]);
+                    } else if (badge.id === "SQUAT_LOVER") targetValue = 5;
+                    else if (badge.id === "MOOD_MASTER") targetValue = 10;
+                    else if (badge.id === "CENTURION") targetValue = 100;
                 }
 
                 // 2. DÉTERMINATION DU CURRENT
@@ -192,7 +203,7 @@ export default function DashboardClient({
                 currentValue = currentValue || 0;
                 const percent = targetValue > 0 ? Math.min(100, Math.floor((currentValue / targetValue) * 100)) : 0;
                 return { ...badge, currentValue, targetValue, unit, percent };
-            }).sort((a, b) => b.percent - a.percent);
+            }).filter(b => b.percent < 100).sort((a, b) => b.percent - a.percent);
 
             if (processed.length > 0) output.push(processed[0]);
         });

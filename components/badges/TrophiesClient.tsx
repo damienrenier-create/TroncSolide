@@ -28,9 +28,9 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
     // 1. Catégorisation des badges (Vitrines)
     const vitrines = useMemo(() => {
         const categories = [
-            { id: "pushups", title: "Vitrine Pompes ⚓", badgeIds: ["PUMP_100", "PUMP_1000", "PUMP_2000", "PUMP_5000", "PUMP_10000", "SERIE_PUMP_10", "SERIE_PUMP_50", "SERIE_PUMP_100", "RECORD_DAY_PUSHUP", "RECORD_SERIES_PUSHUP"] },
+            { id: "pushups", title: "Vitrine Pompes ⚓", badgeIds: ["PUMP_100", "PUMP_1000", "PUMP_2000", "PUMP_5000", "PUMP_10000", "PUMP_20000", "PUMP_50000", "PUMP_100000", "SERIE_PUMP_10", "SERIE_PUMP_50", "SERIE_PUMP_100", "SERIE_PUMP_150", "RECORD_DAY_PUSHUP", "RECORD_SERIES_PUSHUP"] },
             { id: "squats", title: "Vitrine Squats 🦵", badgeIds: ["SQUAT_100", "SQUAT_1000", "SQUAT_5000", "RECORD_DAY_SQUAT", "RECORD_SERIES_SQUAT"] },
-            { id: "plank", title: "Vitrine Gainage 🛡️", badgeIds: ["PLANK_1000S", "PLANK_10000S", "PLANK_100000S", "SERIE_PLANK_30S", "SERIE_PLANK_1M", "SERIE_PLANK_2M", "SERIE_PLANK_5M", "RECORD_DAY_PLANK", "RECORD_SERIES_PLANK"] },
+            { id: "plank", title: "Vitrine Gainage 🛡️", badgeIds: ["PLANK_1000S", "PLANK_10000S", "PLANK_100000S", "SERIE_PLANK_30S", "SERIE_PLANK_1M", "SERIE_PLANK_1M30", "SERIE_PLANK_2M", "SERIE_PLANK_3M", "SERIE_PLANK_5M", "SERIE_PLANK_10M", "RECORD_DAY_PLANK", "RECORD_SERIES_PLANK"] },
             { id: "records", title: "Records Globaux 🏆", badgeIds: ["RECORD_WEEK_PUSHUP", "RECORD_MONTH_PUSHUP", "RECORD_WEEK_SQUAT", "RECORD_MONTH_SQUAT", "RECORD_WEEK_PLANK", "RECORD_MONTH_PLANK"] },
         ];
 
