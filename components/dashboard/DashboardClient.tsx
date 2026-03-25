@@ -275,12 +275,10 @@ export default function DashboardClient({
                             </button>
                         </div>
                     ) : showForm ? (
-                        <div className="form-portal glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", border: "1px solid var(--primary)" }}>
-                            <header style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-                                <h3 style={{ fontSize: "1.25rem", fontWeight: "900" }}>Enregistrer une séance</h3>
-                                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>Qu'as-tu accompli aujourd'hui ?</p>
-                            </header>
-                            <ExerciseBatchForm onSuccess={() => setShowForm(false)} />
+                        <div className="form-portal glass-premium" style={{ padding: "0", borderRadius: "24px", border: "1px solid var(--primary)", overflow: "hidden" }}>
+                            <div style={{ padding: "1.5rem" }}>
+                                <ExerciseBatchForm onSuccess={() => setShowForm(false)} />
+                            </div>
                             <div style={{ textAlign: "center", marginTop: "1rem" }}>
                                 <button className="btn-ghost" style={{ fontSize: "0.75rem" }} onClick={() => setShowForm(false)}>Plus tard</button>
                             </div>

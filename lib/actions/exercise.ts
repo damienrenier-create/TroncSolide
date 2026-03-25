@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { ExerciseType, RecordType, RecordTimeframe } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { randomUUID } from "crypto";
+import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
@@ -150,7 +150,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
 
         const COMPETITIVE_EXERCISES: ExerciseType[] = ["PUSHUP", "SQUAT", "VENTRAL", "LATERAL_L", "LATERAL_R"];
         const createdSessions: { id: string, type: ExerciseType, value: number }[] = [];
-        const batchId = randomUUID();
+        const batchId = crypto.randomUUID();
 
         await prisma.$transaction(async (tx) => {
             let totalXPGained = 0;
