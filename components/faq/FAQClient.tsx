@@ -18,7 +18,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                 setActiveTab("agenda");
             } else if (hash === "#jalons" || hash === "#periodiques" || hash === "#badges") {
                 setActiveTab("badges");
-            } else if (hash === "#concept" || hash === "#cagnotte" || hash === "#regles") {
+            } else if (hash === "#concept" || hash === "#volume" || hash === "#cagnotte" || hash === "#regles") {
                 setActiveTab("rules");
             }
         };
@@ -74,7 +74,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda 
                 <div style={{ animation: "fadeIn 0.3s ease-out", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                     
                     {/* A. Concept Principal */}
-                    <section className="glass" id="concept" style={{ padding: "1.5rem" }}>
+                    <section className="glass" id="volume" style={{ padding: "1.5rem" }}>
                         <div style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--primary)", marginBottom: "0.5rem", letterSpacing: "1px" }}>A. LE CONCEPT PRINCIPAL</div>
                         <h2 style={{ fontSize: "1.25rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
                             <HelpCircle size={22} className="text-primary" />

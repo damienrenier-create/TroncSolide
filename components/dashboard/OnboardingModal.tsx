@@ -17,7 +17,7 @@ const slides = [
     },
     {
         title: "L'Objectif Quotidien 📈",
-        content: "Chaque jour, ton objectif augmente de 1 en volume d'effort. Pompes, Squats ou Gainage : tout compte pour valider ta journée !",
+        content: "Chaque jour, ton objectif augmente de 1 point. Ton volume d'effort est le cumul brut de tes pompes, squats et secondes de gainage. Atteins le score pour valider ta journée !",
         icon: <Trophy size={48} style={{ color: "var(--secondary)" }} />,
         color: "var(--secondary)"
     },

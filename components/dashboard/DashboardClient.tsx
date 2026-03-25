@@ -221,9 +221,10 @@ export default function DashboardClient({
             )}
 
             {/* 1. Daily Hero Section - Circular Impact */}
-            <section className="hero-card">
+            <Link href="/faq#volume" className="hero-card" style={{ display: "block", textDecoration: "none", color: "inherit", cursor: "pointer" }}>
                 <div className="hero-header">
                     <div className="target-label">OBJECTIF DU JOUR</div>
+                    <div style={{ fontSize: "0.6rem", fontWeight: "900", opacity: 0.6, marginTop: "2px", textTransform: "uppercase", letterSpacing: "1px" }}>volume d'effort</div>
                 </div>
 
                 <div className="progress-circular-container">
@@ -236,9 +237,11 @@ export default function DashboardClient({
                         />
                     </svg>
 
-                    <div className="progress-display" style={{ zIndex: 1, position: "relative" }}>
-                        <div className="progress-value">{initialProgress} / {initialTarget}</div>
-                        <div className="progress-total">VOLUME D'EFFORT</div>
+                    <div className="progress-display" style={{ zIndex: 1, position: "relative", textAlign: "center" }}>
+                        <div className="progress-value" style={{ fontSize: "3rem" }}>{initialProgress} / {initialTarget}</div>
+                        <div className="progress-total" style={{ fontSize: "1rem", marginTop: "-5px", fontWeight: "900" }}>
+                            {Math.abs(initialProgress) <= 1 ? "EFFORT" : "EFFORTS"}
+                        </div>
                     </div>
                 </div>
 
@@ -296,7 +299,7 @@ export default function DashboardClient({
                         </div>
                     )}
                 </div>
-            </section>
+            </Link>
 
             {/* 2. Stat Bar - Horizontal Impact */}
             <div className="stats-grid" style={{ marginTop: "-1rem" }}>
