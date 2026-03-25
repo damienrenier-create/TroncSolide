@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ExerciseBatchForm from "@/components/exercises/ExerciseBatchForm";
 import SecondaryExerciseForm from "@/components/exercises/SecondaryExerciseForm";
-import { Flame, Trophy, TrendingUp, History, Award, PlusCircle, HelpCircle, ChevronRight } from "lucide-react";
+import { Flame, Trophy, TrendingUp, History, Award, PlusCircle, HelpCircle, ChevronRight, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { deleteSession } from "@/lib/actions/moderation";
@@ -151,30 +151,50 @@ export default function DashboardClient({
 
     const nextObjectives = getNextObjectives();
     
-    useEffect(() => {
-        async function loadBatches() {
-            const res = await getRecentBatches();
-            if (res.success && res.batches) {
-                // Ne garder que les 3 derniers comme demandé
-                setRecentBatches(res.batches.slice(0, 3));
-            }
+    const loadBatches = async () => {
+        const res = await getRecentBatches();
+        if (res.success && res.batches) {
+            setRecentBatches(res.batches.slice(0, 10)); // On en garde un peu plus pour le scroll
         }
+    };
+
+    useEffect(() => {
         loadBatches();
     }, []);
+
+    const handleDelete = async (e: React.MouseEvent, sessionId: string) => {
+        e.stopPropagation();
+        if (!confirm("Supprimer ce log ?")) return;
+        setLoading(true);
+        try {
+            await deleteSession(sessionId);
+            router.refresh();
+            await loadBatches();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const actualPercent = Math.round((initialProgress / initialTarget) * 100);
     const progressPercent = Math.min(actualPercent, 100);
     const isGoalReached = initialProgress >= initialTarget;
 
     let circleColor = "var(--primary)";
-    let reactionTitle = "OBJECTIF ATTEINT ! 🏆";
-    let reactionSub = `${actualPercent}% de l'objectif 🔥`;
+    let reactionTitle = "Objectif atteint !";
+    let reactionSub = "Bravo, tu es solide !";
     let reactionColor = "var(--secondary)";
 
     if (actualPercent >= 1000) circleColor = "#ef4444", reactionTitle = "LÉGENDE VIVANTE ! 👑", reactionSub = `${actualPercent}% de l'objectif 🌌`, reactionColor = "#ef4444";
     else if (actualPercent >= 500) circleColor = "#8b5cf6", reactionTitle = "MODE DIVIN ACTIVÉ ! ⚡", reactionSub = `${actualPercent}% de l'objectif 🌋`, reactionColor = "#8b5cf6";
     else if (actualPercent >= 200) circleColor = "#3b82f6", reactionTitle = "OBJECTIF PULVÉRISÉ ! 🚀", reactionSub = `${actualPercent}% de l'objectif 💎`, reactionColor = "#3b82f6";
     else if (actualPercent >= 100) circleColor = "var(--secondary)", reactionTitle = "OBJECTIF ATTEINT ! 🏆", reactionSub = `${actualPercent}% de l'objectif 🔥`, reactionColor = "var(--secondary)";
+    else if (actualPercent >= 75) circleColor = "var(--primary)", reactionTitle = "Presque arrivé !", reactionSub = "Dernière ligne droite ! 🚀";
+    else if (actualPercent >= 50) circleColor = "var(--primary)", reactionTitle = "Plus de la moitié !", reactionSub = "Tu es sur la bonne voie. 💪";
+    else if (actualPercent >= 25) circleColor = "var(--primary)", reactionTitle = "Belle lancée !", reactionSub = "Continue comme ça. 🔥";
+    else if (actualPercent > 0) circleColor = "var(--primary)", reactionTitle = "C'est un début !", reactionSub = "Chaque répétition compte. 🌱";
+    else { reactionTitle = "En attente..."; reactionSub = "Prêt pour ta séance ?"; }
 
     const levelInfo = getLevelInfo(stats.totalXP);
     const streakEmoji = stats.streak >= 100 ? "💎" : stats.streak >= 30 ? "⚡" : stats.streak >= 7 ? "🔥" : "🌱";
@@ -270,6 +290,11 @@ export default function DashboardClient({
                             <div className="progress-total">{Math.abs(initialProgress) <= 1 ? "EFFORT" : "EFFORTS"}</div>
                         </div>
                     </div>
+                    {/* Encouragement message restored always */}
+                    <div className="goal-reached" style={{ marginTop: "1rem", textAlign: "center", animation: "slideDown 0.3s ease-out" }}>
+                        <div style={{ color: reactionColor, fontWeight: 900, fontSize: "1.1rem", textTransform: "uppercase" }}>{reactionTitle}</div>
+                        <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-muted)" }}>{reactionSub}</div>
+                    </div>
                 </Link>
 
                 <div style={{ marginTop: "1.5rem" }}>
@@ -285,14 +310,25 @@ export default function DashboardClient({
                     )}
                 </div>
 
-                {/* MINI HISTORY [UNDER LOGGER] */}
+                {/* MINI HISTORY [UNDER LOGGER] - Restored Scroll & Delete */}
                 <div style={{ marginTop: "1.5rem", background: "rgba(0,0,0,0.03)", borderRadius: "16px", padding: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", fontWeight: 900, color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}><span>Historique Récent (Top 3)</span> <History size={12}/></div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", fontWeight: 900, color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase" }}><span>Historique Récent</span> <History size={12}/></div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "180px", overflowY: "auto", paddingRight: "4px", scrollbarWidth: "thin" }}>
                         {recentBatches.map(batch => (
-                            <div key={batch.id} className="history-mini-item" onClick={() => setSelectedBatch(batch)} style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.5)", padding: "8px 12px", borderRadius: "10px", fontSize: "0.75rem", cursor: "pointer", transition: "all 0.2s" }}>
-                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}><span>{batch.exercises.length > 1 ? '📦' : '💪'}</span> <span style={{ fontWeight: 800 }}>{new Date(batch.date).toLocaleDateString('fr', {day:'numeric', month:'short'})}</span></div>
-                                <div style={{ fontWeight: 900, color: "var(--primary)" }}>+{batch.xpTotal} XP</div>
+                            <div key={batch.id} className="history-mini-item" onClick={() => setSelectedBatch(batch)} style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.5)", padding: "10px 12px", borderRadius: "12px", fontSize: "0.75rem", cursor: "pointer", transition: "all 0.2s", alignItems: "center" }}>
+                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                    <span>{batch.exercises.length > 1 ? '📦' : '💪'}</span> 
+                                    <span style={{ fontWeight: 800 }}>{new Date(batch.date).toLocaleDateString('fr', {day:'numeric', month:'short'})}</span>
+                                    <span style={{ fontWeight: 900, color: "var(--primary)", marginLeft: "4px" }}>+{batch.xpTotal} XP</span>
+                                </div>
+                                <button 
+                                    onClick={(e) => handleDelete(e, batch.id)}
+                                    className="delete-item-btn"
+                                    style={{ background: "none", border: "none", color: "#ef4444", padding: "4px", borderRadius: "6px", opacity: 0.6, cursor: "pointer", display: "flex", alignItems: "center" }}
+                                    title="Supprimer"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
                             </div>
                         ))}
                         {recentBatches.length === 0 && <div style={{ textAlign: "center", fontSize: "0.7rem", color: "var(--text-muted)", padding: "10px" }}>Aucune séance récente</div>}
@@ -375,6 +411,7 @@ export default function DashboardClient({
                 .progress-value { font-weight: 950; color: var(--foreground); }
                 .progress-total { font-size: 0.8rem; font-weight: 900; color: var(--text-muted); margin-top: -5px; }
                 .history-mini-item:hover { background: rgba(255,255,255,0.8) !important; }
+                .delete-item-btn:hover { opacity: 1 !important; background: rgba(239, 68, 68, 0.1) !important; }
             `}</style>
         </div>
     );
