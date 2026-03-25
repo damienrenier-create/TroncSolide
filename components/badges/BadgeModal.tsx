@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { X, Trophy, TrendingUp, Zap, ExternalLink } from "lucide-react";
 import Link from "next/link";

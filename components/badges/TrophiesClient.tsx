@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo, useState } from "react";
 import { Badge, ExerciseType, BadgeType, Record as LeagueRecord } from "@prisma/client";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
