@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExerciseType, RecordType, RecordTimeframe } from "@prisma/client";
-import { Trophy, Calendar, Filter, Zap, Target, Flame } from "lucide-react";
+import { Trophy, Calendar, Filter, Zap, Target, Flame, TrendingUp, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import GazetteComponent from "./GazetteComponent";
 
 interface Ranking {
@@ -52,6 +54,7 @@ interface LeagueClientProps {
     initialFeedItems: any[];
     allRecords: any[];
     top3AbsoluteRecords: Record<string, any[]>;
+    trendData?: { chartData: any[], users: string[] };
     onFilterChange: (exercise: ExerciseType, type: RecordType, timeframe: RecordTimeframe) => Promise<Ranking[]>;
 }
 
@@ -62,14 +65,25 @@ export default function LeagueClient({
     initialFeedItems,
     allRecords,
     top3AbsoluteRecords,
+    trendData,
     onFilterChange
 }: LeagueClientProps) {
+    const searchParams = useSearchParams();
+    const initialTab = (searchParams.get("tab") as any) || "RANKINGS";
+
     const [rankings, setRankings] = useState<Ranking[]>(initialRankings);
     const [exercise, setExercise] = useState<ExerciseType>("VENTRAL");
     const [type, setType] = useState<RecordType>("VOLUME");
     const [timeframe, setTimeframe] = useState<RecordTimeframe>("WEEK");
     const [loading, setLoading] = useState(false);
-    const [view, setView] = useState<"RANKINGS" | "GAZETTE" | "GLOBAL">("RANKINGS");
+    const [view, setView] = useState<"RANKINGS" | "GAZETTE" | "GLOBAL" | "TRENDS">(initialTab);
+
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab && ["RANKINGS", "GAZETTE", "GLOBAL", "TRENDS"].includes(tab)) {
+            setView(tab as any);
+        }
+    }, [searchParams]);
 
     async function handleUpdate(newExercise: ExerciseType, newType: RecordType, newTimeframe: RecordTimeframe) {
         setLoading(true);
@@ -91,9 +105,10 @@ export default function LeagueClient({
                 
                 <div className="segmented-control">
                     <button onClick={() => setView("RANKINGS")} className={view === "RANKINGS" ? 'active' : ''}>Podiums</button>
-                    <button onClick={() => setView("GLOBAL")} className={view === "GLOBAL" ? 'active' : ''}>Vue Globale</button>
+                    <button onClick={() => setView("GLOBAL")} className={view === "GLOBAL" ? 'active' : ''}>Records</button>
+                    <button onClick={() => setView("TRENDS")} className={view === "TRENDS" ? 'active' : ''}>📈 Tendances</button>
                     <button onClick={() => setView("GAZETTE")} className={view === "GAZETTE" ? 'active' : ''}>
-                        Gazette <span className="gazette-tag" title="Flux d'actualités">News</span>
+                        Gazette <span className="gazette-tag">News</span>
                     </button>
                 </div>
             </header>
@@ -335,8 +350,78 @@ export default function LeagueClient({
                         );
                     })}
                 </section>
-            ) : (
+            ) : view === "GAZETTE" ? (
                 <GazetteComponent initialItems={initialFeedItems} currentUserId={currentUserId} />
+            ) : (
+                <section className="trends-view" style={{ marginTop: "1rem" }}>
+                    <div className="glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", minHeight: "450px" }}>
+                        <div style={{ marginBottom: "2rem" }}>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "8px" }}>
+                                <TrendingUp size={20} className="text-primary"/> Évolution de l'XP de la Ligue
+                            </h3>
+                            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px", fontWeight: 700 }}>Progression cumulative sur les 14 derniers jours</p>
+                        </div>
+
+                        {trendData && trendData.chartData.length > 0 ? (
+                            <div style={{ width: "100%", height: 350, marginTop: "1rem" }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={trendData.chartData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                                        <XAxis 
+                                            dataKey="date" 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fontSize: 10, fontWeight: 800, fill: "#94a3b8" }} 
+                                            dy={10}
+                                        />
+                                        <YAxis 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fontSize: 10, fontWeight: 800, fill: "#94a3b8" }} 
+                                        />
+                                        <Tooltip 
+                                            contentStyle={{ 
+                                                borderRadius: "16px", 
+                                                border: "none", 
+                                                boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                                                fontSize: "0.8rem",
+                                                fontWeight: 800,
+                                                padding: "12px"
+                                            }}
+                                            itemStyle={{ padding: "2px 0" }}
+                                        />
+                                        <Legend 
+                                            verticalAlign="top" 
+                                            align="right"
+                                            iconType="circle"
+                                            wrapperStyle={{ fontSize: "0.7rem", fontWeight: 900, paddingBottom: "20px" }}
+                                        />
+                                        {trendData.users.map((nick: string, idx: number) => {
+                                            const COLORS = ["#d97706", "#2563eb", "#10b981", "#8b5cf6", "#f43f5e", "#0ea5e9", "#f97316"];
+                                            return (
+                                                <Line 
+                                                    key={nick} 
+                                                    type="monotone" 
+                                                    dataKey={nick} 
+                                                    stroke={COLORS[idx % COLORS.length]} 
+                                                    strokeWidth={3} 
+                                                    dot={false}
+                                                    activeDot={{ r: 6, strokeWidth: 0 }}
+                                                    animationDuration={1500}
+                                                />
+                                            );
+                                        })}
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "300px", opacity: 0.5 }}>
+                                <TrendingUp size={48} strokeWidth={1} />
+                                <p style={{ marginTop: "1rem", fontWeight: 800 }}>Pas assez de données pour générer le graphique.</p>
+                            </div>
+                        )}
+                    </div>
+                </section>
             )}
 
             <style jsx>{`

@@ -26,11 +26,12 @@ export default async function LeaguePage() {
         </div>
     );
 
-    const [initialRankings, initialFeedItems, allRecords, top3AbsoluteRecords] = await Promise.all([
+    const [initialRankings, initialFeedItems, allRecords, top3AbsoluteRecords, trendData] = await Promise.all([
         getLeagueRankings(user.league.id, "VENTRAL", "VOLUME", "WEEK"),
         getFeedItems(user.league.id),
         getLeagueRecords(user.league.id),
-        getTop3AbsoluteRecords(user.league.id)
+        getTop3AbsoluteRecords(user.league.id),
+        import("@/lib/actions/history").then(m => m.getLeagueXPTrends(user!.league.id))
     ]);
 
     async function handleFilterChangeAction(exercise: ExerciseType, type: RecordType, timeframe: RecordTimeframe) {
@@ -46,6 +47,7 @@ export default async function LeaguePage() {
             initialFeedItems={initialFeedItems}
             allRecords={allRecords}
             top3AbsoluteRecords={top3AbsoluteRecords}
+            trendData={trendData}
             onFilterChange={handleFilterChangeAction}
         />
     );

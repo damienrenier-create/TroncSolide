@@ -426,13 +426,17 @@ export default function DashboardClient({
                 if (userEvents.length === 0) return null;
                 return (
                     <section className="glass" style={{ padding: "1rem", marginBottom: "1rem" }}>
-                        <Link href="/league" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", textDecoration: "none", color: "inherit", marginBottom: "0.75rem" }}>
+                        <Link href="/league?tab=GAZETTE" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", textDecoration: "none", color: "inherit", marginBottom: "0.75rem" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 900, fontSize: "0.85rem" }}><Award size={18} className="text-primary"/> VOTRE GAZETTE</div>
                             <ChevronRight size={16} className="text-muted"/>
                         </Link>
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             {userEvents.map(event => (
-                                <Link href={`/badges?highlight=${event.badgeId || ""}`} key={event.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px", background: "rgba(255,255,255,0.5)", borderRadius: "16px", textDecoration: "none", color: "inherit", transition: "all 0.2s" }}>
+                                <Link 
+                                    href={event.type === "LEVEL_UP" ? "/faq#niveaux" : `/trophies?highlight=${event.badgeId || ""}`} 
+                                    key={event.id} 
+                                    style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px", background: "rgba(255,255,255,0.5)", borderRadius: "16px", textDecoration: "none", color: "inherit", transition: "all 0.2s" }}
+                                >
                                     <div style={{ fontSize: "1.25rem" }}>{event.badge?.icon || (event.type === "LEVEL_UP" ? "✨" : "📰")}</div>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontSize: "0.75rem", fontWeight: 800 }}>{event.type === "LEVEL_UP" ? `Tu es passé Niveau ${event.level} !` : event.type === "BADGE_LOST" ? `Perte d'un titre : ${event.badge?.name}` : `Nouveau succès : ${event.badge?.name}`}</div>
@@ -448,8 +452,8 @@ export default function DashboardClient({
 
             {/* 6. TOP LIGUE */}
             <section className="glass" style={{ padding: "1.25rem" }}>
-                <Link href="/league" className="card-header" style={{ marginBottom: "1rem", textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><Trophy size={18} className="text-primary" /> <span>Classement Ligue</span></div>
+                <Link href="/league?tab=TRENDS" className="card-header" style={{ marginBottom: "1rem", textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.85rem" }}><Trophy size={18} className="text-primary" /> <span>Classement Ligue</span></div>
                     <span style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--primary)" }}>VOIR TOUT ➔</span>
                 </Link>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
