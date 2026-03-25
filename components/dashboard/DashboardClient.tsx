@@ -20,6 +20,7 @@ interface DashboardProps {
     initialProgress: number;
     stats: any;
     trophiesData?: any;
+    feedItems?: any[];
 }
 
 export default function DashboardClient({
@@ -27,7 +28,8 @@ export default function DashboardClient({
     initialTarget,
     initialProgress,
     stats,
-    trophiesData
+    trophiesData,
+    feedItems = []
 }: DashboardProps) {
     const [showForm, setShowForm] = useState(false);
     const [showSecondaryForm, setShowSecondaryForm] = useState(false);
@@ -37,6 +39,9 @@ export default function DashboardClient({
     const [recentBatches, setRecentBatches] = useState<any[]>([]);
     const [selectedBatch, setSelectedBatch] = useState<any | null>(null);
     const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
+    const [swipeOffsets, setSwipeOffsets] = useState<Record<string, number>>({});
+    const [swipingId, setSwipingId] = useState<string | null>(null);
+    const [startX, setStartX] = useState(0);
     const router = useRouter();
 
     useEffect(() => {
@@ -53,6 +58,35 @@ export default function DashboardClient({
         setLostBadges(prev => prev.filter(b => b.id !== id));
         const seen = JSON.parse(localStorage.getItem("seenLostBadges") || "[]");
         localStorage.setItem("seenLostBadges", JSON.stringify([...seen, id]));
+        setSwipeOffsets(prev => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+        });
+    };
+
+    const handleSwipeStart = (e: React.PointerEvent, id: string) => {
+        setSwipingId(id);
+        setStartX(e.clientX);
+    };
+
+    const handleSwipeMove = (e: React.PointerEvent) => {
+        if (!swipingId) return;
+        const diff = e.clientX - startX;
+        if (diff > 0) {
+            setSwipeOffsets(prev => ({ ...prev, [swipingId]: diff }));
+        }
+    };
+
+    const handleSwipeEnd = () => {
+        if (!swipingId) return;
+        const offset = swipeOffsets[swipingId] || 0;
+        if (offset > 150) {
+            dismissLostBadge(swipingId);
+        } else {
+            setSwipeOffsets(prev => ({ ...prev, [swipingId]: 0 }));
+        }
+        setSwipingId(null);
     };
 
     // 3. Logic for Next Objectives
@@ -174,7 +208,7 @@ export default function DashboardClient({
                             background: "linear-gradient(90deg, var(--primary) 0%, #3b82f6 100%)", 
                             color: "white", 
                             borderRadius: "16px", 
-                            marginBottom: "1.5rem", 
+                            marginBottom: "1rem", 
                             display: "flex", 
                             justifyContent: "space-between", 
                             alignItems: "center",
@@ -199,18 +233,145 @@ export default function DashboardClient({
                 return null;
             })()}
 
+            {/* 1. COMPACT USER BANNER [NEW] */}
+            <div className="glass-premium" style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                padding: "1rem 1.25rem", 
+                borderRadius: "20px", 
+                marginBottom: "0.75rem", 
+                alignItems: "center",
+                background: "rgba(255, 255, 255, 0.85)",
+                border: "1px solid rgba(0,0,0,0.03)",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.03)"
+            }}>
+                <Link href={`/profile/${encodeURIComponent(stats.nickname)}`} style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", color: "inherit" }}>
+                    <div style={{ fontSize: "1.75rem", background: "rgba(0,0,0,0.03)", width: "45px", height: "45px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {levelInfo.emoji}
+                    </div>
+                    <div>
+                        <div style={{ fontSize: "0.65rem", fontWeight: "900", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>NV. {levelInfo.level}</div>
+                        <div style={{ fontSize: "0.95rem", fontWeight: "900" }}>{levelInfo.name}</div>
+                    </div>
+                </Link>
+                <div style={{ textAlign: "right", display: "flex", gap: "1.25rem", alignItems: "center" }}>
+                    <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: "0.55rem", fontWeight: "900", color: "var(--text-muted)", letterSpacing: "0.5px" }}>XP TOTAL</div>
+                        <div style={{ fontSize: "1rem", fontWeight: "900", color: "var(--primary)" }}>{stats.totalXP} ✨</div>
+                    </div>
+                    <Link href="/league" className={`streak-badge ${stats.streak > 0 ? 'active' : ''}`} style={{ margin: 0, padding: "5px 12px", borderRadius: "12px", textDecoration: "none" }}>
+                        <Flame size={14} fill={stats.streak > 0 ? "currentColor" : "none"} />
+                        <span style={{ fontSize: "0.8rem", fontWeight: "900" }}>{stats.streak}j</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* 2. USER GAZETTE (Filtered) [NEW] */}
+            {(() => {
+                const userEvents = feedItems?.filter((item: any) => item.user.id === userId).slice(0, 2) || [];
+                if (userEvents.length === 0) return null;
+                return (
+                    <section className="glass" style={{ padding: "0.85rem", marginBottom: "0.75rem", background: "rgba(255,255,255,0.4)" }}>
+                        <div className="card-header" style={{ marginBottom: "0.65rem", fontSize: "0.65rem" }}>
+                            <TrendingUp size={14} className="text-primary" />
+                            <span>Tes dernières activités</span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            {userEvents.map((event: any) => (
+                                <div key={event.id} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.8rem", background: "rgba(255,255,255,0.3)", padding: "8px 12px", borderRadius: "12px" }}>
+                                    <div style={{ opacity: 0.8 }}>
+                                        {event.type === "LEVEL_UP" ? "✨" : event.type === "BADGE_LOST" ? "🚨" : "🏆"}
+                                    </div>
+                                    <div style={{ flex: 1, fontWeight: 700, fontSize: "0.75rem" }}>
+                                        {event.type === "LEVEL_UP" ? `Niveau ${event.level} atteint !` : 
+                                         event.type === "BADGE_LOST" ? `Trophée perdu : ${event.badge?.name}` : 
+                                         `Nouveau trophée : ${event.badge?.name}`}
+                                    </div>
+                                    {event.badgeId && (
+                                        <Link href={`/badges?highlight=${event.badgeId}`} style={{ fontSize: "1.2rem", textDecoration: "none", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>
+                                            {event.badge?.icon || "🏆"}
+                                        </Link>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                );
+            })()}
+
             {/* LOST BADGE TOASTS */}
             {lostBadges.length > 0 && (
-                <div style={{ position: "fixed", top: "80px", right: "20px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 9999 }}>
-                    {lostBadges.map(alert => (
-                        <div key={alert.id} className="glass" style={{ padding: "1rem", borderLeft: "4px solid #ef4444", background: "rgba(15, 23, 42, 0.95)", backdropFilter: "blur(10px)", boxShadow: "0 10px 25px rgba(0,0,0,0.5)", borderRadius: "12px", width: "300px", animation: "slideInRight 0.3s ease-out" }}>
-                            <div style={{ fontWeight: 900, color: "#ef4444", marginBottom: "4px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <Flame size={16} /> 🚨 TROPHÉE VOLÉ !
+                <div 
+                    style={{ position: "fixed", top: "80px", right: "20px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 9999 }}
+                    onPointerMove={handleSwipeMove}
+                    onPointerUp={handleSwipeEnd}
+                    onPointerLeave={handleSwipeEnd}
+                >
+                    {lostBadges.map(alert => {
+                        const offset = swipeOffsets[alert.id] || 0;
+                        const opacity = Math.max(0, 1 - (offset / 300));
+
+                        return (
+                            <div 
+                                key={alert.id} 
+                                className="glass" 
+                                onPointerDown={(e) => handleSwipeStart(e, alert.id)}
+                                style={{ 
+                                    padding: "1rem", 
+                                    borderLeft: "4px solid #ef4444", 
+                                    background: "rgba(15, 23, 42, 0.95)", 
+                                    backdropFilter: "blur(10px)", 
+                                    boxShadow: "0 10px 25px rgba(0,0,0,0.5)", 
+                                    borderRadius: "12px", 
+                                    width: "300px", 
+                                    animation: "slideInRight 0.3s ease-out",
+                                    transform: `translateX(${offset}px)`,
+                                    opacity: opacity,
+                                    touchAction: "none",
+                                    position: "relative",
+                                    transition: swipingId === alert.id ? "none" : "transform 0.3s ease, opacity 0.3s ease"
+                                }}
+                            >
+                                <button 
+                                    onClick={() => dismissLostBadge(alert.id)}
+                                    style={{ 
+                                        position: "absolute", 
+                                        top: "8px", 
+                                        right: "8px", 
+                                        background: "none", 
+                                        border: "none", 
+                                        color: "white", 
+                                        opacity: 0.5, 
+                                        cursor: "pointer", 
+                                        fontSize: "1.2rem" 
+                                    }}
+                                >
+                                    ×
+                                </button>
+
+                                <div style={{ fontWeight: 900, color: "#ef4444", marginBottom: "4px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <Flame size={16} /> 🚨 TROPHÉE VOLÉ !
+                                </div>
+                                <p style={{ fontSize: "0.80rem", margin: "0 0 10px 0", color: "rgba(255,255,255,0.9)", lineHeight: 1.4 }}>
+                                    {alert.thief ? (
+                                        <>
+                                            <Link href={`/u/${alert.thief.id}`} className="text-primary" style={{ fontWeight: 900, textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>
+                                                @{alert.thief.nickname}
+                                            </Link>{" "}
+                                            vient de t'arracher le titre :
+                                        </>
+                                    ) : (
+                                        "On vient de t'arracher le titre :"
+                                    )}
+                                    <br/>
+                                    <Link href={`/badges?highlight=${alert.badge?.id}`} style={{ color: "white", fontWeight: 800, textDecoration: "none" }} onClick={(e) => e.stopPropagation()}>
+                                        <strong>{alert.badge?.icon} {alert.badge?.name}</strong>
+                                    </Link>.
+                                </p>
+                                <button onClick={() => dismissLostBadge(alert.id)} style={{ width: "100%", background: "none", border: "1px solid #ef4444", color: "#ef4444", padding: "6px 8px", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer", fontWeight: 800, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"} onMouseOut={e => e.currentTarget.style.background = "none"}>Ça ne se passera pas comme ça !</button>
                             </div>
-                            <p style={{ fontSize: "0.80rem", margin: "0 0 10px 0", color: "white", lineHeight: 1.4 }}>On vient de t'arracher le titre : <br/><strong>{alert.badge?.icon} {alert.badge?.name}</strong>.</p>
-                            <button onClick={() => dismissLostBadge(alert.id)} style={{ width: "100%", background: "none", border: "1px solid #ef4444", color: "#ef4444", padding: "6px 8px", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer", fontWeight: 800, transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"} onMouseOut={e => e.currentTarget.style.background = "none"}>Ça ne se passera pas comme ça !</button>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -269,8 +430,8 @@ export default function DashboardClient({
                 </section>
             )}
 
-            {/* 1. Daily Hero Section - Circular Impact */}
-            <Link href="/faq#volume" className="hero-card" style={{ display: "block", textDecoration: "none", color: "inherit", cursor: "pointer" }}>
+            {/* 3. Daily Hero Section - Circular Impact */}
+            <Link href="/faq#volume" className="hero-card" style={{ display: "block", textDecoration: "none", color: "inherit", cursor: "pointer", marginBottom: "1rem" }}>
                 <div className="hero-header">
                     <div className="target-label">OBJECTIF DU JOUR</div>
                     <div style={{ fontSize: "0.6rem", fontWeight: "900", opacity: 0.6, marginTop: "2px", textTransform: "uppercase", letterSpacing: "1px" }}>volume d'effort</div>
@@ -310,7 +471,7 @@ export default function DashboardClient({
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                             <button
                                 className={`btn-primary start-button ${!isGoalReached ? 'btn-pulse' : ''}`}
-                                onClick={() => setShowForm(true)}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowForm(true); }}
                             >
                                 LOGGER UNE SÉANCE
                             </button>
@@ -318,25 +479,25 @@ export default function DashboardClient({
                                 className="glass-hover"
                                 style={{ 
                                     width: "100%", borderRadius: "16px", padding: "0.85rem", fontSize: "0.85rem", fontWeight: "900", 
-                                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(0,0,0,0.05)", color: "var(--foreground)",
+                                    background: "rgba(0,0,0,0.1)", border: "1px solid rgba(0,0,0,0.05)", color: "var(--foreground)",
                                     display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", cursor: "pointer"
                                 }}
-                                onClick={() => setShowSecondaryForm(true)}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSecondaryForm(true); }}
                             >
                                 <PlusCircle size={16} className="text-primary" /> Pour en faire plus ✨
                             </button>
                         </div>
                     ) : showForm ? (
-                        <div className="form-portal glass-premium" style={{ padding: "0", borderRadius: "24px", border: "1px solid var(--primary)", overflow: "hidden" }}>
+                        <div className="form-portal glass-premium" style={{ padding: "0", borderRadius: "24px", border: "1px solid var(--primary)", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
                             <div style={{ padding: "1.5rem" }}>
                                 <ExerciseBatchForm onSuccess={() => setShowForm(false)} />
                             </div>
-                            <div style={{ textAlign: "center", marginTop: "1rem" }}>
+                            <div style={{ textAlign: "center", paddingBottom: "1rem" }}>
                                 <button className="btn-ghost" style={{ fontSize: "0.75rem" }} onClick={() => setShowForm(false)}>Plus tard</button>
                             </div>
                         </div>
                     ) : (
-                        <div className="form-portal glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", border: "1px solid var(--secondary)" }}>
+                        <div className="form-portal glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", border: "1px solid var(--secondary)" }} onClick={e => e.stopPropagation()}>
                             <header style={{ marginBottom: "1.5rem", textAlign: "center" }}>
                                 <h3 style={{ fontSize: "1.25rem", fontWeight: "900", color: "var(--secondary)" }}>Pour en faire plus</h3>
                                 <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>Tractions, Course, Étirements...</p>
@@ -350,102 +511,14 @@ export default function DashboardClient({
                 </div>
             </Link>
 
-            {/* 2. Stat Bar - Horizontal Impact */}
-            <div className="stats-grid" style={{ marginTop: "-1rem" }}>
-                <Link href="/faq#niveaux" className="glass-premium stat-card nature-rank clickable-card" style={{ padding: "1.25rem", textDecoration: "none", color: "inherit" }}>
-                    <div className="stat-info" style={{ flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <span style={{ fontSize: "1.2rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>{levelInfo.emoji}</span>
-                            <span style={{ fontSize: "0.8rem", fontWeight: "900", color: "var(--text-muted)" }}>NV. {levelInfo.level}</span>
-                        </div>
-                        <span style={{ fontSize: "1rem", fontWeight: "800", display: "block" }}>{levelInfo.name}</span>
-                        <div className="level-mini-bar" style={{ height: "6px", background: "rgba(0,0,0,0.05)", borderRadius: "3px", marginTop: "10px" }}>
-                            <div className="level-fill" style={{ width: `${levelProgress}%`, height: "100%", background: "var(--secondary)", borderRadius: "3px", boxShadow: "0 0 10px rgba(5, 150, 105, 0.2)" }} />
-                        </div>
-                    </div>
-                </Link>
-
-                <Link href="/faq#niveaux" className="glass-premium stat-card clickable-card" style={{ padding: "1.25rem", flexDirection: "column", alignItems: "flex-start", textDecoration: "none", color: "inherit" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "8px" }}>
-                        <Award className="text-primary" size={18} />
-                        <div className={`streak-badge ${stats.streak > 0 ? 'active' : ''}`} style={{ margin: 0, padding: "2px 8px" }}>
-                            <Flame size={12} fill={stats.streak > 0 ? "currentColor" : "none"} />
-                            <span style={{ fontSize: "0.65rem" }}>{stats.streak}j</span>
-                        </div>
-                    </div>
-                    <span style={{ fontSize: "0.8rem", fontWeight: "900", color: "var(--text-muted)" }}>EXP TOTAL</span>
-                    <span className="stat-number" style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{stats.totalXP} ✨</span>
-                </Link>
-            </div>
-
-            {/* 3. Economy & Ligue Focus */}
-            <div className="secondary-grid">
-                <Link href="/faq#cagnotte" className={`glass-premium info-card clickable-card ${!isEligible ? 'locked' : ''}`} style={{ border: isEligible ? "1px solid var(--secondary)" : "", textDecoration: "none", color: "inherit" }}>
-                    <div className="card-header">
-                        <Wallet size={16} className={isEligible ? "text-secondary" : "text-muted"} />
-                        <span>Cagnotte Pot</span>
-                    </div>
-                    <div className="cagnotte-status">
-                        {isEligible ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%" }}>
-                                <div className="status-active" style={{ fontSize: "1rem" }}>{stats.unpaidAmount}€ <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>à payer</span></div>
-                                {stats.unpaidPenalties && stats.unpaidPenalties.length > 0 && (
-                                    <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px", width: "100%" }}>
-                                        {stats.unpaidPenalties.map((p: any, idx: number) => (
-                                            <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
-                                                <span>{new Date(p.date).toLocaleDateString()}</span>
-                                                <span style={{ color: "var(--foreground)" }}>{p.amount}€</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="status-locked">
-                                <Lock size={12} style={{ marginRight: '4px' }} />
-                                {stats.cagnotteProgress.successfulDays}/{stats.cagnotteProgress.totalDays}j
-                            </div>
-                        )}
-                    </div>
-                </Link>
-
-                <div className="glass-premium info-card" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <Link href="/league" className="card-header clickable-card" style={{ marginBottom: "0.5rem", textDecoration: "none", color: "inherit", padding: "4px", borderRadius: "8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <Trophy size={16} className="text-primary" />
-                            <span>Top Ligue</span>
-                        </div>
-                        <span style={{ fontSize: "0.65rem", fontWeight: "800", color: "var(--primary)", opacity: 0.8 }}>VOIR TOUT ➔</span>
-                    </Link>
-                    <div className="league-preview" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        {stats.top3.map((player: any, i: number) => (
-                            <Link href={`/profile/${player.nickname}`} key={i} className="league-row clickable-card" style={{ 
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                opacity: i === 0 ? 1 : i === 1 ? 0.8 : 0.6,
-                                background: "rgba(255,255,255,0.02)", 
-                                padding: "6px 10px", 
-                                borderRadius: "8px",
-                                textDecoration: "none",
-                                color: "inherit"
-                            }}>
-                                <span>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} {player.nickname}</span>
-                                <span className="xp-small" style={{ fontWeight: 900, color: i === 0 ? "var(--primary)" : "inherit" }}>{player.totalXP}</span>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
             {/* PROCHAINS OBJECTIFS - Motivation Booster */}
             {nextObjectives.length > 0 && (
-                <section className="glass" style={{ marginBottom: "1.5rem", padding: "1.25rem" }}>
+                <section className="glass" style={{ marginBottom: "1rem", padding: "1.25rem" }}>
                     <div className="card-header" style={{ marginBottom: "1rem" }}>
                         <TrendingUp size={18} className="text-secondary" />
                         <span>Prochains objectifs</span>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         {nextObjectives.map((badge: any) => (
                             <div 
                                 key={badge.id} 
@@ -461,8 +534,8 @@ export default function DashboardClient({
                                         <div style={{ fontWeight: 800, fontSize: "0.85rem" }}>{badge.name}</div>
                                         <div style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--text-muted)" }}>{badge.currentValue} / {badge.targetValue} {badge.unit}</div>
                                     </div>
-                                    <div style={{ height: "4px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", overflow: "hidden" }}>
-                                        <div style={{ height: "100%", width: `${badge.percent}%`, background: "var(--secondary)", transition: "width 1s ease-out" }} />
+                                    <div className="level-mini-bar">
+                                        <div className="level-fill" style={{ width: `${badge.percent}%`, background: "var(--secondary)", transition: "width 1s ease-out" }} />
                                     </div>
                                 </div>
                             </div>
@@ -472,18 +545,18 @@ export default function DashboardClient({
             )}
 
             {/* 4. Recent History */}
-            <section className="glass history-card">
+            <section className="glass history-card" style={{ marginBottom: "1rem" }}>
                 <div className="card-header">
                     <History size={18} />
                     <span>Historique Récent</span>
                 </div>
-                <div className="history-list">
+                <div className="history-list" style={{ maxHeight: "300px", overflowY: "auto", paddingRight: "4px" }}>
                     {recentBatches.length > 0 ? recentBatches.map((batch: any) => (
                         <div 
                             key={batch.id} 
                             className="history-item clickable-card"
                             onClick={() => setSelectedBatch(batch)}
-                            style={{ cursor: "pointer" }}
+                            style={{ cursor: "pointer", marginBottom: "8px" }}
                         >
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
@@ -491,10 +564,10 @@ export default function DashboardClient({
                                         {batch.exercises.length > 1 ? '📦' : (batch.exercises[0]?.type === 'PUSHUP' ? '💪' : batch.exercises[0]?.type === 'SQUAT' ? '🦵' : '🛡️')}
                                     </div>
                                     <div>
-                                        <div style={{ fontWeight: "800", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                        <div style={{ fontWeight: "800", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                                             {batch.exercises.length > 1 ? `${batch.exercises.length} EXERCICES` : (batch.exercises[0]?.type === 'PUSHUP' ? 'Pompes' : batch.exercises[0]?.type === 'SQUAT' ? 'Squats' : 'Gainage')}
                                         </div>
-                                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "600" }}>
+                                        <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: "600" }}>
                                             {new Date(batch.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {batch.exercises.reduce((acc: number, ex: any) => acc + ex.value, 0)} {batch.exercises[0]?.type === 'PUSHUP' || batch.exercises[0]?.type === 'SQUAT' ? 'reps' : 's'}
                                         </div>
                                     </div>
@@ -511,7 +584,7 @@ export default function DashboardClient({
                             )}
                         </div>
                     )) : (
-                        <p className="empty-text" style={{ fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center", padding: "1.5rem" }}>Chargement de l'historique...</p>
+                        <p className="empty-text" style={{ fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center", padding: "1.5rem" }}>L'historique est vide.</p>
                     )}
                 </div>
 
@@ -531,6 +604,38 @@ export default function DashboardClient({
                         records={trophiesData?.records}
                     />
                 )}
+            </section>
+
+            {/* TOP LIGUE [MOVED TO BOTTOM] */}
+            <section className="glass" style={{ padding: "1.25rem", marginBottom: "1rem" }}>
+                <Link href="/league" className="card-header clickable-card" style={{ marginBottom: "1rem", textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <Trophy size={18} className="text-primary" />
+                        <span>Top Ligue</span>
+                    </div>
+                    <span style={{ fontSize: "0.7rem", fontWeight: "900", color: "var(--primary)" }}>VOIR TOUT ➔</span>
+                </Link>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {stats.top3.map((player: any, i: number) => (
+                        <Link href={`/profile/${player.nickname}`} key={i} className="glass-premium clickable-card" style={{ 
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            background: i === 0 ? "rgba(217, 119, 6, 0.05)" : "rgba(255,255,255,0.02)", 
+                            padding: "10px 15px", 
+                            borderRadius: "16px",
+                            textDecoration: "none",
+                            color: "inherit",
+                            border: i === 0 ? "1px solid rgba(217, 119, 6, 0.2)" : "1px solid transparent"
+                        }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <span style={{ fontSize: "1.1rem" }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                                <span style={{ fontWeight: 800, fontSize: "0.9rem" }}>{player.nickname}</span>
+                            </div>
+                            <span style={{ fontWeight: 900, color: i === 0 ? "var(--primary)" : "var(--text-muted)" }}>{player.totalXP} XP</span>
+                        </Link>
+                    ))}
+                </div>
             </section>
 
             <style jsx>{`

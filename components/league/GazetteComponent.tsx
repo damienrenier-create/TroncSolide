@@ -53,12 +53,26 @@ export default function GazetteComponent({
             return <strong>{msgs[sumChars % msgs.length]}</strong>;
         } else if (item.type === "BADGE_LOST") {
             const badgeName = `${item.badge?.icon || ''} ${item.badge?.name || ''}`;
-            const msgs = [
-                `S'est fait lâchement dérober le titre : ${badgeName} ! 💔`,
-                `Ateinte à la dignité ! Son record ${badgeName} a été battu. 🚨`,
-                `Coup dur... Le titre de ${badgeName} a changé de propriétaire sous son nez. 😭`
-            ];
-            return <span style={{ color: "#ef4444" }}><strong>{msgs[sumChars % msgs.length]}</strong></span>;
+            const thief = item.thief;
+            
+            return (
+                <span style={{ color: "#ef4444" }}>
+                    {thief ? (
+                        <>
+                            <Link href={`/u/${thief.id}`} style={{ color: "var(--primary)", fontWeight: 800 }}>
+                                @{thief.nickname}
+                            </Link>
+                            {" "}vient de lui arracher le titre :{" "}
+                        </>
+                    ) : (
+                        "S'est fait lâchement dérober le titre : "
+                    )}
+                    <Link href={`/badges?highlight=${item.badgeId}`} style={{ color: "inherit", fontWeight: 800 }}>
+                        {badgeName}
+                    </Link>
+                    {" "}! 💔
+                </span>
+            );
         } else {
             const badgeName = `${item.badge?.icon || ''} ${item.badge?.name || ''}`;
             const msgs = [
@@ -111,10 +125,18 @@ export default function GazetteComponent({
                                     <span>{item.likeCount}</span>
                                 </button>
 
-                                <Link href="/faq" className="feed-link">
-                                    <ExternalLink size={12} />
-                                    Voir {item.type === "LEVEL_UP" ? "niveaux" : "trophée"}
-                                </Link>
+                                {item.badgeId ? (
+                                    <Link href={`/badges?highlight=${item.badgeId}`} className="feed-link" title="Voir le trophée">
+                                        <div style={{ fontSize: "1.2rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>
+                                            {item.badge?.icon || "🏆"}
+                                        </div>
+                                    </Link>
+                                ) : (
+                                    <Link href="/faq" className="feed-link">
+                                        <ExternalLink size={12} />
+                                        Voir {item.type === "LEVEL_UP" ? "niveaux" : "trophée"}
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </div>

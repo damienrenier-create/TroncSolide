@@ -25,11 +25,34 @@ export async function getFeedItems(leagueId: string) {
         }
     });
 
-    return items.map(item => ({
-        ...item,
-        likeCount: item.likes.length,
-        isLiked: item.likes.some(l => l.userId === currentUserId)
+    const enrichedItems = await Promise.all(items.map(async (item) => {
+        let thief = null;
+        if (item.type === "BADGE_LOST") {
+            const thiefItem = await prisma.feedItem.findFirst({
+                where: {
+                    leagueId: item.leagueId,
+                    badgeId: item.badgeId,
+                    type: "BADGE_WON",
+                    createdAt: {
+                        gte: new Date(item.createdAt.getTime() - 15000),
+                        lte: new Date(item.createdAt.getTime() + 15000)
+                    },
+                    NOT: { userId: item.userId }
+                },
+                include: { user: { select: { id: true, nickname: true } } }
+            });
+            thief = thiefItem?.user || null;
+        }
+
+        return {
+            ...item,
+            thief,
+            likeCount: item.likes.length,
+            isLiked: item.likes.some(l => l.userId === currentUserId)
+        };
     }));
+
+    return enrichedItems;
 }
 
 export async function toggleLike(feedItemId: string) {

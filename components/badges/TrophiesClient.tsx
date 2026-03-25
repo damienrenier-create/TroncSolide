@@ -16,6 +16,15 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
     const searchParams = useSearchParams();
     const highlightId = searchParams.get("highlight");
 
+    React.useEffect(() => {
+        if (highlightId) {
+            const element = document.getElementById(`badge-${highlightId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+    }, [highlightId]);
+
     // 1. Catégorisation des badges (Vitrines)
     const vitrines = useMemo(() => {
         const categories = [

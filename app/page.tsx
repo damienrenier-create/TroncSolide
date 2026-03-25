@@ -5,6 +5,7 @@ import { getDailyTarget, getTodayProgress } from "@/lib/actions/exercise";
 import { getUserStats } from "@/lib/actions/dashboard";
 import { getTrophiesRoomData } from "@/lib/actions/gamification";
 import { syncPenalties } from "@/lib/actions/economy";
+import { getFeedItems } from "@/lib/actions/social";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 
 export default async function DashboardPage() {
@@ -17,12 +18,7 @@ export default async function DashboardPage() {
   // Sync penalties on load (simple "cron" replacement)
   await syncPenalties();
 
-  const [target, progress, stats, trophiesData] = await Promise.all([
-    getDailyTarget(session.user.id),
-    getTodayProgress(session.user.id),
-    getUserStats(),
-    getTrophiesRoomData()
-  ]);
+  const stats = await getUserStats();
 
   if (!stats) return (
     <div className="container dashboard-container" style={{ textAlign: "center", marginTop: "4rem" }}>
@@ -34,6 +30,13 @@ export default async function DashboardPage() {
     </div>
   );
 
+  const [target, progress, trophiesData, feedItems] = await Promise.all([
+    getDailyTarget(session.user.id),
+    getTodayProgress(session.user.id),
+    getTrophiesRoomData(),
+    getFeedItems(stats.leagueId)
+  ]);
+
   return (
     <DashboardClient
       userId={session.user.id}
@@ -41,6 +44,7 @@ export default async function DashboardPage() {
       initialProgress={progress}
       stats={stats}
       trophiesData={trophiesData}
+      feedItems={feedItems}
     />
   );
 }

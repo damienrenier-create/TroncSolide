@@ -94,10 +94,31 @@ export async function getUserStats() {
     const activeEvent = await getActiveEvents(user.leagueId);
 
     // 6. Recent Lost Badges (last 2 days)
-    const recentLostBadges = await prisma.feedItem.findMany({
+    const rawLostBadges = await prisma.feedItem.findMany({
         where: { userId, type: "BADGE_LOST", createdAt: { gte: subDays(new Date(), 2) } },
-        include: { badge: { select: { name: true, icon: true } } }
+        include: { badge: { select: { id: true, name: true, icon: true } } }
     });
+
+    const recentLostBadges = await Promise.all(rawLostBadges.map(async (item) => {
+        // Find who won this badge at roughly the same time in the same league
+        const thiefItem = await prisma.feedItem.findFirst({
+            where: {
+                leagueId: item.leagueId,
+                badgeId: item.badgeId,
+                type: "BADGE_WON",
+                createdAt: {
+                    gte: new Date(item.createdAt.getTime() - 15000),
+                    lte: new Date(item.createdAt.getTime() + 15000)
+                },
+                NOT: { userId: item.userId }
+            },
+            include: { user: { select: { id: true, nickname: true } } }
+        });
+        return {
+            ...item,
+            thief: thiefItem?.user || null
+        };
+    }));
 
     return {
         ...user,
