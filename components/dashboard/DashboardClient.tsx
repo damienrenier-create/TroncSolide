@@ -98,8 +98,17 @@ export default function DashboardClient({
 
     const getNextObjectives = () => {
         if (!trophiesData || !trophiesData.userStats) return [];
-        const userStats = trophiesData.userStats;
+        const { userStats, records } = trophiesData;
         const myBadgeIds = new Set(stats.badges?.map((b: any) => b.badgeId || b.id) || []);
+
+        // Helper to get total or max from aggregate arrays
+        const getValue = (arr: any[], exType: string | string[], field: '_sum' | '_max' = '_sum') => {
+            if (!arr) return 0;
+            const types = Array.isArray(exType) ? exType : [exType];
+            return arr
+                .filter(a => types.includes(a.type))
+                .reduce((acc, curr) => acc + (curr[field]?.value || 0), 0);
+        };
 
         const categories = [
             { key: "PUSHUP", tags: ["PUMP", "PUSHUP"] },
@@ -117,25 +126,67 @@ export default function DashboardClient({
             );
 
             const processed = candidates.map(badge => {
-                const match = badge.id.match(/\d+/);
-                const targetValue = match ? parseInt(match[0]) : 0;
+                let targetValue = 0;
                 let currentValue = 0;
                 let unit = "reps";
 
+                // 1. DÉTERMINATION DU TARGET
+                const match = badge.id.match(/\d+/);
+                if (match) {
+                    targetValue = parseInt(match[0]);
+                } else if (badge.id === "SQUAT_LOVER") targetValue = 5;
+                else if (badge.id === "MOOD_MASTER") targetValue = 10;
+                else if (badge.id === "CENTURION") targetValue = 100;
+                else if (badge.id.startsWith("RECORD_")) {
+                    const exercise = badge.id.includes("PUSHUP") ? "PUSHUP" : badge.id.includes("SQUAT") ? "SQUAT" : "VENTRAL";
+                    const tf = badge.id.includes("DAY") ? "DAY" : badge.id.includes("WEEK") ? "WEEK" : badge.id.includes("MONTH") ? "MONTH" : "YEAR";
+                    const type = badge.id.includes("SERIES") ? "SERIES" : "VOLUME";
+                    
+                    const rec = records.find((r: any) => r.exercise === exercise && r.timeframe === tf && r.type === type);
+                    targetValue = (rec?.value || 0) + 1;
+                }
+
+                // 2. DÉTERMINATION DU CURRENT
                 if (badge.id.includes("PUMP") || badge.id.includes("PUSHUP")) {
                     unit = "pompes";
-                    currentValue = badge.id.startsWith("SERIE_") ? userStats.allTime?.maxPushups : userStats.allTime?.pushups;
+                    if (badge.id.startsWith("SERIE_PUMP_") || badge.id === "RECORD_SERIES_PUSHUP") {
+                        currentValue = getValue(userStats.aggregates, "PUSHUP", "_max");
+                    } else if (badge.id === "RECORD_DAY_PUSHUP") {
+                        currentValue = getValue(userStats.dayStats, "PUSHUP");
+                    } else if (badge.id === "RECORD_WEEK_PUSHUP") {
+                        currentValue = getValue(userStats.weekStats, "PUSHUP");
+                    } else if (badge.id === "RECORD_MONTH_PUSHUP") {
+                        currentValue = getValue(userStats.monthStats, "PUSHUP");
+                    } else {
+                        currentValue = getValue(userStats.aggregates, "PUSHUP");
+                    }
                 } else if (badge.id.includes("SQUAT")) {
                     unit = "squats";
-                    currentValue = badge.id.startsWith("SERIE_") ? userStats.allTime?.maxSquats : userStats.allTime?.squats;
+                    if (badge.id.startsWith("SERIE_SQUAT_") || badge.id === "RECORD_SERIES_SQUAT") {
+                        currentValue = getValue(userStats.aggregates, "SQUAT", "_max");
+                    } else if (badge.id === "RECORD_DAY_SQUAT") {
+                        currentValue = getValue(userStats.dayStats, "SQUAT");
+                    } else if (badge.id === "RECORD_WEEK_SQUAT") {
+                        currentValue = getValue(userStats.weekStats, "SQUAT");
+                    } else if (badge.id === "RECORD_MONTH_SQUAT") {
+                        currentValue = getValue(userStats.monthStats, "SQUAT");
+                    } else {
+                        currentValue = getValue(userStats.aggregates, "SQUAT");
+                    }
                 } else if (badge.id.includes("PLANK")) {
-                    unit = "s";
-                    currentValue = badge.id.startsWith("SERIE_") ? userStats.allTime?.maxPlank : userStats.allTime?.plank;
-                } else if (badge.id.startsWith("RECORD_")) {
-                    const exercise = badge.id.includes("PUSHUP") ? "pushups" : badge.id.includes("SQUAT") ? "squats" : "plank";
-                    const timeframe = (badge.id.includes("WEEK") ? "week" : badge.id.includes("MONTH") ? "month" : badge.id.includes("DAY") ? "today" : "allTime");
-                    currentValue = userStats[timeframe]?.[exercise] || 0;
-                    unit = exercise === "plank" ? "s" : "reps";
+                    unit = badge.id.includes("SERIE") ? "secondes" : "s";
+                    const plankTypes = ["VENTRAL", "LATERAL_L", "LATERAL_R"];
+                    if (badge.id.startsWith("SERIE_PLANK_") || badge.id === "RECORD_SERIES_PLANK") {
+                        currentValue = getValue(userStats.aggregates, plankTypes, "_max");
+                    } else if (badge.id === "RECORD_DAY_PLANK") {
+                        currentValue = getValue(userStats.dayStats, plankTypes);
+                    } else if (badge.id === "RECORD_WEEK_PLANK") {
+                        currentValue = getValue(userStats.weekStats, plankTypes);
+                    } else if (badge.id === "RECORD_MONTH_PLANK") {
+                        currentValue = getValue(userStats.monthStats, plankTypes);
+                    } else {
+                        currentValue = getValue(userStats.aggregates, plankTypes);
+                    }
                 }
 
                 currentValue = currentValue || 0;
