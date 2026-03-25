@@ -234,11 +234,15 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         const { checkGamification } = await import("@/lib/actions/gamification");
         const { updateUserStreak } = await import("@/lib/actions/streak");
         
-        for (const s of createdSessions) {
-            if (COMPETITIVE_EXERCISES.includes(s.type)) {
-                await syncRecords(session.user.id, user.leagueId, s.type, s.value, entryDate);
-                await checkGamification(session.user.id, s.id);
+        // On ne synchronise qu'une fois par batch pour éviter la congestion
+        const lastSession = createdSessions[createdSessions.length - 1];
+        if (lastSession) {
+            for (const s of createdSessions) {
+                if (COMPETITIVE_EXERCISES.includes(s.type)) {
+                    await syncRecords(session.user.id, user.leagueId, s.type, s.value, entryDate);
+                }
             }
+            await checkGamification(session.user.id, lastSession.id);
         }
 
         // Met à jour la jauge d'assiduité du joueur (Streak)
@@ -316,11 +320,14 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                     }
                 });
 
-                for (const s of twinSessions) {
-                    if (COMPETITIVE_EXERCISES.includes(s.type)) {
-                        await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
-                        await checkGamification(twin.id, s.id);
+                const lastTwinSession = twinSessions[twinSessions.length - 1];
+                if (lastTwinSession) {
+                    for (const s of twinSessions) {
+                        if (COMPETITIVE_EXERCISES.includes(s.type)) {
+                            await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
+                        }
                     }
+                    await checkGamification(twin.id, lastTwinSession.id);
                 }
                 await updateUserStreak(twin.id);
 
@@ -341,7 +348,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         revalidatePath("/league");
         return { success: true };
     } catch (e) {
-        console.error(e);
+        console.error("Batch logging error:", e);
         return { error: "Erreur lors de l'enregistrement groupé." };
     }
 }
