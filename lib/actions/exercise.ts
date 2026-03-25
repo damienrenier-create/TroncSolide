@@ -193,7 +193,8 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                 sources: sessionsToCreate.map(s => ({
                     type: "base",
                     label: `${s.ex.type === 'PUSHUP' ? 'Pompes' : s.ex.type === 'SQUAT' ? 'Squats' : 'Gainage'} (${s.ex.value}${s.ex.type === 'PUSHUP' || s.ex.type === 'SQUAT' ? ' reps' : 's'})`,
-                    xp: s.xpBase
+                    xp: s.xpBase,
+                    exerciseType: s.ex.type
                 }))
             };
 
@@ -202,7 +203,8 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                 xpDetails.sources.push({
                     type: "event",
                     label: `Bonus Événement : ${activeEvent.title}`,
-                    xp: xpDetails.breakdown.bonus
+                    xp: xpDetails.breakdown.bonus,
+                    exerciseType: null as any
                 });
             }
 
@@ -293,7 +295,8 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                         sources: twinSessionsToCreate.map(s => ({
                             type: "base",
                             label: `${s.ex.type} (${s.ex.value})`,
-                            xp: s.xpBase
+                            xp: s.xpBase,
+                            exerciseType: s.ex.type
                         }))
                     };
 

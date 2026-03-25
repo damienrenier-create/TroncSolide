@@ -109,6 +109,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
 
     const badgesToAward: string[] = [];
     const userBadgeNames = new Set(user.badges.map(b => b.badge.name));
+    const finalAwards: any[] = [];
 
     // --- LOGIQUE ACCOMPLISSEMENTS (ACHIEVEMENT) ---
     const hour = today.getHours();
@@ -204,6 +205,11 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                     data: { totalXP: { increment: finalXP } }
                 });
                 currentTotalXP += finalXP;
+                finalAwards.push({
+                    type: "badge",
+                    label: `BADGE: ${def.name}`,
+                    xp: finalXP
+                });
             }
 
             await tx.feedItem.create({
@@ -213,7 +219,45 @@ export async function checkGamification(userId: string, lastSessionId: string) {
     }
 
     // --- LOGIQUE BRAQUAGE DE RECORDS (TOP 3) ---
-    await reSyncLeagueRecords(user.leagueId);
+    const recordAwards = await reSyncLeagueRecords(user.leagueId, userId);
+    finalAwards.push(...recordAwards);
+
+    // 4. Update the ExerciseSession(s) with these awards for transparency
+    if (finalAwards.length > 0) {
+        const batchId = session.batchId;
+        if (batchId) {
+            // Bulk update for all sessions in the same batch
+            const batchSessions = await prisma.exerciseSession.findMany({ where: { batchId } });
+            for (const s of batchSessions) {
+                const details = (s.xpDetails as any) || { version: 1, totalXp: s.xpGained, sources: [] };
+                details.sources.push(...finalAwards.map(a => ({
+                    type: "badge",
+                    label: a.label,
+                    xp: a.xp
+                })));
+                details.totalXp += finalAwards.reduce((acc, a) => acc + a.xp, 0);
+                
+                await prisma.exerciseSession.update({
+                    where: { id: s.id },
+                    data: { xpDetails: details }
+                });
+            }
+        } else {
+            // Single session without batch
+            const details = (session.xpDetails as any) || { version: 1, totalXp: session.xpGained, sources: [] };
+            details.sources.push(...finalAwards.map(a => ({
+                type: "badge",
+                label: a.label,
+                xp: a.xp
+            })));
+            details.totalXp += finalAwards.reduce((acc, a) => acc + a.xp, 0);
+            
+            await prisma.exerciseSession.update({
+                where: { id: lastSessionId },
+                data: { xpDetails: details }
+            });
+        }
+    }
 
     revalidatePath("/profile");
     revalidatePath("/faq");
@@ -224,9 +268,10 @@ export async function checkGamification(userId: string, lastSessionId: string) {
  * Re-evaluates all records for a league and updates the Top 3 badges.
  * 1st = Diamond, 2nd = Gold, 3rd = Silver.
  */
-export async function reSyncLeagueRecords(leagueId: string) {
+export async function reSyncLeagueRecords(leagueId: string, targetUserId?: string) {
     const { getLeagueRankings } = await import("./record");
     const today = getBrusselsToday();
+    const awardsForUser: { type: "badge", label: string, xp: number }[] = [];
 
     const recordMapping = [
         { id: "RECORD_DAY_PUSHUP", type: "VOLUME", tf: "DAY", ex: "PUSHUP", coef: 0.5 },
@@ -299,6 +344,9 @@ export async function reSyncLeagueRecords(leagueId: string) {
                     await tx.feedItem.create({
                         data: { leagueId, userId: player.userId, type: "BADGE_WON", badgeId: badge.id }
                     });
+                    if (player.userId === targetUserId) {
+                        awardsForUser.push({ type: "badge", label: `RECORD: ${def.name}`, xp: newBaseXP + CASSEUR_BONUS });
+                    }
                 } else {
                     // Already in Top 3, check if rank or XP changed
                     const oldTotal = (existing.baseXP || 0) + (existing.rank === 1 ? 200 : 0);
@@ -310,11 +358,14 @@ export async function reSyncLeagueRecords(leagueId: string) {
                             where: { id: existing.id },
                             data: { rank, baseXP: newBaseXP, rateXP: newRateXP }
                         });
-                        if (diff !== 0) {
+                        if (diff > 0) {
                             await tx.user.update({
                                 where: { id: player.userId },
                                 data: { totalXP: { increment: diff } }
                             });
+                            if (player.userId === targetUserId) {
+                                awardsForUser.push({ type: "badge", label: `RECORD: ${def.name}`, xp: diff });
+                            }
                         }
                         // Only add feed item if rank improved to 1
                         if (existing.rank !== 1 && rank === 1) {
@@ -331,6 +382,7 @@ export async function reSyncLeagueRecords(leagueId: string) {
     revalidatePath("/profile");
     revalidatePath("/faq");
     revalidatePath("/league");
+    return awardsForUser;
 }
 
 export async function getBadgeCatalogue() {

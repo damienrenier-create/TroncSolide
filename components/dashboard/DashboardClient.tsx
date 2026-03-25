@@ -363,7 +363,7 @@ export default function DashboardClient({
                     {!showForm && !showSecondaryForm ? (
                         <>
                             <button className={`btn-primary start-button ${!isGoalReached ? 'btn-pulse' : ''}`} onClick={() => setShowForm(true)}>LOGGER UNE SÉANCE</button>
-                            <button className="glass-hover" style={{ width: "100%", borderRadius: "16px", padding: "0.85rem", fontSize: "0.85rem", fontWeight: "900", background: "rgba(0,0,0,0.1)", border: "none", color: "var(--foreground)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "10px", cursor: "pointer" }} onClick={() => setShowSecondaryForm(true)}><PlusCircle size={16} /> Pour en faire plus ✨</button>
+                            <button className="glass-hover" style={{ width: "100%", borderRadius: "16px", padding: "0.85rem", fontSize: "0.85rem", fontWeight: "900", background: "rgba(0,0,0,0.15)", border: "none", color: "var(--foreground)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "10px", cursor: "pointer" }} onClick={() => setShowSecondaryForm(true)}><PlusCircle size={16} /> Pour en faire plus ✨</button>
                         </>
                     ) : showForm ? (
                         <div className="form-portal glass-premium" style={{ border: "1px solid var(--primary)", overflow: "hidden" }}><div style={{ padding: "1.25rem" }}><ExerciseBatchForm onSuccess={() => setShowForm(false)} /></div><button className="btn-ghost" onClick={() => setShowForm(false)} style={{ width: "100%", paddingBottom: "1rem" }}>Plus tard</button></div>
@@ -379,7 +379,11 @@ export default function DashboardClient({
                         {recentBatches.map(batch => (
                             <div key={batch.id} className="history-mini-item" onClick={() => setSelectedBatch(batch)} style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.5)", padding: "10px 12px", borderRadius: "12px", fontSize: "0.75rem", cursor: "pointer", transition: "all 0.2s", alignItems: "center" }}>
                                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                    <span>{batch.exercises.length > 1 ? '📦' : '💪'}</span> 
+                                    <span>
+                                        {batch.exercises.length > 1 ? '📦' : 
+                                         batch.exercises[0].type === 'PUSHUP' ? '💪' : 
+                                         batch.exercises[0].type === 'SQUAT' ? '🦵' : '🛡️'}
+                                    </span> 
                                     <span style={{ fontWeight: 800 }}>{new Date(batch.date).toLocaleDateString('fr', {day:'numeric', month:'short'})}</span>
                                     <span style={{ fontWeight: 900, color: "var(--primary)", marginLeft: "4px" }}>+{batch.xpTotal} XP</span>
                                 </div>

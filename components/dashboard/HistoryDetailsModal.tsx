@@ -18,6 +18,7 @@ interface XPDetailSource {
   type: "badge" | "milestone" | "event" | "rule" | "base";
   label: string;
   xp: number;
+  exerciseType?: string;
 }
 
 interface XPDetails {
@@ -62,16 +63,27 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
     sources: batch.exercises.map(ex => ({
       type: "base" as const,
       label: `${ex.type === 'PUSHUP' ? 'Pompes' : ex.type === 'SQUAT' ? 'Squats' : 'Gainage'} (${ex.value})`,
-      xp: 0
+      xp: 0,
+      exerciseType: ex.type
     }))
   };
 
-  const getSourceIcon = (type: string) => {
+  const getSourceIcon = (type: string, exType?: string) => {
+    if (type === "base") {
+      switch (exType) {
+        case "PUSHUP": return <span style={{ fontSize: "1.1rem" }}>💪</span>;
+        case "SQUAT": return <span style={{ fontSize: "1.1rem" }}>🦵</span>;
+        case "VENTRAL":
+        case "LATERAL_L":
+        case "LATERAL_R": return <span style={{ fontSize: "1.1rem" }}>🛡️</span>;
+        default: return <Zap size={18} style={{ color: "var(--primary)" }} />;
+      }
+    }
+    
     switch (type) {
-      case "base": return <Zap size={18} style={{ color: "var(--primary)" }} />;
       case "event": return <Star size={18} style={{ color: "#8b5cf6" }} />;
       case "rule": return <TrendingUp size={18} style={{ color: "var(--accent)" }} />;
-      case "badge": return <Award size={18} style={{ color: "#ec4899" }} />;
+      case "badge": 
       case "milestone": return <Trophy size={18} style={{ color: "#f59e0b" }} />;
       default: return <Info size={18} style={{ color: "var(--text-muted)" }} />;
     }
@@ -184,8 +196,8 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
                   border: "1px solid #f1f5f9"
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{ background: "#ffffff", padding: "8px", borderRadius: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
-                      {getSourceIcon(source.type)}
+                    <div style={{ background: "#ffffff", padding: "8px", borderRadius: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {getSourceIcon(source.type, source.exerciseType)}
                     </div>
                     <div>
                       <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#1e293b" }}>{source.label}</div>

@@ -2,7 +2,7 @@ export const NATURE_LEVELS = [
     { name: "Graine", emoji: "🌰" }, { name: "Germe", emoji: "🪴" }, { name: "Pousse", emoji: "🌱" },
     { name: "Tige", emoji: "🌿" }, { name: "Feuille", emoji: "🍃" }, { name: "Bourgeon", emoji: "🏵️" },
     { name: "Fleur", emoji: "🌸" }, { name: "Pétale", emoji: "💮" }, { name: "Sève", emoji: "🍯" },
-    { name: "Racine", emoji: "🪢" }, { name: "Arbrisseau", emoji: "🌾" }, { name: "Buisson", emoji: "🪹" },
+    { name: "Racine", emoji: "🪵" }, { name: "Arbrisseau", emoji: "🌾" }, { name: "Buisson", emoji: "🪹" },
     { name: "Fougère", emoji: "🪷" }, { name: "Mousse", emoji: "🦠" }, { name: "Lierre", emoji: "🕸️" }, 
     { name: "Bambou", emoji: "🎋" }, { name: "Roseau", emoji: "🌾" }, { name: "Genêt", emoji: "🌼" }, 
     { name: "Bruyère", emoji: "🪻" }, { name: "Ajonc", emoji: "🌵" }, { name: "Arbuste", emoji: "🪴" },
