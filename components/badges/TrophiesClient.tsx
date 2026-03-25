@@ -1,20 +1,21 @@
-"use client";
-
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Badge, ExerciseType, BadgeType, Record as LeagueRecord } from "@prisma/client";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import { Flame, CheckCircle, Trophy as TrophyIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import BadgeModal from "@/components/badges/BadgeModal";
 
 interface TrophiesClientProps {
     initialBadges: any[];
     userStats: any;
     records?: LeagueRecord[];
+    userId?: string;
 }
 
-export default function TrophiesClient({ initialBadges, userStats, records = [] }: TrophiesClientProps) {
+export default function TrophiesClient({ initialBadges, userStats, records = [], userId }: TrophiesClientProps) {
     const searchParams = useSearchParams();
     const highlightId = searchParams.get("highlight");
+    const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
 
     React.useEffect(() => {
         if (highlightId) {
@@ -22,8 +23,11 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
             if (element) {
                 element.scrollIntoView({ behavior: "smooth", block: "center" });
             }
+            // Optional: Auto-select it
+            const b = initialBadges.find(b => b.id === highlightId);
+            if (b) setSelectedBadge(b);
         }
-    }, [highlightId]);
+    }, [highlightId, initialBadges]);
 
     // 1. Catégorisation des badges (Vitrines)
     const vitrines = useMemo(() => {
@@ -44,15 +48,17 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
         }));
     }, [initialBadges]);
 
-    // 2. Logique de calcul d'écart
+    // 2. Logique de calcul d'écart (Utilise la nouvelle structure allTime, week, today...)
     const getGapInfo = (badgeId: string, def: any, badgeInstance: any) => {
-        const aggs = userStats.aggregates || [];
-        const month = userStats.monthStats || [];
-        const week = userStats.weekStats || [];
-        const day = userStats.dayStats || [];
+        let targetValue = 0;
+        let userValue = 0;
+        let unit = "";
+        let label = "";
 
-        const getSum = (stats: any[], type: ExerciseType) => stats.find(s => s.type === type)?._sum?.value || 0;
-        const getMax = (stats: any[], type: ExerciseType) => stats.find(s => s.type === type)?._max?.value || 0;
+        const allTime = userStats.allTime || {};
+        const today = userStats.today || {};
+        const week = userStats.week || {};
+        const month = userStats.month || {};
 
         const extractThreshold = (str: string) => {
             const matches = str.match(/(\d[\d\s]*)/);
@@ -60,32 +66,27 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
             return parseInt(matches[0].replace(/\s/g, ''));
         };
 
-        let targetValue = 0;
-        let userValue = 0;
-        let unit = "";
-        let label = "";
-
         // --- PALIERS DE VOLUME ---
         if (badgeId.startsWith("PUMP_")) {
             targetValue = extractThreshold(def.name);
-            userValue = getSum(aggs, "PUSHUP");
+            userValue = allTime.pushups || 0;
             unit = "reps";
             label = "Total all-time";
         } else if (badgeId.startsWith("SQUAT_")) {
             targetValue = extractThreshold(def.name);
-            userValue = getSum(aggs, "SQUAT");
+            userValue = allTime.squats || 0;
             unit = "reps";
             label = "Total all-time";
         } else if (badgeId.startsWith("PLANK_")) {
             targetValue = extractThreshold(def.name);
-            userValue = getSum(aggs, "VENTRAL") + getSum(aggs, "LATERAL_L") + getSum(aggs, "LATERAL_R");
+            userValue = allTime.plank || 0;
             unit = "s";
             label = "Total gainage";
         }
         // --- PALIERS DE SÉRIE ---
         else if (badgeId.startsWith("SERIE_PUMP_")) {
             targetValue = extractThreshold(def.name);
-            userValue = getMax(aggs, "PUSHUP");
+            userValue = allTime.maxPushups || 0;
             unit = "reps";
             label = "Meilleure série";
         } else if (badgeId.startsWith("SERIE_PLANK_")) {
@@ -98,31 +99,30 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
             else if (name.includes("5m")) targetValue = 300;
             else targetValue = extractThreshold(def.name);
             
-            userValue = Math.max(getMax(aggs, "VENTRAL"), getMax(aggs, "LATERAL_L"), getMax(aggs, "LATERAL_R"));
+            userValue = allTime.maxPlank || 0;
             unit = "s";
             label = "Meilleure série";
         }
-        // --- RECORDS DE LIGUE (DYNAMIQUES) ---
+        // --- RECORDS DE LIGUE ---
         else if (badgeId.startsWith("RECORD_")) {
-            // Mapping ID -> Exercise & Timeframe pour chercher dans `records`
-            const isPushup = badgeId.includes("PUSHUP");
-            const isSquat = badgeId.includes("SQUAT");
-            const isPlank = badgeId.includes("PLANK");
-            const exercise = isPushup ? "PUSHUP" : isSquat ? "SQUAT" : "VENTRAL";
-
-            const timeframe = badgeId.includes("_DAY_") ? "DAY" : badgeId.includes("_WEEK_") ? "WEEK" : badgeId.includes("_MONTH_") ? "MONTH" : "SERIES";
+            const exercise = badgeId.includes("PUSHUP") ? "pushups" : badgeId.includes("SQUAT") ? "squats" : "plank";
+            const timeframeStr = badgeId.includes("_DAY_") ? "DAY" : badgeId.includes("_WEEK_") ? "WEEK" : badgeId.includes("_MONTH_") ? "MONTH" : "SERIES";
             
-            const leagueRecord = records.find(r => r.exercise === (isPlank && timeframe !== "SERIES" ? "VENTRAL" : exercise) && r.timeframe === (timeframe === "SERIES" ? "DAY" : timeframe) && r.type === (timeframe === "SERIES" ? "SERIES" : "VOLUME"));
+            const leagueRecord = records.find(r => 
+                r.exercise === (exercise === "plank" && timeframeStr !== "SERIES" ? "VENTRAL" : exercise.toUpperCase()) && 
+                r.timeframe === (timeframeStr === "SERIES" ? "DAY" : timeframeStr) && 
+                r.type === (timeframeStr === "SERIES" ? "SERIES" : "VOLUME")
+            );
             
             targetValue = leagueRecord?.value || 0;
             
-            if (timeframe === "DAY") userValue = getSum(day, exercise);
-            else if (timeframe === "WEEK") userValue = getSum(week, exercise);
-            else if (timeframe === "MONTH") userValue = getSum(month, exercise);
-            else if (timeframe === "SERIES") userValue = getMax(aggs, exercise);
+            if (timeframeStr === "DAY") userValue = today[exercise] || 0;
+            else if (timeframeStr === "WEEK") userValue = week[exercise] || 0;
+            else if (timeframeStr === "MONTH") userValue = month[exercise] || 0;
+            else if (timeframeStr === "SERIES") userValue = allTime[`max${exercise.charAt(0).toUpperCase() + exercise.slice(1)}`] || 0;
 
-            unit = isPlank ? "s" : "reps";
-            label = timeframe === "SERIES" ? "Ton record" : "Ton volume";
+            unit = exercise === "plank" ? "s" : "reps";
+            label = timeframeStr === "SERIES" ? "Ton record" : "Ton volume";
         }
 
         const gap = Math.max(0, targetValue - userValue);
@@ -149,18 +149,24 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
                             const holderNickname = item.badge?.users?.[0]?.user?.nickname;
 
                             return (
-                                <div key={item.id} id={`badge-${item.id}`} className={`trophy-card glass ${info.isDone ? 'done' : ''} ${highlightId === item.id ? 'highlighted-badge' : ''}`} style={{
-                                    padding: "1rem",
-                                    borderRadius: "20px",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "8px",
-                                    position: "relative",
-                                    overflow: "hidden",
-                                    background: info.isDone ? "rgba(5, 150, 105, 0.05)" : "rgba(255,255,255,0.6)",
-                                    border: highlightId === item.id ? "2px solid var(--primary)" : (info.isNear ? "2px solid var(--primary)" : "1px solid rgba(0,0,0,0.05)"),
-                                    transition: "transform 0.2s, box-shadow 0.3s"
-                                }}>
+                                <div 
+                                    key={item.id} 
+                                    id={`badge-${item.id}`} 
+                                    onClick={() => setSelectedBadge(item.badge || { ...item.def, users: [] })}
+                                    className={`trophy-card glass ${info.isDone ? 'done' : ''} ${highlightId === item.id ? 'highlighted-badge' : ''}`} 
+                                    style={{
+                                        padding: "1rem",
+                                        borderRadius: "20px",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "8px",
+                                        position: "relative",
+                                        cursor: "pointer",
+                                        overflow: "hidden",
+                                        background: info.isDone ? "rgba(5, 150, 105, 0.05)" : "rgba(255,255,255,1)",
+                                        border: highlightId === item.id ? "2px solid var(--primary)" : (info.isNear ? "2px solid var(--primary)" : "1px solid rgba(0,0,0,0.05)"),
+                                        transition: "transform 0.2s, box-shadow 0.3s"
+                                    }}>
                                     {info.isNear && (
                                         <div style={{ position: "absolute", top: "5px", right: "5px", color: "var(--primary)" }}>
                                             <Flame size={16} fill="currentColor" />
@@ -171,7 +177,7 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
                                         {item.def.icon}
                                     </div>
 
-                                    <div className="trophy-info">
+                                    <div className="trophy-info" style={{ flex: 1 }}>
                                         <h3 style={{ fontSize: "0.85rem", fontWeight: "900", marginBottom: "4px", lineHeight: "1.2" }}>{item.def.name}</h3>
                                         
                                         {holderNickname && (
@@ -238,6 +244,8 @@ export default function TrophiesClient({ initialBadges, userStats, records = [] 
                     100% { box-shadow: 0 0 0px rgba(139, 92, 246, 0); }
                 }
             `}</style>
+
+            {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} userStats={{...userStats, userId}} records={records} />}
         </div>
     );
 }

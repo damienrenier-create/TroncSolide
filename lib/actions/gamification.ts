@@ -642,7 +642,8 @@ export async function getTrophiesRoomData() {
         where: { OR: [{ leagueId: user.leagueId }, { leagueId: null }] },
         include: {
             users: {
-                where: { rank: 1 },
+                orderBy: { awardedAt: 'asc' }, // All holders, ordered by time
+                take: 50, // Limit to 50 total for performance
                 include: { user: { select: { nickname: true } } }
             }
         }
@@ -706,15 +707,40 @@ export async function getTrophiesRoomData() {
         _max: { value: true }
     });
 
+    // Helper mapping
+    const mapAgg = (arr: any[]) => {
+        const res: any = {};
+        arr.forEach(a => {
+            const types = Array.isArray(a.type) ? a.type : [a.type];
+            types.forEach((t: string) => {
+                if (t.includes("PUSHUP")) {
+                    res.pushups = (res.pushups || 0) + (a._sum?.value || 0);
+                    res.maxPushups = Math.max(res.maxPushups || 0, a._max?.value || 0);
+                } else if (t.includes("SQUAT")) {
+                    res.squats = (res.squats || 0) + (a._sum?.value || 0);
+                    res.maxSquats = Math.max(res.maxSquats || 0, a._max?.value || 0);
+                } else if (["VENTRAL", "LATERAL_L", "LATERAL_R"].includes(t)) {
+                    res.plank = (res.plank || 0) + (a._sum?.value || 0);
+                    res.maxPlank = Math.max(res.maxPlank || 0, a._max?.value || 0);
+                }
+            });
+        });
+        return res;
+    };
+
     return {
-        badges,
+        userId,
+        badges: badges.map(b => ({
+            ...b,
+            xpValue: BADGE_DEFINITIONS.find(d => d.id === b.id)?.xpValue || 0
+        })),
         records,
         userStats: {
-            aggregates,
-            monthStats,
-            weekStats,
-            dayStats,
-            dayMax
+            allTime: mapAgg(aggregates),
+            month: mapAgg(monthStats),
+            week: mapAgg(weekStats),
+            today: mapAgg(dayStats),
+            dayMax: mapAgg(dayMax)
         }
     };
 }

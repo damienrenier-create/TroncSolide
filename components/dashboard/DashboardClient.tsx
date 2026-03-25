@@ -466,10 +466,6 @@ export default function DashboardClient({
                 </div>
             </section>
 
-            {/* MODALS [FIXED Z-INDEX] */}
-            {selectedBatch && <HistoryDetailsModal isOpen={!!selectedBatch} batch={selectedBatch} onClose={() => setSelectedBatch(null)} />}
-            {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} userStats={trophiesData?.userStats} records={trophiesData?.records} />}
-
             <style jsx>{`
                 .level-mini-bar { height: 4px; background: rgba(0,0,0,0.05); border-radius: 2px; margin-top: 4px; overflow: hidden; }
                 .level-fill { height: 100%; background: var(--primary); transition: width 1s ease-out; }
@@ -483,6 +479,10 @@ export default function DashboardClient({
                 .history-mini-item:hover { background: rgba(255,255,255,0.8) !important; }
                 .delete-item-btn:hover { opacity: 1 !important; background: rgba(239, 68, 68, 0.1) !important; }
             `}</style>
+
+            {/* MODALS [FIXED Z-INDEX] - Rendered last to ensure stacking overlay */}
+            {selectedBatch && <HistoryDetailsModal isOpen={!!selectedBatch} batch={selectedBatch} onClose={() => setSelectedBatch(null)} />}
+            {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} userStats={{...trophiesData?.userStats, userId}} records={trophiesData?.records} />}
         </div>
     );
 }

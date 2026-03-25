@@ -78,12 +78,8 @@ export default function LeagueClient({
     const [loading, setLoading] = useState(false);
     const [view, setView] = useState<"RANKINGS" | "GAZETTE" | "GLOBAL" | "TRENDS">(initialTab);
 
-    useEffect(() => {
-        const tab = searchParams.get("tab");
-        if (tab && ["RANKINGS", "GAZETTE", "GLOBAL", "TRENDS"].includes(tab)) {
-            setView(tab as any);
-        }
-    }, [searchParams]);
+    // --- NEW: Reward Modal State ---
+    const [rewardModal, setRewardModal] = useState<{ rank: number; label: string } | null>(null);
 
     async function handleUpdate(newExercise: ExerciseType, newType: RecordType, newTimeframe: RecordTimeframe) {
         setLoading(true);
@@ -98,6 +94,19 @@ export default function LeagueClient({
     const top3 = rankings.slice(0, 3);
     const others = rankings.slice(3);
 
+    // --- REWARDS DATA ---
+    const getRewardsForRank = (rank: number) => {
+        if (type === "SERIES") {
+            return { xp: rank === 1 ? 150 : rank === 2 ? 75 : 40, badge: rank === 1 ? "Recordman 🏆" : null };
+        }
+        // Volume rewards vary by timeframe
+        const mult = timeframe === "MONTH" ? 10 : timeframe === "WEEK" ? 3 : 1;
+        return { 
+            xp: (rank === 1 ? 50 : rank === 2 ? 25 : 15) * mult, 
+            badge: rank === 1 ? "Champion du Jour 👑" : null 
+        };
+    };
+
     return (
         <div className="container" style={{ padding: "1.5rem 1rem" }}>
             <header style={{ marginBottom: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -106,7 +115,11 @@ export default function LeagueClient({
                 <div className="segmented-control">
                     <button onClick={() => setView("RANKINGS")} className={view === "RANKINGS" ? 'active' : ''}>Podiums</button>
                     <button onClick={() => setView("GLOBAL")} className={view === "GLOBAL" ? 'active' : ''}>Records</button>
-                    <button onClick={() => setView("TRENDS")} className={view === "TRENDS" ? 'active' : ''}>📈 Tendances</button>
+                    {/* Tendances only visible if already active (from homepage link) or if user is admin/debugging? 
+                        User: "L'onglet tendance ne devrait pas etre affiché mais uniquement dispo via le lien de la homepage" */}
+                    {view === "TRENDS" && (
+                        <button onClick={() => setView("TRENDS")} className="active">📈 Tendances</button>
+                    )}
                     <button onClick={() => setView("GAZETTE")} className={view === "GAZETTE" ? 'active' : ''}>
                         Gazette <span className="gazette-tag">News</span>
                     </button>
@@ -115,139 +128,150 @@ export default function LeagueClient({
 
             {view === "RANKINGS" ? (
                 <>
-                    {/* Filters Hub - Premium Chips */}
-                    <section style={{ marginBottom: "2.5rem" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                            {/* Exercise Chips */}
-                            <div className="filter-group">
-                                <div className="filter-scroll">
-                                    {[
-                                        { id: "VENTRAL", label: "Ventral", icon: "🛡️" },
-                                        { id: "LATERAL_L", label: "G", icon: "👈" },
-                                        { id: "LATERAL_R", label: "D", icon: "👉" },
-                                        { id: "PUSHUP", label: "Pompes", icon: "💪" },
-                                        { id: "SQUAT", label: "Squats", icon: "🦵" }
-                                    ].map(ex => (
-                                        <button
-                                            key={ex.id}
-                                            onClick={() => handleUpdate(ex.id as ExerciseType, type, timeframe)}
-                                            className={`chip ${exercise === ex.id ? 'active' : ''}`}
-                                        >
-                                            <span style={{ fontSize: "1rem" }}>{ex.icon}</span>
-                                            {ex.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-                                {/* Type Chips */}
-                                <div className="filter-group mini">
-                                    <div className="filter-scroll">
-                                        {[
-                                            { id: "VOLUME", label: "VOLUME" },
-                                            { id: "SERIES", label: "RECORD" }
-                                        ].map(t => (
-                                            <button
-                                                key={t.id}
-                                                onClick={() => handleUpdate(exercise, t.id as RecordType, timeframe)}
-                                                className={`chip-small ${type === t.id ? 'active' : ''}`}
-                                            >
-                                                {t.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Période Chips */}
-                                <div className="filter-group mini">
-                                    <div className="filter-scroll">
-                                        {[
-                                            { id: "DAY", label: "Jour" },
-                                            { id: "WEEK", label: "Semaine" },
-                                            { id: "MONTH", label: "Mois" }
-                                        ].map(tf => (
-                                            <button
-                                                key={tf.id}
-                                                onClick={() => handleUpdate(exercise, type, tf.id as RecordTimeframe)}
-                                                className={`chip-small ${timeframe === tf.id ? 'active' : ''}`}
-                                            >
-                                                {tf.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                    {/* 1. SWIPABLE EXERCISE NAV */}
+                    <section style={{ marginBottom: "2rem" }}>
+                        <div className="swipe-nav-container">
+                            <div className="swipe-nav-track">
+                                {[
+                                    { id: "VENTRAL", label: "Ventral", icon: "🛡️" },
+                                    { id: "LATERAL_L", label: "G", icon: "👈" },
+                                    { id: "LATERAL_R", label: "D", icon: "👉" },
+                                    { id: "PUSHUP", label: "Pompes", icon: "💪" },
+                                    { id: "SQUAT", label: "Squats", icon: "🦵" }
+                                ].map(ex => (
+                                    <button
+                                        key={ex.id}
+                                        onClick={() => handleUpdate(ex.id as ExerciseType, type, timeframe)}
+                                        className={`swipe-chip ${exercise === ex.id ? 'active' : ''}`}
+                                    >
+                                        <span className="swipe-icon">{ex.icon}</span>
+                                        <span className="swipe-label">{ex.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </section>
 
-                    {/* Podium Prestige */}
-                    <div className="podium-container" style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
-                        {top3.length > 0 ? (
-                            <div className="podium">
-                                {/* Rank 2 (Silver) */}
-                                {top3[1] && (
-                                    <div className="podium-step rank-2">
-                                        <div className="player-avatar-ring silver">
-                                            <span>⭐</span>
+                    <div style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start", marginBottom: "2.5rem" }}>
+                        {/* 2. VERTICAL TIMEFRAME TOGGLE */}
+                        <div className="vertical-time-toggle">
+                            {[
+                                { id: "DAY", label: "Jour", icon: "☀️" },
+                                { id: "WEEK", label: "Sem.", icon: "🗓️" },
+                                { id: "MONTH", label: "Mois", icon: "🌙" }
+                            ].map(tf => (
+                                <button
+                                    key={tf.id}
+                                    onClick={() => handleUpdate(exercise, type, tf.id as RecordTimeframe)}
+                                    className={`time-node ${timeframe === tf.id ? 'active' : ''}`}
+                                    title={tf.label}
+                                >
+                                    <span className="time-icon">{tf.icon}</span>
+                                    <span className="time-label">{tf.label}</span>
+                                </button>
+                            ))}
+                            <div className="time-line"></div>
+                        </div>
+
+                        {/* 3. PODIUM PRESTIGE */}
+                        <div className="podium-area" style={{ flex: 1, opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+                            {top3.length > 0 ? (
+                                <div className="podium">
+                                    {/* Rank 2 (Argent) */}
+                                    {top3[1] && (
+                                        <div className="podium-step rank-2 interactive" onClick={() => setRewardModal({ rank: 2, label: "ARGENT" })}>
+                                            <div className="player-meta">
+                                                <div className="player-avatar-ring silver" onClick={(e) => { e.stopPropagation(); }}>
+                                                    <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} style={{ textDecoration: 'none' }}>
+                                                        <span>🥈</span>
+                                                    </Link>
+                                                </div>
+                                                <div className="player-name-pop">
+                                                    <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} className="profile-link">{top3[1].nickname}</Link>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[1].currentStreak} /></div>
+                                                </div>
+                                            </div>
+                                            <div className="step-bar-3d silver">
+                                                <span className="rank-label">ARGENT</span>
+                                                <div className="val-badge">{top3[1].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
+                                                <div className="click-hint">RÉCOMPENSES 🎁</div>
+                                            </div>
                                         </div>
-                                        <div className="player-name-pop">
-                                            <Link href={`/profile/${encodeURIComponent(top3[1].nickname)}`} className="profile-link">{top3[1].nickname}</Link>
-                                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[1].currentStreak} /></div>
+                                    )}
+
+                                    {/* Rank 1 (Or) */}
+                                    <div className="podium-step rank-1 interactive" onClick={() => setRewardModal({ rank: 1, label: "OR" })}>
+                                        <div className="player-meta">
+                                            <div className="crown-premium">
+                                                <Trophy size={28} className="gold-icon" />
+                                            </div>
+                                            <div className="player-avatar-ring gold" onClick={(e) => { e.stopPropagation(); }}>
+                                                <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} style={{ textDecoration: 'none' }}>
+                                                    <span>🥇</span>
+                                                </Link>
+                                            </div>
+                                            <div className="player-name-pop" style={{ fontSize: "1rem" }}>
+                                                <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} className="profile-link">{top3[0].nickname}</Link>
+                                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[0].currentStreak} /></div>
+                                            </div>
                                         </div>
-                                        <div className="step-bar-3d silver">
+                                        <div className="step-bar-3d gold">
                                             <span className="rank-label">OR</span>
-                                            <div className="val-badge">{top3[1].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
+                                            <div className="val-badge main">{top3[0].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
+                                            <div className="click-hint">RÉCOMPENSES ⭐️</div>
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Rank 1 (Gold) */}
-                                <div className="podium-step rank-1">
-                                    <div className="crown-premium">
-                                        <Trophy size={28} className="gold-icon" />
-                                    </div>
-                                    <div className="player-avatar-ring gold">
-                                        <span>🏆</span>
-                                    </div>
-                                    <div className="player-name-pop" style={{ fontSize: "1rem" }}>
-                                        <Link href={`/profile/${encodeURIComponent(top3[0].nickname)}`} className="profile-link">{top3[0].nickname}</Link>
-                                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[0].currentStreak} /></div>
-                                    </div>
-                                    <div className="step-bar-3d gold">
-                                        <span className="rank-label">DIAMANT</span>
-                                        <div className="val-badge main">{top3[0].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
-                                    </div>
+                                    {/* Rank 3 (Bronze) */}
+                                    {top3[2] && (
+                                        <div className="podium-step rank-3 interactive" onClick={() => setRewardModal({ rank: 3, label: "BRONZE" })}>
+                                            <div className="player-meta">
+                                                <div className="player-avatar-ring bronze" onClick={(e) => { e.stopPropagation(); }}>
+                                                    <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} style={{ textDecoration: 'none' }}>
+                                                        <span>🥉</span>
+                                                    </Link>
+                                                </div>
+                                                <div className="player-name-pop">
+                                                    <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} className="profile-link">{top3[2].nickname}</Link>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[2].currentStreak} /></div>
+                                                </div>
+                                            </div>
+                                            <div className="step-bar-3d bronze">
+                                                <span className="rank-label">BRONZE</span>
+                                                <div className="val-badge">{top3[2].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
+                                                <div className="click-hint">RÉCOMPENSES 🥉</div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                            ) : (
+                                <div className="glass-premium" style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--card-border)", borderRadius: "32px" }}>
+                                    <div style={{ fontSize: "3rem", marginBottom: "1rem", opacity: 0.3 }}>😴</div>
+                                    <p style={{ fontWeight: "900", color: "var(--foreground)" }}>Silence Radio</p>
+                                    <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Personne n'a encore relevé ce défi.</p>
+                                </div>
+                            )}
+                        </div>
 
-                                {/* Rank 3 (Bronze) */}
-                                {top3[2] && (
-                                    <div className="podium-step rank-3">
-                                        <div className="player-avatar-ring bronze">
-                                            <span>✨</span>
-                                        </div>
-                                        <div className="player-name-pop">
-                                            <Link href={`/profile/${encodeURIComponent(top3[2].nickname)}`} className="profile-link">{top3[2].nickname}</Link>
-                                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}><StreakFlame streak={top3[2].currentStreak} /></div>
-                                        </div>
-                                        <div className="step-bar-3d bronze">
-                                            <span className="rank-label">ARGENT</span>
-                                            <div className="val-badge">{top3[2].value}{exercise.includes('VENTRAL') || exercise.includes('LATERAL') ? 's' : ''}</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="glass-premium" style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--card-border)", borderRadius: "32px" }}>
-                                <div style={{ fontSize: "3rem", marginBottom: "1rem", opacity: 0.3 }}>😴</div>
-                                <p style={{ fontWeight: "900", color: "var(--foreground)" }}>Silence Radio</p>
-                                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Personne n'a encore relevé ce défi.</p>
-                            </div>
-                        )}
+                        {/* 4. TYPE SELECTOR (MINI) */}
+                        <div className="type-toggle-vertical">
+                            <button 
+                                onClick={() => handleUpdate(exercise, "VOLUME", timeframe)}
+                                className={type === "VOLUME" ? 'active' : ''}
+                            >
+                                VOLUME
+                            </button>
+                            <button 
+                                onClick={() => handleUpdate(exercise, "SERIES", timeframe)}
+                                className={type === "SERIES" ? 'active' : ''}
+                            >
+                                RECORD
+                            </button>
+                        </div>
                     </div>
 
                     {/* competitors list */}
-                    <section className="ranking-list" style={{ marginTop: "3.5rem" }}>
+                    <section className="ranking-list" style={{ marginTop: "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem", paddingLeft: "0.5rem" }}>
                             <Filter size={14} className="text-muted" />
                             <h4 style={{ fontSize: "0.75rem", fontWeight: "900", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Autres compétiteurs</h4>
@@ -260,7 +284,7 @@ export default function LeagueClient({
                                     <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px" }}>
                                         <div className="user-letter">{r.nickname.charAt(0).toUpperCase()}</div>
                                         <div className="user-nick-row">
-                                            <Link href={`/profile/${encodeURIComponent(r.nickname)}`} className="profile-link" style={{ fontWeight: "800" }}>{r.nickname}</Link>
+                                            <Link href={`/profile/${encodeURIComponent(r.nickname)}`} className="profile-link" style={{ fontWeight: "800", display: "block", padding: "10px 0" }}>{r.nickname}</Link>
                                             {r.userId === currentUserId && <span className="self-tag">TOI</span>}
                                         </div>
                                         <StreakFlame streak={r.currentStreak} />
@@ -275,6 +299,39 @@ export default function LeagueClient({
                             )}
                         </div>
                     </section>
+
+                    {/* REWARD MODAL */}
+                    {rewardModal && (
+                        <div className="reward-modal-overlay" onClick={() => setRewardModal(null)}>
+                            <div className="reward-modal-content" onClick={e => e.stopPropagation()}>
+                                <header>
+                                    <div className={`rank-medal ${rewardModal.label.toLowerCase()}`}>
+                                        {rewardModal.rank === 1 ? '🥇' : rewardModal.rank === 2 ? '🥈' : '🥉'}
+                                    </div>
+                                    <h3>Marche de {rewardModal.label}</h3>
+                                </header>
+                                <div className="reward-body">
+                                    <div className="reward-item">
+                                        <Zap size={20} className="text-primary" />
+                                        <div className="reward-text">
+                                            <span className="reward-val">+{getRewardsForRank(rewardModal.rank).xp} XP</span>
+                                            <span className="reward-desc">Fin de période</span>
+                                        </div>
+                                    </div>
+                                    {getRewardsForRank(rewardModal.rank).badge && (
+                                        <div className="reward-item">
+                                            <Trophy size={20} className="text-primary" />
+                                            <div className="reward-text">
+                                                <span className="reward-val">{getRewardsForRank(rewardModal.rank).badge}</span>
+                                                <span className="reward-desc">Badge exclusif</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <button className="btn-close-reward" onClick={() => setRewardModal(null)}>FERMER</button>
+                            </div>
+                        </div>
+                    )}
                 </>
             ) : view === "GLOBAL" ? (
                 <section className="global-records-view" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -425,7 +482,238 @@ export default function LeagueClient({
             )}
 
             <style jsx>{`
-        /* Segmented Control Header */
+        /* 1. SWIPE NAV EXERCISES */
+        .swipe-nav-container {
+          width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 0.5rem;
+          margin-bottom: -0.5rem;
+          scrollbar-width: none;
+        }
+        .swipe-nav-container::-webkit-scrollbar { display: none; }
+        .swipe-nav-track {
+          display: flex;
+          gap: 12px;
+          padding-right: 1.5rem;
+        }
+        .swipe-chip {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255,255,255,0.8);
+          border: 1.5px solid rgba(0,0,0,0.04);
+          padding: 10px 18px;
+          border-radius: 100px;
+          white-space: nowrap;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+          scroll-snap-align: start;
+        }
+        .swipe-chip.active {
+          background: var(--primary);
+          color: white;
+          border-color: var(--primary);
+          box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
+          transform: translateY(-2px);
+        }
+        .swipe-icon { font-size: 1.2rem; }
+        .swipe-label { font-weight: 900; font-size: 0.85rem; letter-spacing: 0.02em; }
+
+        /* 2. VERTICAL TIMEFRAME TOGGLE */
+        .vertical-time-toggle {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          position: relative;
+          padding: 8px;
+          background: rgba(0,0,0,0.03);
+          border-radius: 30px;
+          align-self: center;
+        }
+        .time-node {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: none;
+          background: white;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-muted);
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+          z-index: 2;
+          overflow: hidden;
+        }
+        .time-node.active {
+          background: var(--foreground);
+          color: white;
+          transform: scale(1.1);
+          box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .time-icon { font-size: 1rem; line-height: 1; }
+        .time-label { font-size: 0.55rem; font-weight: 900; text-transform: uppercase; margin-top: 2px; }
+
+        /* 3. PODIUM STYLING */
+        .podium-area { max-width: 380px; margin: 0 auto; }
+        .podium {
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          gap: 6px;
+          height: 280px;
+          padding-bottom: 2rem;
+        }
+        .podium-step {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex: 1;
+          transition: transform 0.3s ease;
+        }
+        .podium-step.interactive { cursor: pointer; }
+        .podium-step.interactive:hover { transform: translateY(-5px); }
+        .podium-step.interactive:hover .click-hint { opacity: 1; }
+
+        .player-meta {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          z-index: 2;
+          margin-bottom: -10px;
+        }
+        .player-avatar-ring {
+          width: 54px;
+          height: 54px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.6rem;
+          background: white;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+          border: 4px solid white;
+          transition: all 0.2s ease;
+        }
+        .player-avatar-ring:hover { transform: scale(1.1); }
+        .player-avatar-ring.gold { border-color: #fbbf24; background: linear-gradient(135deg, #fffbeb, #fbbf24); }
+        .player-avatar-ring.silver { border-color: #94a3b8; background: linear-gradient(135deg, #f8fafc, #94a3b8); }
+        .player-avatar-ring.bronze { border-color: #ca8a04; background: linear-gradient(135deg, #fef9c3, #ca8a04); }
+
+        .player-name-pop {
+          font-weight: 950;
+          font-size: 0.8rem;
+          margin: 6px 0;
+          text-align: center;
+          color: var(--foreground);
+          text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+          max-width: 90px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .step-bar-3d {
+          width: 100%;
+          border-radius: 20px 20px 8px 8px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 1.5rem 0.5rem 0.5rem;
+          position: relative;
+          box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+          overflow: hidden;
+        }
+        .step-bar-3d.gold { height: 160px; background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%); border-top: 4px solid #fde68a; }
+        .step-bar-3d.silver { height: 110px; background: linear-gradient(180deg, #94a3b8 0%, #475569 100%); border-top: 4px solid #cbd5e1; }
+        .step-bar-3d.bronze { height: 80px; background: linear-gradient(180deg, #ca8a04 0%, #854d0e 100%); border-top: 4px solid #fef08a; }
+
+        .rank-label { font-weight: 900; font-size: 0.65rem; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; margin-bottom: auto; }
+        .val-badge { background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); padding: 5px 10px; border-radius: 100px; color: white; font-weight: 950; font-size: 0.8rem; margin-bottom: 20px; }
+        .val-badge.main { font-size: 1.1rem; padding: 6px 14px; background: rgba(255,255,255,0.35); }
+        .click-hint { position: absolute; bottom: 8px; font-size: 0.5rem; font-weight: 950; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 4px; opacity: 0.4; transition: opacity 0.2s; }
+
+        .crown-premium {
+          position: absolute;
+          top: -35px;
+          z-index: 3;
+          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+        .gold-icon { color: #fbbf24; fill: #fbbf24; }
+
+        /* 4. TYPE SELECTOR (MINI VERTICAL) */
+        .type-toggle-vertical {
+          display: flex;
+          flex-direction: column;
+          background: rgba(0,0,0,0.03);
+          border-radius: 16px;
+          padding: 4px;
+          gap: 4px;
+        }
+        .type-toggle-vertical button {
+          border: none;
+          background: transparent;
+          padding: 8px 4px;
+          font-size: 0.55rem;
+          font-weight: 950;
+          color: var(--text-muted);
+          writing-mode: vertical-lr;
+          transform: rotate(180deg);
+          border-radius: 12px;
+          cursor: pointer;
+        }
+        .type-toggle-vertical button.active { background: white; color: var(--foreground); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+
+        /* 5. REWARD MODAL Styles */
+        .reward-modal-overlay {
+          position: fixed; inset: 0;
+          background: rgba(15, 23, 42, 0.7);
+          backdrop-filter: blur(8px);
+          z-index: 20000;
+          display: flex; align-items: center; justify-content: center;
+          padding: 1.5rem;
+          animation: fadeIn 0.3s ease;
+        }
+        .reward-modal-content {
+          background: white; width: 100%; max-width: 320px;
+          border-radius: 28px; padding: 2rem;
+          animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          text-align: center;
+        }
+        .rank-medal { font-size: 3rem; margin-bottom: 1rem; }
+        .reward-body { display: flex; flex-direction: column; gap: 12px; margin: 1.5rem 0; }
+        .reward-item {
+          display: flex; align-items: center; gap: 12px;
+          background: rgba(0,0,0,0.02); padding: 12px 16px; border-radius: 16px; text-align: left;
+        }
+        .reward-val { display: block; font-weight: 950; color: var(--foreground); font-size: 1rem; }
+        .reward-desc { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-top: -2px; }
+        .btn-close-reward {
+          width: 100%; padding: 12px; border: none; border-radius: 100px;
+          background: var(--foreground); color: white; font-weight: 900;
+          letter-spacing: 0.05em; cursor: pointer;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalPop { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+        /* Generic cleanup */
+        .premium-rank-card {
+          display: flex; align-items: center; gap: 12px; padding: 1rem;
+          background: white; border-radius: 20px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+          transition: transform 0.2s ease;
+        }
+        .rank-circle { width: 32px; height: 32px; background: rgba(0,0,0,0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; color: var(--text-muted); }
+        .user-letter { width: 40px; height: 40px; background: var(--primary-light); color: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; }
+        .self-tag { font-size: 0.6rem; background: var(--primary); color: white; padding: 2px 6px; border-radius: 6px; font-weight: 900; }
+        .rank-score { font-weight: 900; color: var(--foreground); font-size: 1.1rem; text-align: right; }
+        .rank-score span { display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 700; margin-top: -2px; }
+        .segmented-control .gazette-tag { font-size: 0.5rem; background: #f97316; color: white; padding: 1px 4px; border-radius: 4px; font-weight: 900; vertical-align: middle; }
+
         .segmented-control {
             display: flex;
             background: rgba(0,0,0,0.04);
@@ -461,291 +749,11 @@ export default function LeagueClient({
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        
-        .gazette-tag {
-            background: var(--primary);
-            color: white;
-            font-size: 0.55rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
 
-        /* Streak Badges */
-        .streak-badge {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            font-size: 0.7rem;
-            background: rgba(0,0,0,0.03);
-            padding: 2px 6px;
-            border-radius: 6px;
-        }
-        .flame-warm {
-            background: rgba(249, 115, 22, 0.1);
-        }
-        .flame-hot {
-            background: rgba(239, 68, 68, 0.1);
-            animation: pulse-hot 2s infinite;
-        }
-        .flame-mythic {
-            background: rgba(12, 235, 235, 0.1);
-            animation: pulse-mythic 1.5s infinite;
-            box-shadow: 0 0 10px rgba(12, 235, 235, 0.2);
-        }
-        @keyframes pulse-hot {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(239,68,68,0.5)); }
-            50% { transform: scale(1.05); filter: drop-shadow(0 0 6px rgba(239,68,68,0.8)); }
-        }
-        @keyframes pulse-mythic {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(12,235,235,0.6)); }
-            50% { transform: scale(1.1); filter: drop-shadow(0 0 12px rgba(32,227,178,0.9)); }
-        }
-
-        .profile-link {
-            color: inherit;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .profile-link:hover {
-            color: var(--primary);
-            text-decoration: underline;
-        }
-        .profile-link-white {
-            color: white;
-            text-decoration: none;
-        }
-        .profile-link-white:hover {
-            text-decoration: underline;
-        }
-
-        /* Legacy Filter Scroll */
-        .filter-group {
-          margin-bottom: 0.5rem;
-        }
-        .filter-scroll {
-          display: flex;
-          gap: 0.6rem;
-          overflow-x: auto;
-          padding: 4px 2px;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .filter-scroll::-webkit-scrollbar { display: none; }
-
-        .chip {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          background: white;
-          border: 1px solid rgba(0,0,0,0.05);
-          padding: 0.6rem 1.1rem;
-          border-radius: 100px;
-          font-size: 0.85rem;
-          font-weight: 800;
-          color: var(--text-muted);
-          white-space: nowrap;
-          transition: all 0.2s ease;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
-        .chip.active {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-          box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
-        }
-
-        .chip-small {
-          background: rgba(0,0,0,0.03);
-          border: none;
-          padding: 0.4rem 0.9rem;
-          border-radius: 100px;
-          font-size: 0.7rem;
-          font-weight: 900;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          transition: all 0.2s ease;
-        }
-        .chip-small.active {
-          background: var(--foreground);
-          color: white;
-        }
-
-        .podium {
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          gap: 0.5rem;
-          height: 300px;
-          margin-top: 1rem;
-          padding-bottom: 20px;
-        }
-
-        .podium-step {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          flex: 1;
-          max-width: 110px;
-        }
-
-        .player-avatar-ring {
-          width: 50px;
-          height: 50px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.5rem;
-          margin-bottom: 0.5rem;
-          background: white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-          border: 3px solid white;
-          z-index: 2;
-        }
-        .player-avatar-ring.gold { border-color: #fbbf24; background: linear-gradient(135deg, #fef3c7, #fbbf24); }
-        .player-avatar-ring.silver { border-color: #94a3b8; background: linear-gradient(135deg, #f1f5f9, #94a3b8); }
-        .player-avatar-ring.bronze { border-color: #d97706; background: linear-gradient(135deg, #ffedd5, #d97706); }
-
-        .player-name-pop {
-          font-weight: 900;
-          font-size: 0.75rem;
-          margin-bottom: 0.5rem;
-          text-align: center;
-          color: var(--foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          width: 100%;
-          text-shadow: 0 1px 0 white;
-        }
-
-        .step-bar-3d {
-          width: 100%;
-          border-radius: 12px 12px 4px 4px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding-top: 1rem;
-          position: relative;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        .step-bar-3d.gold { 
-          height: 150px; 
-          background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
-          border-top: 4px solid #fde68a;
-        }
-        .step-bar-3d.silver { 
-          height: 100px; 
-          background: linear-gradient(180deg, #94a3b8 0%, #475569 100%);
-          border-top: 4px solid #cbd5e1;
-        }
-        .step-bar-3d.bronze { 
-          height: 70px; 
-          background: linear-gradient(180deg, #d97706 0%, #92400e 100%);
-          border-top: 4px solid #fbbf24;
-        }
-
-        .rank-label {
-          font-weight: 900;
-          font-size: 0.7rem;
-          color: rgba(255,255,255,0.5);
-          margin-bottom: auto;
-        }
-
-        .val-badge {
-          background: rgba(255,255,255,0.2);
-          backdrop-filter: blur(4px);
-          padding: 4px 8px;
-          border-radius: 80px;
-          color: white;
-          font-weight: 900;
-          font-size: 0.85rem;
-          margin-bottom: 12px;
-        }
-        .val-badge.main {
-          font-size: 1.1rem;
-          padding: 6px 12px;
-          background: rgba(255,255,255,0.3);
-        }
-
-        .crown-premium {
-          position: absolute;
-          top: -35px;
-          z-index: 3;
-          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-        }
-        .gold-icon { color: #fbbf24; fill: #fbbf24; }
-
-        .premium-rank-card {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 1rem;
-          background: white;
-          border-radius: 20px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-          transition: transform 0.2s ease;
-        }
-        .premium-rank-card:active { transform: scale(0.98); }
-
-        .rank-circle {
-          width: 32px;
-          height: 32px;
-          background: rgba(0,0,0,0.03);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.75rem;
-          font-weight: 900;
-          color: var(--text-muted);
-        }
-
-        .user-letter {
-          width: 40px;
-          height: 40px;
-          background: var(--primary-light);
-          color: var(--primary);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 900;
-          font-size: 1.1rem;
-        }
-
-        .self-tag {
-          font-size: 0.6rem;
-          background: var(--primary);
-          color: white;
-          padding: 2px 6px;
-          border-radius: 6px;
-          font-weight: 900;
-        }
-
-        .user-nick-row {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .rank-score {
-          font-weight: 900;
-          color: var(--foreground);
-          font-size: 1.1rem;
-          text-align: right;
-        }
-        .rank-score span {
-            display: block;
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            font-weight: 700;
-            margin-top: -2px;
-        }
+        .profile-link { color: inherit; text-decoration: none; transition: color 0.2s; }
+        .profile-link:hover { color: var(--primary); text-decoration: underline; }
+        .profile-link-white { color: white; text-decoration: none; }
+        .profile-link-white:hover { text-decoration: underline; }
       `}</style>
         </div>
     );

@@ -27,6 +27,7 @@ export default async function TrophiesRoomPage() {
                     initialBadges={data.badges} 
                     userStats={data.userStats}
                     records={data.records}
+                    userId={data.userId}
                 />
             </Suspense>
         </div>
