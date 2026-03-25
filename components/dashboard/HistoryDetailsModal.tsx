@@ -9,9 +9,7 @@ import {
   Star, 
   TrendingUp, 
   Calendar,
-  CheckCircle2,
-  Info,
-  Flame
+  Info
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -57,7 +55,6 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
 
   if (!isOpen || !isMounted) return null;
 
-  // Extraction propre des données avec fallbacks
   const xp = batch.xpDetails || {
     version: 0,
     totalXp: batch.xpTotal,
@@ -85,44 +82,43 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 1000,
+        zIndex: 9999,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "1.5rem",
-        background: "rgba(0, 0, 0, 0.4)",
-        backdropFilter: "blur(12px)",
-        animation: "fadeIn 0.3s ease-out"
+        padding: "1.25rem",
+        background: "rgba(13, 27, 26, 0.4)", // --foreground avec opacité
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
       }}
       onClick={onClose}
     >
       <div 
-        className="glass-premium"
         style={{
           width: "100%",
-          maxWdith: "450px",
-          maxWidth: "450px",
-          background: "white",
+          maxWidth: "420px",
+          background: "#ffffff",
+          borderRadius: "32px",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           padding: "2rem",
-          position: "relative",
-          animation: "slideInScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
           display: "flex",
           flexDirection: "column",
           gap: "1.5rem",
-          maxHeight: "90vh",
-          overflowY: "auto"
+          position: "relative",
+          maxHeight: "85vh",
+          overflowY: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
+        {/* Close button */}
         <button 
           onClick={onClose}
           style={{
             position: "absolute",
             top: "1.5rem",
             right: "1.5rem",
-            background: "rgba(0,0,0,0.05)",
             border: "none",
+            background: "#f1f5f9",
             width: "32px",
             height: "32px",
             borderRadius: "50%",
@@ -130,132 +126,109 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
-            color: "var(--text-muted)"
+            color: "#64748b"
           }}
         >
           <X size={18} />
         </button>
 
-        {/* Header */}
-        <header style={{ marginTop: "0.5rem" }}>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--foreground)", marginBottom: "0.25rem" }}>
+        {/* Top Header */}
+        <div>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#0f172a", marginBottom: "0.25rem", letterSpacing: "-0.02em" }}>
             Détails de la séance
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
-            <Calendar size={14} />
-            {format(new Date(batch.date), "eeee d MMMM", { locale: fr })}
-          </p>
-        </header>
-
-        {/* XP Hero Card */}
-        <div style={{
-          background: "linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%)",
-          border: "2px solid rgba(217, 119, 6, 0.1)",
-          borderRadius: "24px",
-          padding: "1.5rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between"
-        }}>
-          <div>
-            <span style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: "4px" }}>
-              RÉSULTAT TOTAL
-            </span>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-              <span style={{ fontSize: "2.5rem", fontWeight: 900, color: "var(--primary)" }}>+{batch.xpTotal}</span>
-              <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--primary)", opacity: 0.8 }}>XP</span>
-            </div>
-          </div>
-          <div style={{ background: "var(--primary)", color: "white", padding: "12px", borderRadius: "18px", boxShadow: "0 8px 16px rgba(217, 119, 6, 0.3)" }}>
-            <Trophy size={28} />
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#64748b", fontSize: "0.85rem", fontWeight: 700 }}>
+             <Calendar size={14} />
+             {format(new Date(batch.date), "eeee d MMMM", { locale: fr })}
           </div>
         </div>
 
-        {/* Breakdown Section */}
+        {/* Total XP Highlight */}
+        <div style={{
+          background: "linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)",
+          border: "2px solid rgba(217, 119, 6, 0.08)",
+          borderRadius: "24px",
+          padding: "1.5rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <div>
+            <span style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--primary)", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
+              Total XP Gagné
+            </span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+              <span style={{ fontSize: "2.75rem", fontWeight: 900, color: "var(--primary)" }}>+{batch.xpTotal}</span>
+              <span style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--primary)", opacity: 0.7 }}>XP</span>
+            </div>
+          </div>
+          <div style={{ background: "var(--primary)", width: "56px", height: "56px", display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center", borderRadius: "18px", color: "#ffffff", boxShadow: "0 8px 20px rgba(217, 119, 6, 0.25)" }}>
+            <Trophy size={32} />
+          </div>
+        </div>
+
+        {/* Breakdown List */}
         <section>
-          <h3 style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
-            <TrendingUp size={14} /> Décomposition des gains
+          <h3 style={{ fontSize: "0.75rem", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
+            <TrendingUp size={14} /> Décomposition des points
           </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {xp.sources.map((source, idx) => (
-              <div 
-                key={idx}
-                style={{
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+             {xp.sources.map((source, idx) => (
+                <div key={idx} style={{
+                  background: "#f8fafc",
+                  borderRadius: "18px",
+                  padding: "1rem",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "12px 16px",
-                  background: "rgba(0,0,0,0.03)",
-                  borderRadius: "16px",
-                  border: "1px solid rgba(0,0,0,0.02)"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ background: "white", padding: "8px", borderRadius: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
-                    {getSourceIcon(source.type)}
+                  border: "1px solid #f1f5f9"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ background: "#ffffff", padding: "8px", borderRadius: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
+                      {getSourceIcon(source.type)}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#1e293b" }}>{source.label}</div>
+                      <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>{source.type}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--text-primary)" }}>{source.label}</div>
-                    <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>{source.type}</div>
-                  </div>
+                  <div style={{ fontWeight: 900, color: "#0f172a" }}>+{source.xp}</div>
                 </div>
-                <div style={{ fontWeight: 900, color: "var(--foreground)", fontSize: "0.9rem" }}>
-                  +{source.xp}
-                </div>
-              </div>
-            ))}
+             ))}
           </div>
         </section>
 
-        {/* Exercises Tags */}
+        {/* Exercises realizado */}
         <section>
-           <h3 style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "1rem" }}>
-            Exercices réalisés
-          </h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <h4 style={{ fontSize: "0.75rem", fontWeight: 900, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem" }}>
+            Contenu du lot
+          </h4>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {batch.exercises.map((ex, idx) => (
-              <span key={idx} style={{ padding: "6px 12px", background: "#f1f5f9", color: "#475569", borderRadius: "10px", fontSize: "0.7rem", fontWeight: 800, border: "1px solid #e2e8f0" }}>
-                {ex.value}{ex.type === 'VENTRAL' || ex.type === 'LATERAL_L' || ex.type === 'LATERAL_R' ? 's' : ''} {ex.type === 'PUSHUP' ? 'POMPES' : ex.type === 'SQUAT' ? 'SQUATS' : 'GAINAGE'}
+              <span key={idx} style={{ background: "#f1f5f9", padding: "6px 12px", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 800, color: "#475569", border: "1px solid #e2e8f0" }}>
+                {ex.value}{ex.type === 'VENTRAL' || ex.type === 'LATERAL_L' || ex.type === 'LATERAL_R' ? 's' : ''} {ex.type}
               </span>
             ))}
           </div>
         </section>
 
         {batch.mood && (
-          <div style={{ padding: "12px 16px", background: "rgba(5, 150, 69, 0.05)", borderRadius: "16px", border: "1px solid rgba(5, 150, 69, 0.1)", fontStyle: "italic", fontSize: "0.8rem", color: "var(--secondary)", fontWeight: 600 }}>
+          <div style={{ background: "rgba(5, 150, 105, 0.05)", border: "1px solid rgba(5, 150, 105, 0.1)", borderRadius: "16px", padding: "12px 16px", fontSize: "0.8rem", fontStyle: "italic", color: "#059669", fontWeight: 600 }}>
              "{batch.mood}"
           </div>
         )}
 
-        {/* Warning for old logs */}
-        {xp.version === 0 && (
-          <div style={{ padding: "12px", background: "rgba(37, 99, 235, 0.05)", borderRadius: "16px", border: "1px solid rgba(37, 99, 235, 0.1)", display: "flex", gap: "10px", alignItems: "center" }}>
-            <Info size={16} style={{ color: "var(--accent)" }} />
-            <p style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: 700, margin: 0, lineHeight: 1.4 }}>
-              Ancienne séance : détail XP estimé.
-            </p>
-          </div>
-        )}
-
-        <button 
-          onClick={onClose}
-          className="btn-primary"
-          style={{ marginTop: "0.5rem" }}
-        >
-          FERMER
-        </button>
+        {/* Footer */}
+        <div style={{ marginTop: "0.5rem" }}>
+          <button 
+            onClick={onClose}
+            className="btn-primary" // On garde la classe existante qui marche
+            style={{ width: "100%" }}
+          >
+            TERMINÉ
+          </button>
+        </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideInScale {
-          from { transform: translateY(20px) scale(0.95); opacity: 0; }
-          to { transform: translateY(0) scale(1); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }
