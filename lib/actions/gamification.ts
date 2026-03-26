@@ -230,6 +230,8 @@ export async function checkGamification(userId: string, lastSessionId: string) {
             const batchSessions = await prisma.exerciseSession.findMany({ where: { batchId } });
             for (const s of batchSessions) {
                 const details = (s.xpDetails as any) || { version: 1, totalXp: s.xpGained, sources: [] };
+                
+                // Add all awards but make sure they are distinct from base exercise
                 details.sources.push(...finalAwards.map(a => ({
                     type: "badge",
                     label: a.label,
@@ -307,9 +309,14 @@ export async function reSyncLeagueRecords(leagueId: string, targetUserId?: strin
                     if (totalToSubtract > 0) {
                         await tx.user.update({ where: { id: holder.userId }, data: { totalXP: { decrement: totalToSubtract } } });
                     }
-                    await tx.feedItem.create({
-                        data: { leagueId, userId: holder.userId, type: "BADGE_LOST", badgeId: badge.id }
-                    });
+
+                    // FIX Bug 2: Only create Badge Lost alert if someone ELSE took the #1 spot
+                    // This avoids false "STOLEN" alerts on daily/weekly/monthly resets.
+                    if (top3.length > 0) {
+                        await tx.feedItem.create({
+                            data: { leagueId, userId: holder.userId, type: "BADGE_LOST", badgeId: badge.id }
+                        });
+                    }
                 }
             }
 
@@ -345,7 +352,7 @@ export async function reSyncLeagueRecords(leagueId: string, targetUserId?: strin
                         data: { leagueId, userId: player.userId, type: "BADGE_WON", badgeId: badge.id }
                     });
                     if (player.userId === targetUserId) {
-                        awardsForUser.push({ type: "badge", label: `RECORD: ${def.name}`, xp: newBaseXP + CASSEUR_BONUS });
+                        awardsForUser.push({ type: "badge", label: `LIGUE: ${def.name}`, xp: newBaseXP + CASSEUR_BONUS });
                     }
                 } else {
                     // Already in Top 3, check if rank or XP changed
@@ -364,7 +371,7 @@ export async function reSyncLeagueRecords(leagueId: string, targetUserId?: strin
                                 data: { totalXP: { increment: diff } }
                             });
                             if (player.userId === targetUserId) {
-                                awardsForUser.push({ type: "badge", label: `RECORD: ${def.name}`, xp: diff });
+                                awardsForUser.push({ type: "badge", label: `LIGUE: ${def.name}`, xp: diff });
                             }
                         }
                         // Only add feed item if rank improved to 1

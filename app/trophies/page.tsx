@@ -1,5 +1,5 @@
 import { getTrophiesRoomData } from "@/lib/actions/gamification";
-import TrophiesClient from "@/components/badges/TrophiesClient";
+import TrophiesClient from "../../components/badges/TrophiesClient";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 

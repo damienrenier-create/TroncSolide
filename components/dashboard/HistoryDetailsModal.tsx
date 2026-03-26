@@ -68,7 +68,11 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
     }))
   };
 
-  const getSourceIcon = (type: string, exType?: string) => {
+  const getSourceIcon = (type: string, label: string, exType?: string) => {
+    if (label.includes("LIGUE") || label.includes("RECORD")) {
+      return <Trophy size={18} style={{ color: "#f59e0b" }} />;
+    }
+
     if (type === "base") {
       switch (exType) {
         case "PUSHUP": return <span style={{ fontSize: "1.1rem" }}>💪</span>;
@@ -197,7 +201,7 @@ export default function HistoryDetailsModal({ batch, isOpen, onClose }: HistoryD
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <div style={{ background: "#ffffff", padding: "8px", borderRadius: "12px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {getSourceIcon(source.type, source.exerciseType)}
+                      {getSourceIcon(source.type, source.label, source.exerciseType)}
                     </div>
                     <div>
                       <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#1e293b" }}>{source.label}</div>
