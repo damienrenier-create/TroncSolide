@@ -152,27 +152,59 @@ export default function LeagueClient({
                         </div>
                     </section>
 
-                    {/* 2. MODE SELECTOR (VOLUME | RECORD) */}
-                    <div className="tab-control-bar" style={{ marginBottom: '1.5rem' }}>
-                        <div className="segmented-control glass-premium">
-                            <button 
-                                onClick={() => handleUpdate(exercise, "VOLUME", timeframe)}
-                                className={type === "VOLUME" ? 'active' : ''}
-                            >
-                                📊 Volume
-                            </button>
-                            <button 
-                                onClick={() => handleUpdate(exercise, "SERIES", timeframe)}
-                                className={type === "SERIES" ? 'active' : ''}
-                            >
-                                🏆 Record
-                            </button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center", marginBottom: "2rem" }}>
+                        {/* 2. DYNAMIC EXERCISE TITLE */}
+                        <div 
+                            style={{ 
+                                display: 'flex', alignItems: 'center', gap: '10px', 
+                                background: 'var(--foreground)', color: 'white', 
+                                padding: '8px 24px', borderRadius: '100px', 
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                                fontSize: '0.9rem', fontWeight: 950, textTransform: 'uppercase',
+                                letterSpacing: '0.1em'
+                            }}
+                        >
+                            <span style={{ fontSize: '1.2rem' }}>
+                                {[
+                                    { id: "VENTRAL", icon: "🛡️" },
+                                    { id: "LATERAL_L", icon: "👈" },
+                                    { id: "LATERAL_R", icon: "👉" },
+                                    { id: "PUSHUP", icon: "💪" },
+                                    { id: "SQUAT", icon: "🦵" }
+                                ].find(ex => ex.id === exercise)?.icon}
+                            </span>
+                            {exercise.replace('_', ' ')}
                         </div>
-                    </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2rem", alignItems: "center", marginBottom: "2.5rem" }}>
-                        {/* 3. PODIUM PRESTIGE */}
-                        <div className="podium-area" style={{ width: '100%', opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+                        {/* 3. PODIUM PRESTIGE (With Swipe detection) */}
+                        <div 
+                            className="podium-area swipable" 
+                            style={{ width: '100%', opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}
+                            onTouchStart={(e) => {
+                                const touch = e.touches[0];
+                                (e.currentTarget as any).touchStartX = touch.clientX;
+                            }}
+                            onTouchEnd={(e) => {
+                                const startX = (e.currentTarget as any).touchStartX;
+                                if (startX === undefined) return;
+                                const endX = e.changedTouches[0].clientX;
+                                const diffX = startX - endX;
+                                const threshold = 50;
+
+                                const exOrder: ExerciseType[] = ["VENTRAL", "LATERAL_L", "LATERAL_R", "PUSHUP", "SQUAT"];
+                                const currIdx = exOrder.indexOf(exercise);
+
+                                if (diffX > threshold) {
+                                    // Swipe Left -> Next
+                                    const nextIdx = (currIdx + 1) % exOrder.length;
+                                    handleUpdate(exOrder[nextIdx], type, timeframe);
+                                } else if (diffX < -threshold) {
+                                    // Swipe Right -> Prev
+                                    const prevIdx = (currIdx - 1 + exOrder.length) % exOrder.length;
+                                    handleUpdate(exOrder[prevIdx], type, timeframe);
+                                }
+                            }}
+                        >
                             {top3.length > 0 ? (
                                 <div className="podium">
                                     {/* Rank 2 (Argent) */}
@@ -477,44 +509,52 @@ export default function LeagueClient({
             )}
 
             <style jsx>{`
-        /* 1. SWIPE NAV EXERCISES */
+        /* 1. SWIPE NAV EXERCISES (More subtle as chips) */
         .swipe-nav-container {
           width: 100%;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
-          padding-bottom: 0.5rem;
-          margin-bottom: -0.5rem;
+          padding: 4px 0;
+          margin-bottom: 0.5rem;
           scrollbar-width: none;
         }
         .swipe-nav-container::-webkit-scrollbar { display: none; }
         .swipe-nav-track {
           display: flex;
-          gap: 12px;
-          padding-right: 1.5rem;
+          gap: 10px;
+          justify-content: center;
         }
         .swipe-chip {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(0,0,0,0.05);
+          background: white;
           display: flex;
           align-items: center;
-          gap: 8px;
-          background: rgba(255,255,255,0.8);
-          border: 1.5px solid rgba(0,0,0,0.04);
-          padding: 10px 18px;
-          border-radius: 100px;
-          white-space: nowrap;
+          justify-content: center;
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-          scroll-snap-align: start;
+          transition: all 0.3s ease;
+          opacity: 0.5;
         }
         .swipe-chip.active {
-          background: var(--primary);
+          opacity: 1;
+          background: var(--foreground);
           color: white;
-          border-color: var(--primary);
-          box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
-          transform: translateY(-2px);
+          border-color: var(--foreground);
+          transform: scale(1.1);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        .swipe-icon { font-size: 1.2rem; }
-        .swipe-label { font-weight: 900; font-size: 0.85rem; letter-spacing: 0.02em; }
+        .swipe-icon { font-size: 1rem; }
+        .swipe-label { display: none; } /* Hide labels in chips, title is enough */
+
+        /* 1b. SWIPABLE AREA FEEDBACK */
+        .podium-area.swipable {
+          touch-action: pan-y; /* Allow vertical scroll, but capture horizontal */
+          position: relative;
+          cursor: grab;
+        }
+        .podium-area.swipable:active { cursor: grabbing; }
 
         /* 2. TAB CONTROL BARS (Horizontal Segmented) */
         .tab-control-bar {
