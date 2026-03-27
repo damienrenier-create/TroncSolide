@@ -5,10 +5,34 @@ import BottomNav from "./BottomNav";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { HelpCircle, User } from "lucide-react";
+import SeasonalTree from "./SeasonalTree";
+import { useEffect, useState } from "react";
+import { claimRetroBadge } from "@/lib/actions/gamification";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
     const pathname = usePathname();
+    const [isRetro, setIsRetro] = useState(false);
+
+    // Konami Code Logic
+    useEffect(() => {
+        let keys: string[] = [];
+        const konami = "ArrowUp,ArrowUp,ArrowDown,ArrowDown,ArrowLeft,ArrowRight,ArrowLeft,ArrowRight,b,a";
+
+        const handleKeyDown = async (e: KeyboardEvent) => {
+            keys.push(e.key);
+            keys = keys.slice(-10);
+            if (keys.join(',') === konami) {
+                setIsRetro(true);
+                document.body.classList.add('retro-mode');
+                await claimRetroBadge();
+                alert("🕹️ MODE RÉTRO ACTIVÉ ! Vous avez débloqué le badge 'Rétro-Gaineur'.");
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const isAuthPage = pathname === "/login" || pathname === "/register";
 
@@ -29,7 +53,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="app-shell">
             <header className="app-header glass">
                 <div className="container header-content">
-                    <Link href="/" className="logo">Tronc <span>Solide 🌳</span></Link>
+                    <Link href="/" className="logo">Tronc <span>Solide <SeasonalTree /></span></Link>
                     
                     <div className="header-actions">
                         <Link href="/faq" className="header-user-btn">

@@ -15,6 +15,7 @@ interface User {
     currentStreak: number;
     highestStreak: number;
     totalXP: number;
+    level: number;
 }
 
 interface RankingsProps {
@@ -33,7 +34,7 @@ const COLORS = [
 ];
 
 export default function LeagueRankingsClient({ evolutionData, streakRankings, leagueInfo }: RankingsProps) {
-    const views = ["STREAKS", "LEVELS", "XP"] as const;
+    const views = ["STREAKS", "LEVELS", "XP", "EVO_LEVELS", "EVO_XP"] as const;
     const [viewIndex, setViewIndex] = useState(0);
     const view = views[viewIndex];
     const [hiddenUsers, setHiddenUsers] = useState<Set<string>>(() => {
@@ -65,10 +66,15 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
     const renderChart = () => {
         switch (view) {
             case "STREAKS":
+            case "LEVELS":
+            case "XP":
+                const barDataKey = view === "STREAKS" ? "currentStreak" : view === "LEVELS" ? "level" : "totalXP";
+                const sortedRankings = [...streakRankings].sort((a, b) => (b as any)[barDataKey] - (a as any)[barDataKey]);
+                
                 return (
                     <div style={{ height: "400px", width: "100%" }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={streakRankings} layout="vertical" margin={{ left: 40, right: 20 }}>
+                            <BarChart data={sortedRankings} layout="vertical" margin={{ left: 40, right: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.1} />
                                 <XAxis type="number" hide />
                                 <YAxis 
@@ -85,16 +91,20 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                                             return (
                                                 <div className="glass" style={{ padding: "10px", border: "1px solid var(--primary)" }}>
                                                     <p style={{ fontWeight: 900, fontSize: "0.9rem", margin: 0 }}>{data.nickname}</p>
-                                                    <p style={{ fontSize: "0.8rem", margin: "4px 0", color: "var(--secondary)" }}>🔥 Série : {data.currentStreak} jours</p>
-                                                    <p style={{ fontSize: "0.7rem", margin: 0, opacity: 0.7 }}>Record : {data.highestStreak}j</p>
+                                                    <p style={{ fontSize: "0.8rem", margin: "4px 0", color: "var(--secondary)" }}>
+                                                        {view === "STREAKS" ? `🔥 Série : ${data.currentStreak} jours` : 
+                                                         view === "LEVELS" ? `⭐ Niveau : ${data.level}` : 
+                                                         `✨ Total : ${data.totalXP} XP`}
+                                                    </p>
+                                                    {view === "STREAKS" && <p style={{ fontSize: "0.7rem", margin: 0, opacity: 0.7 }}>Record : {data.highestStreak}j</p>}
                                                 </div>
                                             );
                                         }
                                         return null;
                                     }}
                                 />
-                                <Bar dataKey="currentStreak" radius={[0, 10, 10, 0]}>
-                                    {streakRankings.map((entry, index) => (
+                                <Bar dataKey={barDataKey} radius={[0, 10, 10, 0]}>
+                                    {sortedRankings.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Bar>
@@ -102,9 +112,9 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                         </ResponsiveContainer>
                     </div>
                 );
-            case "LEVELS":
-            case "XP":
-                const dataKeySuffix = view === "LEVELS" ? "_lvl" : "";
+            case "EVO_LEVELS":
+            case "EVO_XP":
+                const dataKeySuffix = view === "EVO_LEVELS" ? "_lvl" : "";
                 return (
                     <div style={{ height: "400px", width: "100%" }}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -127,7 +137,7 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                                                     {payload.map((p: any, i: number) => (
                                                         <div key={i} style={{ fontSize: "0.75rem", color: p.color, fontWeight: 800, display: "flex", justifyContent: "space-between", gap: "20px" }}>
                                                             <span>{p.name.replace('_lvl', '')}</span>
-                                                            <span>{p.value} {view === "LEVELS" ? "NV" : "XP"}</span>
+                                                            <span>{p.value} {view === "EVO_LEVELS" ? "NV" : "XP"}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -172,24 +182,36 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
             </header>
 
             {/* TAB SELECTOR */}
-            <div style={{ display: "flex", background: "rgba(0,0,0,0.05)", borderRadius: "16px", padding: "4px", marginBottom: "1.5rem" }}>
+            <div style={{ display: "flex", background: "rgba(0,0,0,0.05)", borderRadius: "16px", padding: "4px", marginBottom: "1.5rem", overflowX: "auto", scrollbarWidth: "none" }}>
                 <button 
                     onClick={() => setViewIndex(0)}
-                    style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.8rem", fontWeight: 800, cursor: "pointer", background: view === "STREAKS" ? "white" : "none", color: view === "STREAKS" ? "var(--primary)" : "var(--text-muted)", boxShadow: view === "STREAKS" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                    style={{ flex: "0 0 auto", minWidth: "120px", padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer", background: view === "STREAKS" ? "white" : "none", color: view === "STREAKS" ? "var(--primary)" : "var(--text-muted)", boxShadow: view === "STREAKS" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
                 >
                     🔥 SÉRIES
                 </button>
                 <button 
                     onClick={() => setViewIndex(1)}
-                    style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.8rem", fontWeight: 800, cursor: "pointer", background: view === "LEVELS" ? "white" : "none", color: view === "LEVELS" ? "var(--secondary)" : "var(--text-muted)", boxShadow: view === "LEVELS" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                    style={{ flex: "0 0 auto", minWidth: "120px", padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer", background: view === "LEVELS" ? "white" : "none", color: view === "LEVELS" ? "var(--secondary)" : "var(--text-muted)", boxShadow: view === "LEVELS" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
                 >
                     ⭐ NIVEAUX
                 </button>
                 <button 
                     onClick={() => setViewIndex(2)}
-                    style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.8rem", fontWeight: 800, cursor: "pointer", background: view === "XP" ? "white" : "none", color: view === "XP" ? "var(--primary)" : "var(--text-muted)", boxShadow: view === "XP" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                    style={{ flex: "0 0 auto", minWidth: "120px", padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer", background: view === "XP" ? "white" : "none", color: view === "XP" ? "var(--primary)" : "var(--text-muted)", boxShadow: view === "XP" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
                 >
-                    ✨ XP
+                    ✨ XP TOTAL
+                </button>
+                <button 
+                    onClick={() => setViewIndex(3)}
+                    style={{ flex: "0 0 auto", minWidth: "120px", padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer", background: view === "EVO_LEVELS" ? "white" : "none", color: view === "EVO_LEVELS" ? "var(--secondary)" : "var(--text-muted)", boxShadow: view === "EVO_LEVELS" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                >
+                    📈 EVO. NIVEAUX
+                </button>
+                <button 
+                    onClick={() => setViewIndex(4)}
+                    style={{ flex: "0 0 auto", minWidth: "120px", padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer", background: view === "EVO_XP" ? "white" : "none", color: view === "EVO_XP" ? "var(--primary)" : "var(--text-muted)", boxShadow: view === "EVO_XP" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                >
+                    📈 EVO. XP
                 </button>
             </div>
 
@@ -197,8 +219,11 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
             <div className="glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", marginBottom: "1.5rem", background: "white" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
                     <h3 style={{ fontSize: "0.9rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "8px" }}>
-                        {view === "STREAKS" ? <Flame size={18} className="text-primary"/> : <TrendingUp size={18} className="text-secondary"/>}
-                        {view === "STREAKS" ? "Record des Séries Actuelles" : view === "LEVELS" ? "Progression des Niveaux" : "Accumulation de l'XP"}
+                        {(view === "STREAKS" || view === "LEVELS" || view === "XP") ? <Award size={18} className="text-secondary"/> : <TrendingUp size={18} className="text-primary"/>}
+                        {view === "STREAKS" ? "Classement des Séries" : 
+                         view === "LEVELS" ? "Niveaux Actuels" : 
+                         view === "XP" ? "XP Totale Accumulée" :
+                         view === "EVO_LEVELS" ? "Évolution des Niveaux" : "Évolution de l'XP"}
                     </h3>
                 </div>
                 
@@ -210,8 +235,8 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                     <button onClick={nextView} className="carousel-btn right"><ChevronRight size={20}/></button>
                 </div>
 
-                {/* LEGEND TOGGLER (For Evolution Charts) */}
-                {view !== "STREAKS" && (
+                {/* LEGEND TOGGLER (For Evolution Charts only) */}
+                {(view === "EVO_LEVELS" || view === "EVO_XP") && (
                     <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
                         {evolutionData.users.map((u, i) => (
                             <button 
@@ -233,28 +258,26 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                 )}
             </div>
 
-            {/* TABLE VIEW (STREAKS ONLY) */}
-            {view === "STREAKS" && (
-                <div className="glass" style={{ padding: "0" }}>
-                    <div style={{ padding: "1rem", fontWeight: 900, fontSize: "0.8rem", borderBottom: "1px solid rgba(0,0,0,0.03)", textTransform: "uppercase", color: "var(--text-muted)" }}>Détails de la Ligue</div>
-                    {streakRankings.map((u, i) => (
-                        <div key={u.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderBottom: i < streakRankings.length - 1 ? "1px solid rgba(0,0,0,0.03)" : "none" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <span style={{ fontSize: "1rem", width: "24px", textAlign: "center", fontWeight: 900 }}>{i + 1}</span>
-                                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: COLORS[i % COLORS.length], color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: 900 }}>{u.nickname.charAt(0)}</div>
-                                <div>
-                                    <div style={{ fontSize: "0.9rem", fontWeight: 900 }}>{u.nickname}</div>
-                                    <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>Record : {u.highestStreak} jours</div>
-                                </div>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                                <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--secondary)" }}>{u.currentStreak}j 🔥</div>
-                                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>{u.totalXP} XP</div>
+            {/* TABLE VIEW (Always visible as reference) */}
+            <div className="glass" style={{ padding: "0" }}>
+                <div style={{ padding: "1rem", fontWeight: 900, fontSize: "0.8rem", borderBottom: "1px solid rgba(0,0,0,0.03)", textTransform: "uppercase", color: "var(--text-muted)" }}>Détails de la Ligue</div>
+                {streakRankings.map((u, i) => (
+                    <div key={u.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderBottom: i < streakRankings.length - 1 ? "1px solid rgba(0,0,0,0.03)" : "none" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <span style={{ fontSize: "1rem", width: "24px", textAlign: "center", fontWeight: 900 }}>{i + 1}</span>
+                            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: COLORS[i % COLORS.length], color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: 900 }}>{u.nickname.charAt(0)}</div>
+                            <div>
+                                <div style={{ fontSize: "0.9rem", fontWeight: 900 }}>{u.nickname}</div>
+                                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>NV {u.level} • Record : {u.highestStreak}j</div>
                             </div>
                         </div>
-                    ))}
-                </div>
-            )}
+                        <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--secondary)" }}>{u.currentStreak}j 🔥</div>
+                            <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>{u.totalXP.toLocaleString()} XP</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
 
             <style jsx>{`
                 .glass-premium { box-shadow: 0 10px 30px rgba(0,0,0,0.05); }

@@ -86,6 +86,7 @@ model User {
   inCagnotte    Boolean   @default(true)
   active        Boolean   @default(true) // For "Abandon project"
   hasSeenOnboarding Boolean @default(false)
+  zenLevel        Int      @default(0)
   
   league        League    @relation(fields: [leagueId], references: [id])
   sessions      ExerciseSession[]

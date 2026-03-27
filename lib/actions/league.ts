@@ -107,7 +107,8 @@ export async function getLeagueStreakRankings() {
             nickname: true, 
             currentStreak: true, 
             highestStreak: true,
-            totalXP: true
+            totalXP: true,
+            level: true
         },
         orderBy: { currentStreak: 'desc' }
     });

@@ -6,12 +6,14 @@ declare module "next-auth" {
             id: string;
             leagueId: string;
             role: string;
+            birthday?: Date;
         } & DefaultSession["user"];
     }
 
     interface User extends DefaultUser {
         leagueId: string;
         role: string;
+        birthday?: Date;
     }
 }
 

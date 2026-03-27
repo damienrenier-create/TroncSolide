@@ -389,6 +389,59 @@ a {
   cursor: pointer;
 }
 
+/* =========================================
+   EASTER EGGS
+   ========================================= */
+
+/* Rainbow Streak */
+@keyframes rainbow-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.rainbow-streak {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab) !important;
+  background-size: 400% 400% !important;
+  animation: rainbow-bg 5s ease infinite !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(231, 60, 126, 0.4) !important;
+}
+
+/* Retro Mode */
+.retro-mode {
+  filter: sepia(0.2);
+}
+
+.retro-mode .logo {
+  font-family: "Courier New", Courier, monospace !important;
+  text-transform: uppercase;
+}
+
+.retro-mode .logo span {
+  color: #39FF14 !important; /* Neon Green */
+  text-shadow: 2px 2px #000 !important;
+}
+
+.retro-mode .app-header {
+  border-bottom: 2px solid #39FF14 !important;
+  background: #000 !important;
+}
+
+.retro-mode .glass, .retro-mode .glass-premium, .retro-mode .hero-card {
+  background: #1a1a1a !important;
+  border: 1px solid #39FF14 !important;
+  color: #39FF14 !important;
+  border-radius: 0 !important;
+}
+
+.retro-mode .btn-primary, .retro-mode .start-button {
+  background: #39FF14 !important;
+  color: #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 5px 5px 0px #004d00 !important;
+}
+
 @keyframes pulse-primary {
   0% {
     transform: scale(1);

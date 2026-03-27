@@ -135,4 +135,28 @@ export const BADGE_DEFINITIONS = [
     { id: "REGULARITY_STREAK_TARGET_24D", name: "Précision (24j)", description: "Avoir atteint son objectif quotidien pendant 24 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 6000 },
     { id: "REGULARITY_STREAK_TARGET_48D", name: "Précision (48j)", description: "Avoir atteint son objectif quotidien pendant 48 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 15000 },
     { id: "REGULARITY_STREAK_TARGET_96D", name: "Précision (96j)", description: "Avoir atteint son objectif quotidien pendant 96 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 40000 },
+    {
+        id: "HIDDEN_FOU_CLIC",
+        name: "Fou du Clic",
+        description: "A fait vieillir l'arbre sacré jusqu'à son propre âge. Frénétique !",
+        icon: "🖱️",
+        xpValue: 0,
+        type: "ACHIEVEMENT"
+    },
+    {
+        id: "HIDDEN_ZEN_BIRD",
+        name: "L'Oiseau de la Paix",
+        description: "A su rester immobile assez longtemps pour que la nature reprenne ses droits. Zen !",
+        icon: "🐦",
+        xpValue: 50,
+        type: "ACHIEVEMENT"
+    },
+    {
+        id: "HIDDEN_RETRO_GAINEUR",
+        name: "Rétro-Gaineur",
+        description: "A invoqué les anciens esprits du code Konami. Nostalgique !",
+        icon: "🕹️",
+        xpValue: 0,
+        type: "ACHIEVEMENT"
+    }
 ];

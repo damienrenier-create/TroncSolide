@@ -6,7 +6,8 @@ import { BadgeType, FeedItemType, ExerciseType, RecordType, RecordTimeframe } fr
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { 
-    differenceInDays, 
+    differenceInDays,
+    differenceInYears,
     startOfDay, 
     startOfWeek, 
     startOfMonth, 
@@ -17,6 +18,7 @@ import {
 import { getBrusselsToday, getBrusselsDate } from "@/lib/date-utils";
 
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
+import { getLevelInfo } from "@/lib/constants/levels";
 import { processAnniversarySettlement } from "./settlement";
 
 /**
@@ -70,7 +72,7 @@ export async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], league
             name: def.name,
             description: def.description,
             icon: def.icon,
-            type: def.type,
+            type: def.type as BadgeType,
             xpValue: def.xpValue,
             leagueId: isFirstCome ? leagueId : null
         }
@@ -965,4 +967,190 @@ export async function getRegularityStats(userId: string) {
         maxStreak1, maxStreak3, maxStreak30, maxStreak3Diff, maxStreakTarget,
         currentStreak1, currentStreak3, currentStreak30, currentStreak3Diff, currentStreakTarget
     };
+}
+
+export async function claimClickEasterEgg() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return { success: false, error: "Non connecté" };
+
+    const userId = session.user.id;
+
+    // 1. Check if already has the badge
+    const existingBadge = await prisma.userBadge.findUnique({
+        where: { userId_badgeId: { userId, badgeId: "HIDDEN_FOU_CLIC" } }
+    });
+    if (existingBadge) return { success: false, error: "Badge déjà obtenu" };
+
+    // 2. Fetch user to check age
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { birthday: true, totalXP: true, level: true, leagueId: true }
+    });
+
+    if (!user) return { success: false, error: "Utilisateur introuvable" };
+
+    // 3. Award Badge & Level Up
+    const levelInfo = getLevelInfo(user.totalXP);
+    const xpToNext = levelInfo.nextLevelXP - user.totalXP;
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            // Award badge
+            await tx.userBadge.create({
+                data: {
+                    userId,
+                    badgeId: "HIDDEN_FOU_CLIC",
+                    awardedAt: new Date()
+                }
+            });
+
+            // Level up (add XP to reach exactly next level)
+            await tx.user.update({
+                where: { id: userId },
+                data: {
+                    totalXP: { increment: xpToNext },
+                    level: user.level + 1
+                }
+            });
+
+            // Add to feed for the gazette
+            await tx.feedItem.create({
+                data: {
+                    leagueId: user.leagueId,
+                    userId,
+                    type: "BADGE_WON",
+                    badgeId: "HIDDEN_FOU_CLIC"
+                }
+            });
+
+            // Special Level Up feed item
+            await tx.feedItem.create({
+                data: {
+                    leagueId: user.leagueId,
+                    userId,
+                    type: "LEVEL_UP",
+                    level: user.level + 1
+                }
+            });
+        });
+
+        revalidatePath("/");
+        revalidatePath("/league");
+        return { success: true };
+    } catch (e) {
+        console.error(e);
+        return { success: false, error: "Erreur lors de l'attribution" };
+    }
+}
+
+export async function claimZenReward() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return { success: false, error: "Non connecté" };
+
+    const userId = session.user.id;
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { zenLevel: true, totalXP: true, level: true, leagueId: true }
+    }) as any;
+
+    if (!user) return { success: false, error: "Utilisateur introuvable" };
+
+    const birdIndex = user.zenLevel;
+    
+    try {
+        await prisma.$transaction(async (tx) => {
+            if (birdIndex < 7) {
+                // Happy Bird
+                const xpGain = 50 + (birdIndex * 25);
+                await tx.user.update({
+                    where: { id: userId },
+                    data: {
+                        totalXP: { increment: xpGain },
+                        zenLevel: { increment: 1 }
+                    }
+                });
+
+                // Award first time zen badge
+                if (birdIndex === 0) {
+                    await tx.userBadge.upsert({
+                        where: { userId_badgeId: { userId, badgeId: "HIDDEN_ZEN_BIRD" } },
+                        create: { userId, badgeId: "HIDDEN_ZEN_BIRD" },
+                        update: {}
+                    });
+                     await tx.feedItem.create({
+                        data: { leagueId: user.leagueId, userId, type: "BADGE_WON", badgeId: "HIDDEN_ZEN_BIRD" }
+                    });
+                }
+            } else {
+                // MALÉFIQUE CHAT !
+                // Find XP required to reach the start of user.level - 1
+                let targetXP = 0;
+                let accumulated = 0;
+                const targetLevel = Math.max(1, user.level - 1);
+                
+                for (let i = 2; i <= targetLevel; i++) {
+                     const linearCost = (i - 1) * 50;
+                     const acceleration = i > 50 ? Math.pow(i - 50, 2) * 10 : 0;
+                     accumulated += (linearCost + acceleration);
+                }
+                targetXP = accumulated;
+
+                await tx.user.update({
+                    where: { id: userId },
+                    data: {
+                        totalXP: targetXP,
+                        level: targetLevel,
+                        zenLevel: 0 // Reset
+                    }
+                });
+
+                await tx.feedItem.create({
+                    data: {
+                        leagueId: user.leagueId,
+                        userId,
+                        type: "LEVEL_UP", // Using LEVEL_UP as a general level change
+                        level: targetLevel
+                    }
+                });
+            }
+        });
+
+        revalidatePath("/");
+        revalidatePath("/league");
+        return { success: true, zenLevel: birdIndex < 7 ? birdIndex + 1 : 0 };
+    } catch (e) {
+        console.error(e);
+        return { success: false };
+    }
+}
+
+export async function claimRetroBadge() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return { success: false };
+
+    const userId = session.user.id;
+    const badgeId = "HIDDEN_RETRO_GAINEUR";
+
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { leagueId: true } });
+    if (!user) return { success: false };
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            const existing = await tx.userBadge.findUnique({
+                where: { userId_badgeId: { userId, badgeId } }
+            });
+            if (!existing) {
+                await tx.userBadge.create({ data: { userId, badgeId } });
+                await tx.feedItem.create({
+                    data: { leagueId: user.leagueId, userId, type: "BADGE_WON", badgeId }
+                });
+            }
+        });
+
+        revalidatePath("/trophies");
+        return { success: true };
+    } catch (e) {
+        return { success: false };
+    }
 }

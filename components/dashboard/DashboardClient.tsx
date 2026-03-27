@@ -319,7 +319,7 @@ export default function DashboardClient({
                         <Link href="/league" style={{ fontSize: "0.55rem", fontWeight: "900", color: "var(--text-muted)", textDecoration: "none" }}>XP TOTAL</Link>
                         <div style={{ fontSize: "1rem", fontWeight: "900", color: "var(--primary)" }}>{stats.totalXP} ✨</div>
                     </div>
-                    <Link href="/faq#cagnotte" className={`streak-badge ${stats.streak > 0 ? 'active' : ''}`} style={{ margin: 0, padding: "5px 12px", borderRadius: "12px", textDecoration: "none" }}>
+                    <Link href="/faq#cagnotte" className={`streak-badge ${stats.streak > 0 ? 'active' : ''} ${stats.streak > 0 && stats.streak % 7 === 0 ? 'rainbow-streak' : ''}`} style={{ margin: 0, padding: "5px 12px", borderRadius: "12px", textDecoration: "none" }}>
                         <span style={{ fontSize: "1.2rem", marginRight: "4px" }}>{streakEmoji}</span>
                         <span style={{ fontSize: "0.8rem", fontWeight: "900" }}>{stats.streak}j</span>
                     </Link>

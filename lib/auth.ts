@@ -67,11 +67,12 @@ export const authOptions: NextAuthOptions = {
                 // Adding leagueId to session for isolation
                 const dbUser = await prisma.user.findUnique({
                     where: { id: token.sub as string },
-                    select: { leagueId: true, role: true },
+                    select: { leagueId: true, role: true, birthday: true },
                 });
                 if (dbUser) {
                     session.user.leagueId = dbUser.leagueId;
                     session.user.role = dbUser.role;
+                    session.user.birthday = dbUser.birthday;
                     session.user.email = token.email as string;
                 }
             }
