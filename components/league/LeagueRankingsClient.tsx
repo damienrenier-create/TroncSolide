@@ -21,6 +21,7 @@ interface RankingsProps {
     evolutionData: {
         chartData: any[];
         users: { id: string, nickname: string }[];
+        currentNickname?: string;
     };
     streakRankings: User[];
     leagueInfo: any;
@@ -35,7 +36,16 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
     const views = ["STREAKS", "LEVELS", "XP"] as const;
     const [viewIndex, setViewIndex] = useState(0);
     const view = views[viewIndex];
-    const [hiddenUsers, setHiddenUsers] = useState<Set<string>>(new Set());
+    const [hiddenUsers, setHiddenUsers] = useState<Set<string>>(() => {
+        const { users, currentNickname } = evolutionData;
+        const hidden = new Set<string>();
+        users.forEach(u => {
+            if (u.nickname !== currentNickname) {
+                hidden.add(u.nickname);
+            }
+        });
+        return hidden;
+    });
     const router = useRouter();
 
     const nextView = () => setViewIndex(prev => (prev + 1) % views.length);

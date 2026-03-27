@@ -25,7 +25,7 @@ export async function getLeagueEvolutionData() {
 
     const currentUser = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { leagueId: true }
+        select: { leagueId: true, nickname: true }
     });
 
     if (!currentUser?.leagueId) throw new Error("League not found");
@@ -84,7 +84,8 @@ export async function getLeagueEvolutionData() {
 
     return {
         chartData,
-        users: users.map(u => ({ id: u.id, nickname: u.nickname }))
+        users: users.map(u => ({ id: u.id, nickname: u.nickname })),
+        currentNickname: currentUser?.nickname
     };
 }
 
