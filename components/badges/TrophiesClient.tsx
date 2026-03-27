@@ -86,14 +86,20 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
             unit = exercise === "plank" ? "s" : "reps";
             label = timeframeStr === "SERIES" ? "Ton record" : "Ton volume";
         } else if (badgeId.startsWith("HOLISTIC_")) {
-            const isSession = badgeId.includes("_SESSION_");
+            const isLog = badgeId.includes("_LOG_");
             targetValue = extractThreshold(def.name);
-            unit = "efforts";
-            label = isSession ? "Séance record" : "Total holistique";
-            if (isSession) {
+            unit = "/exo";
+            label = isLog ? "Ton meilleur log" : "Ton palier mini";
+            if (isLog) {
                 userValue = allTime.maxHolisticSession || 0; 
             } else {
-                userValue = (allTime.pushups || 0) + (allTime.squats || 0) + (allTime.plank || 0);
+                userValue = Math.min(
+                    allTime.pushups || 0,
+                    allTime.squats || 0,
+                    allTime.ventral || 0,
+                    allTime.lateral_l || 0,
+                    allTime.lateral_r || 0
+                );
             }
         }
 
@@ -108,7 +114,7 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
     // 2. Catégorisation des badges (Vitrines)
     const vitrines = useMemo(() => {
         const categories = [
-            { id: "holistic", title: "La Vitrine Holistique 🧘", badgeIds: ["HOLISTIC_SESSION_5", "HOLISTIC_SESSION_10", "HOLISTIC_SESSION_30", "HOLISTIC_SESSION_100", "HOLISTIC_CUMULATIVE_50", "HOLISTIC_CUMULATIVE_500", "HOLISTIC_CUMULATIVE_5000"] },
+            { id: "holistic", title: "La Vitrine Holistique 🧘", badgeIds: ["HOLISTIC_LOG_1", "HOLISTIC_LOG_5", "HOLISTIC_LOG_10", "HOLISTIC_LOG_30", "HOLISTIC_LOG_60", "HOLISTIC_MILESTONE_100", "HOLISTIC_MILESTONE_600", "HOLISTIC_MILESTONE_6000"] },
             { id: "pushups", title: "Vitrine Pompes ⚓", badgeIds: ["PUMP_100", "PUMP_1000", "PUMP_2000", "PUMP_5000", "PUMP_10000", "PUMP_20000", "PUMP_50000", "PUMP_100000", "SERIE_PUMP_10", "SERIE_PUMP_50", "SERIE_PUMP_100", "SERIE_PUMP_150", "RECORD_DAY_PUSHUP", "RECORD_SERIES_PUSHUP"] },
             { id: "squats", title: "Vitrine Squats 🦵", badgeIds: ["SQUAT_100", "SQUAT_1000", "SQUAT_5000", "RECORD_DAY_SQUAT", "RECORD_SERIES_SQUAT"] },
             { id: "plank", title: "Vitrine Gainage 🛡️", badgeIds: ["PLANK_1000S", "PLANK_10000S", "PLANK_100000S", "SERIE_PLANK_30S", "SERIE_PLANK_1M", "SERIE_PLANK_1M30", "SERIE_PLANK_2M", "SERIE_PLANK_3M", "SERIE_PLANK_5M", "SERIE_PLANK_10M", "RECORD_DAY_PLANK", "RECORD_SERIES_PLANK"] },
@@ -191,7 +197,7 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
                         </div>
                         {openVitrines[cat.id] ? <ChevronUp size={20} color="var(--text-muted)" /> : <ChevronDown size={20} color="var(--text-muted)" />}
                     </div>
-
+ 
                     {openVitrines[cat.id] && (
                         <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1.5rem", animation: "slideDown 0.3s ease-out" }}>
                             
@@ -202,16 +208,18 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
                                         <Unlock size={14} color="var(--secondary)" />
                                         <span style={{ fontSize: "0.75rem", fontWeight: "900", color: "var(--secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Mes Exploits</span>
                                     </div>
-                                    <div className="horizontal-scroll-container">
-                                        {cat.earned.map(item => (
-                                            <TrophyCard 
-                                                key={item.id} 
-                                                item={item} 
-                                                highlightId={highlightId} 
-                                                onSelect={setSelectedBadge} 
-                                            />
-                                        ))}
-                                    </div>
+                                    <ScrollWrapper>
+                                        <div className="horizontal-scroll-container">
+                                            {cat.earned.map((item: any) => (
+                                                <TrophyCard 
+                                                    key={item.id} 
+                                                    item={item} 
+                                                    highlightId={highlightId} 
+                                                    onSelect={setSelectedBadge} 
+                                                />
+                                            ))}
+                                        </div>
+                                    </ScrollWrapper>
                                 </div>
                             )}
 
@@ -222,16 +230,18 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
                                         <Lock size={14} color="var(--primary)" />
                                         <span style={{ fontSize: "0.75rem", fontWeight: "900", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "1px" }}>Prochains Défis</span>
                                     </div>
-                                    <div className="horizontal-scroll-container">
-                                        {cat.toEarn.map(item => (
-                                            <TrophyCard 
-                                                key={item.id} 
-                                                item={item} 
-                                                highlightId={highlightId} 
-                                                onSelect={setSelectedBadge} 
-                                            />
-                                        ))}
-                                    </div>
+                                    <ScrollWrapper>
+                                        <div className="horizontal-scroll-container">
+                                            {cat.toEarn.map((item: any) => (
+                                                <TrophyCard 
+                                                    key={item.id} 
+                                                    item={item} 
+                                                    highlightId={highlightId} 
+                                                    onSelect={setSelectedBadge} 
+                                                />
+                                            ))}
+                                        </div>
+                                    </ScrollWrapper>
                                 </div>
                             )}
 
@@ -262,6 +272,56 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
             `}</style>
 
             {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} userStats={{...userStats, userId}} records={records} />}
+        </div>
+    );
+}
+
+function ScrollWrapper({ children }: { children: React.ReactNode }) {
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+    const [showArrows, setShowArrows] = useState(false);
+
+    const scroll = (direction: 'left' | 'right') => {
+        if (!scrollRef.current) return;
+        const container = scrollRef.current.querySelector('.horizontal-scroll-container');
+        if (container) {
+            const scrollAmount = direction === 'left' ? -320 : 320;
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    return (
+        <div 
+            className="scroll-wrapper" 
+            style={{ position: "relative" }}
+            onMouseEnter={() => setShowArrows(true)}
+            onMouseLeave={() => setShowArrows(false)}
+        >
+            {showArrows && (
+                <>
+                    <button 
+                        onClick={() => scroll('left')}
+                        className="scroll-arrow left"
+                        style={{ position: "absolute", left: "-15px", top: "50%", transform: "translateY(-50%)", zIndex: 10, background: "white", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 10px rgba(0,0,0,0.1)", color: "var(--primary)" }}
+                    >
+                        <ChevronDown size={20} style={{ transform: "rotate(90deg)" }} />
+                    </button>
+                    <button 
+                        onClick={() => scroll('right')}
+                        className="scroll-arrow right"
+                        style={{ position: "absolute", right: "-15px", top: "50%", transform: "translateY(-50%)", zIndex: 10, background: "white", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 10px rgba(0,0,0,0.1)", color: "var(--primary)" }}
+                    >
+                        <ChevronDown size={20} style={{ transform: "rotate(-90deg)" }} />
+                    </button>
+                </>
+            )}
+            <div ref={scrollRef}>
+                {children}
+            </div>
+            <style jsx>{`
+                @media (max-width: 1024px) {
+                    .scroll-arrow { display: none !important; }
+                }
+            `}</style>
         </div>
     );
 }

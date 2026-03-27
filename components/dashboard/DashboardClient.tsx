@@ -122,6 +122,7 @@ export default function DashboardClient({
             { key: "PUSHUP", tags: ["PUMP", "PUSHUP"] },
             { key: "SQUAT", tags: ["SQUAT"] },
             { key: "PLANK", tags: ["PLANK"] },
+            { key: "HOLISTIC", tags: ["HOLISTIC_"] },
             { key: "RECORD", tags: ["RECORD_"] }
         ];
 
@@ -166,7 +167,21 @@ export default function DashboardClient({
                 }
 
                 // 2. DÉTERMINATION DU CURRENT (Match logic with BadgeModal.tsx)
-                if (badge.id.includes("PUMP") || badge.id.includes("PUSHUP")) {
+                if (badge.id.startsWith("HOLISTIC_")) {
+                    unit = "/exo";
+                    if (badge.id.includes("_LOG_")) {
+                        currentValue = userStats.allTime?.maxHolisticSession || 0;
+                    } else if (badge.id.includes("_MILESTONE_")) {
+                        const allTime = userStats.allTime || {};
+                        currentValue = Math.min(
+                            allTime.pushups || 0,
+                            allTime.squats || 0,
+                            allTime.ventral || 0,
+                            allTime.lateral_l || 0,
+                            allTime.lateral_r || 0
+                        );
+                    }
+                } else if (badge.id.includes("PUMP") || badge.id.includes("PUSHUP")) {
                     unit = "pompes";
                     if (badge.id.startsWith("SERIE_") || badge.id.includes("SERIES")) currentValue = getValue("PUSHUP", "allTime", true);
                     else if (badge.id.includes("DAY")) currentValue = getValue("PUSHUP", "today");

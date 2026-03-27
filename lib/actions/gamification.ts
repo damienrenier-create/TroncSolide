@@ -180,31 +180,33 @@ export async function checkGamification(userId: string, lastSessionId: string) {
         batchSessionsForHolistic = await prisma.exerciseSession.findMany({ where: { batchId: session.batchId } });
     }
 
-    const batchTypes = new Set(batchSessionsForHolistic.map(s => s.type));
-    const isHolisticSession = holisticTypes.every(t => batchTypes.has(t as any));
+    const batchValues: Record<string, number> = {};
+    batchSessionsForHolistic.forEach(s => {
+        batchValues[s.type] = (batchValues[s.type] || 0) + s.value;
+    });
+    
+    const minBatchValue = holisticTypes.every(t => batchValues[t] !== undefined)
+        ? Math.min(...holisticTypes.map(t => batchValues[t]))
+        : 0;
 
-    if (isHolisticSession) {
-        const totalBatchVolume = batchSessionsForHolistic.reduce((acc, s) => acc + s.value, 0);
-        if (totalBatchVolume >= 5) badgesToAward.push("HOLISTIC_SESSION_5");
-        if (totalBatchVolume >= 10) badgesToAward.push("HOLISTIC_SESSION_10");
-        if (totalBatchVolume >= 30) badgesToAward.push("HOLISTIC_SESSION_30");
-        if (totalBatchVolume >= 100) badgesToAward.push("HOLISTIC_SESSION_100");
-    }
+    if (minBatchValue >= 1) badgesToAward.push("HOLISTIC_LOG_1");
+    if (minBatchValue >= 5) badgesToAward.push("HOLISTIC_LOG_5");
+    if (minBatchValue >= 10) badgesToAward.push("HOLISTIC_LOG_10");
+    if (minBatchValue >= 30) badgesToAward.push("HOLISTIC_LOG_30");
+    if (minBatchValue >= 60) badgesToAward.push("HOLISTIC_LOG_60");
 
     // Cumulative Holistic (all-time)
-    const hasMinEach = holisticTypes.every(t => {
+    const minAllTimeValue = holisticTypes.every(t => {
         const agg = aggregates.find(a => a.type === t);
-        return (agg?._sum.value || 0) >= 5;
-    });
-    if (hasMinEach) {
-        const totalHolisticVolume = aggregates
-            .filter(a => holisticTypes.includes(a.type))
-            .reduce((acc, a) => acc + (a._sum.value || 0), 0);
-        
-        if (totalHolisticVolume >= 50) badgesToAward.push("HOLISTIC_CUMULATIVE_50");
-        if (totalHolisticVolume >= 500) badgesToAward.push("HOLISTIC_CUMULATIVE_500");
-        if (totalHolisticVolume >= 5000) badgesToAward.push("HOLISTIC_CUMULATIVE_5000");
-    }
+        return (agg?._sum.value || 0) >= 1;
+    }) ? Math.min(...holisticTypes.map(t => {
+        const agg = aggregates.find(a => a.type === t);
+        return agg?._sum.value || 0;
+    })) : 0;
+
+    if (minAllTimeValue >= 100) badgesToAward.push("HOLISTIC_MILESTONE_100");
+    if (minAllTimeValue >= 600) badgesToAward.push("HOLISTIC_MILESTONE_600");
+    if (minAllTimeValue >= 6000) badgesToAward.push("HOLISTIC_MILESTONE_6000");
 
     // Process Basic Badges & Tiered FIRST_COME
     for (const badgeId of badgesToAward) {
@@ -552,38 +554,34 @@ export async function reSyncUserBadges(userId: string) {
                 _max: { value: true } 
             });
             if (req > 0) stillEarned = (maxPlank._max.value || 0) >= req;
-        } else if (bid.startsWith("HOLISTIC_SESSION_")) {
+        } else if (bid.startsWith("HOLISTIC_LOG_")) {
             const req = parseInt(bid.split("_")[2]);
             const batchSessions = await prisma.exerciseSession.findMany({
                 where: { userId, batchId: { not: null } }
             });
-            const sessionsByBatch: Record<string, any[]> = {};
+            const valuesByBatch: Record<string, Record<string, number>> = {};
             batchSessions.forEach(s => {
-                if (!sessionsByBatch[s.batchId!]) sessionsByBatch[s.batchId!] = [];
-                sessionsByBatch[s.batchId!].push(s);
+                if (!valuesByBatch[s.batchId!]) valuesByBatch[s.batchId!] = {};
+                valuesByBatch[s.batchId!][s.type] = (valuesByBatch[s.batchId!][s.type] || 0) + s.value;
             });
             const holisticTypes = ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"];
-            stillEarned = Object.values(sessionsByBatch).some(batch => {
-                const types = new Set(batch.map(s => s.type));
-                const isHoli = holisticTypes.every(t => types.has(t as any));
-                const vol = batch.reduce((acc, s) => acc + s.value, 0);
-                return isHoli && vol >= req;
+            stillEarned = Object.values(valuesByBatch).some(batchVals => {
+                const minVal = holisticTypes.every(t => batchVals[t] !== undefined)
+                    ? Math.min(...holisticTypes.map(t => batchVals[t]))
+                    : 0;
+                return minVal >= req;
             });
-        } else if (bid.startsWith("HOLISTIC_CUMULATIVE_")) {
+        } else if (bid.startsWith("HOLISTIC_MILESTONE_")) {
             const req = parseInt(bid.split("_")[2]);
             const holisticTypes = ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"];
-            const hasMinEach = holisticTypes.every(t => {
+            const minAllTime = holisticTypes.every(t => {
                 const agg = aggregates.find(a => a.type === t);
-                return (agg?._sum.value || 0) >= 5;
-            });
-            if (!hasMinEach) {
-                stillEarned = false;
-            } else {
-                const totalHoli = aggregates
-                    .filter(a => holisticTypes.includes(a.type))
-                    .reduce((acc, a) => acc + (a._sum.value || 0), 0);
-                stillEarned = totalHoli >= req;
-            }
+                return (agg?._sum.value || 0) >= 1;
+            }) ? Math.min(...holisticTypes.map(t => {
+                const agg = aggregates.find(a => a.type === t);
+                return agg?._sum.value || 0;
+            })) : 0;
+            stillEarned = minAllTime >= req;
         }
 
         if (!stillEarned) {
@@ -739,18 +737,25 @@ export async function getTrophiesRoomData() {
         where: { userId, batchId: { not: null } },
         select: { type: true, value: true, batchId: true }
     });
-    const batchData: Record<string, { types: Set<string>, total: number }> = {};
+    const batchData: Record<string, { values: Record<string, number>, total: number }> = {};
     allSessions.forEach(s => {
-        if (!batchData[s.batchId!]) batchData[s.batchId!] = { types: new Set(), total: 0 };
-        batchData[s.batchId!].types.add(s.type);
+        if (!batchData[s.batchId!]) batchData[s.batchId!] = { values: {}, total: 0 };
+        batchData[s.batchId!].values[s.type] = (batchData[s.batchId!].values[s.type] || 0) + s.value;
         batchData[s.batchId!].total += s.value;
     });
 
     const holisticTypes = ["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"];
-    let maxHolisticVol = 0;
+    let maxHolisticVol = 0; // Balanced volume (min * 5)
     Object.values(batchData).forEach(b => {
-        const isHoli = holisticTypes.every(t => b.types.has(t));
-        if (isHoli && b.total > maxHolisticVol) maxHolisticVol = b.total;
+        const hasAll = holisticTypes.every(t => b.values[t] !== undefined);
+        if (hasAll) {
+            const minVal = Math.min(...holisticTypes.map(t => b.values[t]));
+            if (minVal > 0) {
+                // We define "balanced volume" as the min reps across all 5 types
+                // This will help the UI show progress towards Holistic Log badges
+                if (minVal > maxHolisticVol) maxHolisticVol = minVal;
+            }
+        }
     });
 
     // 3. Récupérer les stats de l'utilisateur pour les périodes en cours (pour les calculs d'écarts de record)
@@ -804,15 +809,17 @@ export async function getTrophiesRoomData() {
         arr.forEach(a => {
             const types = Array.isArray(a.type) ? a.type : [a.type];
             types.forEach((t: string) => {
-                if (t.includes("PUSHUP")) {
+                if (t === "PUSHUP") {
                     res.pushups = (res.pushups || 0) + (a._sum?.value || 0);
                     res.maxPushups = Math.max(res.maxPushups || 0, a._max?.value || 0);
-                } else if (t.includes("SQUAT")) {
+                } else if (t === "SQUAT") {
                     res.squats = (res.squats || 0) + (a._sum?.value || 0);
                     res.maxSquats = Math.max(res.maxSquats || 0, a._max?.value || 0);
                 } else if (["VENTRAL", "LATERAL_L", "LATERAL_R"].includes(t)) {
                     res.plank = (res.plank || 0) + (a._sum?.value || 0);
                     res.maxPlank = Math.max(res.maxPlank || 0, a._max?.value || 0);
+                    // Add individual totals for holistic calculation
+                    res[t.toLowerCase()] = (res[t.toLowerCase()] || 0) + (a._sum?.value || 0);
                 }
             });
         });

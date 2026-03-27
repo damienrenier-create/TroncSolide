@@ -101,14 +101,15 @@ export const BADGE_DEFINITIONS = [
     { id: "RECORD_SERIES_PLANK", name: "L'Imbattable (Série Gainage)", description: "Détenteur actuel du record ALL-TIME de la plus longue série de gainage.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 0 },
 
     // --- FAMILLE F : LA VITRINE HOLISTIQUE (FULL BODY) ---
-    // En une séance (Batch) : 1 effort de chaque (Ventral, G, D, Pompes, Squats)
-    { id: "HOLISTIC_SESSION_5", name: "Session Holistique 5", description: "Réaliser au moins 1 effort de chaque exo et 5 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🧘", xpValue: 100 },
-    { id: "HOLISTIC_SESSION_10", name: "Session Holistique 10", description: "Réaliser au moins 1 effort de chaque exo et 10 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🤸", xpValue: 200 },
-    { id: "HOLISTIC_SESSION_30", name: "Session Holistique 30", description: "Réaliser au moins 1 effort de chaque exo et 30 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🧬", xpValue: 500 },
-    { id: "HOLISTIC_SESSION_100", name: "Session Holistique 100", description: "Réaliser au moins 1 effort de chaque exo et 100 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🌌", xpValue: 2000 },
+    // En une séance (Batch) : Chaque exercice doit atteindre le palier
+    { id: "HOLISTIC_LOG_1", name: "L'Équilibré (1/exo)", description: "Réaliser au moins 1 de chaque (Ventral, D, G, Pompe, Squat) en un seul log.", type: "FIRST_COME" as BadgeType, icon: "🧘", xpValue: 100 },
+    { id: "HOLISTIC_LOG_5", name: "L'Harmonieux (5/exo)", description: "Réaliser au moins 5 de chaque (Ventral, D, G, Pompe, Squat) en un seul log.", type: "FIRST_COME" as BadgeType, icon: "🤸", xpValue: 250 },
+    { id: "HOLISTIC_LOG_10", name: "Le Symétrique (10/exo)", description: "Réaliser au moins 10 de chaque (Ventral, D, G, Pompe, Squat) en un seul log.", type: "FIRST_COME" as BadgeType, icon: "🧬", xpValue: 500 },
+    { id: "HOLISTIC_LOG_30", name: "L'Intégral (30/exo)", description: "Réaliser au moins 30 de chaque (Ventral, D, G, Pompe, Squat) en un seul log.", type: "FIRST_COME" as BadgeType, icon: "🌌", xpValue: 2000 },
+    { id: "HOLISTIC_LOG_60", name: "Le Maître Holistique (60/exo)", description: "Réaliser au moins 60 de chaque (Ventral, D, G, Pompe, Squat) en un seul log.", type: "FIRST_COME" as BadgeType, icon: "👑", xpValue: 5000 },
 
-    // Cumulatif : 5 efforts de chaque exo depuis le début
-    { id: "HOLISTIC_CUMULATIVE_50", name: "Parcours Holistique 50", description: "Avoir fait au moins 5 efforts de chaque exo et 50 efforts cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💠", xpValue: 500 },
-    { id: "HOLISTIC_CUMULATIVE_500", name: "Parcours Holistique 500", description: "Avoir fait au moins 5 efforts de chaque exo et 500 efforts cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 2500 },
-    { id: "HOLISTIC_CUMULATIVE_5000", name: "Parcours Holistique 5000", description: "Avoir fait au moins 5 efforts de chaque exo et 5 000 efforts cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💎", xpValue: 10000 },
+    // Milestones (Cumulatif) : 100, 600, 6000 de chaque exo depuis le début
+    { id: "HOLISTIC_MILESTONE_100", name: "Apprenti Holistique (100/exo)", description: "Avoir fait au moins 100 de chaque exercice cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💠", xpValue: 500 },
+    { id: "HOLISTIC_MILESTONE_600", name: "Expert Holistique (600/exo)", description: "Avoir fait au moins 600 de chaque exercice cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 3000 },
+    { id: "HOLISTIC_MILESTONE_6000", name: "Légende Holistique (6000/exo)", description: "Avoir fait au moins 6 000 de chaque exercice cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💎", xpValue: 15000 },
 ];
