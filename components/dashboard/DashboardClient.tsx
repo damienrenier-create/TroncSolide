@@ -472,15 +472,18 @@ export default function DashboardClient({
 
             {/* 6. TOP LIGUE */}
             <section className="glass" style={{ padding: "1.25rem" }}>
-                <Link href="/league?tab=TRENDS" className="card-header" style={{ marginBottom: "1rem", textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Link href="/league/rankings" className="card-header" style={{ marginBottom: "1rem", textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.85rem" }}><Trophy size={18} className="text-primary" /> <span>Classement Ligue</span></div>
                     <span style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--primary)" }}>VOIR TOUT ➔</span>
                 </Link>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {stats.top3.map((player: any, i: number) => (
                         <div key={i} className="glass-premium" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 15px", borderRadius: "16px", background: i === 0 ? "rgba(217,119,6,0.05)" : "none" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><span style={{ fontSize: "1rem" }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span> <span style={{ fontWeight: 800, fontSize: "0.9rem" }}>{player.nickname}</span></div>
-                            <span style={{ fontWeight: 900, color: i === 0 ? "var(--primary)" : "var(--text-muted)" }}>{player.totalXP} XP</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}><span style={{ fontSize: "1rem" }}>{i === 0 ? '👑' : i === 1 ? '🥇' : '🥈'}</span> <span style={{ fontWeight: 800, fontSize: "0.9rem" }}>{player.nickname}</span></div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span style={{ fontWeight: 900, color: "var(--secondary)", fontSize: "0.9rem" }}>{player.currentStreak}j</span>
+                                <span style={{ fontSize: "1rem" }}>🔥</span>
+                            </div>
                         </div>
                     ))}
                 </div>

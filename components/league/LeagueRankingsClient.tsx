@@ -1,0 +1,275 @@
+"use client"
+
+import { useState, useEffect } from "react";
+import { 
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+    BarChart, Bar, Cell 
+} from "recharts";
+import { Flame, TrendingUp, Award, ChevronLeft, ChevronRight, Share2, Filter } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface User {
+    id: string;
+    nickname: string;
+    currentStreak: number;
+    highestStreak: number;
+    totalXP: number;
+}
+
+interface RankingsProps {
+    evolutionData: {
+        chartData: any[];
+        users: { id: string, nickname: string }[];
+    };
+    streakRankings: User[];
+    leagueInfo: any;
+}
+
+const COLORS = [
+    "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", 
+    "#ec4899", "#06b6d4", "#f43f5e", "#14b8a6", "#6366f1"
+];
+
+export default function LeagueRankingsClient({ evolutionData, streakRankings, leagueInfo }: RankingsProps) {
+    const views = ["STREAKS", "LEVELS", "XP"] as const;
+    const [viewIndex, setViewIndex] = useState(0);
+    const view = views[viewIndex];
+    const [hiddenUsers, setHiddenUsers] = useState<Set<string>>(new Set());
+    const router = useRouter();
+
+    const nextView = () => setViewIndex(prev => (prev + 1) % views.length);
+    const prevView = () => setViewIndex(prev => (prev - 1 + views.length) % views.length);
+
+    const toggleUser = (nickname: string) => {
+        setHiddenUsers(prev => {
+            const next = new Set(prev);
+            if (next.has(nickname)) next.delete(nickname);
+            else next.add(nickname);
+            return next;
+        });
+    };
+
+    const activeUsers = evolutionData.users.filter(u => !hiddenUsers.has(u.nickname));
+
+    const renderChart = () => {
+        switch (view) {
+            case "STREAKS":
+                return (
+                    <div style={{ height: "400px", width: "100%" }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={streakRankings} layout="vertical" margin={{ left: 40, right: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.1} />
+                                <XAxis type="number" hide />
+                                <YAxis 
+                                    dataKey="nickname" 
+                                    type="category" 
+                                    tick={{ fontSize: 12, fontWeight: 700 }} 
+                                    width={100}
+                                />
+                                <Tooltip 
+                                    cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                                    content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                                <div className="glass" style={{ padding: "10px", border: "1px solid var(--primary)" }}>
+                                                    <p style={{ fontWeight: 900, fontSize: "0.9rem", margin: 0 }}>{data.nickname}</p>
+                                                    <p style={{ fontSize: "0.8rem", margin: "4px 0", color: "var(--secondary)" }}>🔥 Série : {data.currentStreak} jours</p>
+                                                    <p style={{ fontSize: "0.7rem", margin: 0, opacity: 0.7 }}>Record : {data.highestStreak}j</p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                                <Bar dataKey="currentStreak" radius={[0, 10, 10, 0]}>
+                                    {streakRankings.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                );
+            case "LEVELS":
+            case "XP":
+                const dataKeySuffix = view === "LEVELS" ? "_lvl" : "";
+                return (
+                    <div style={{ height: "400px", width: "100%" }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={evolutionData.chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                                <XAxis 
+                                    dataKey="date" 
+                                    tick={{ fontSize: 10 }} 
+                                    tickFormatter={(val) => new Date(val).toLocaleDateString('fr', { day: 'numeric', month: 'short' })}
+                                />
+                                <YAxis tick={{ fontSize: 10 }} />
+                                <Tooltip 
+                                    content={({ active, payload, label }) => {
+                                        if (active && payload && payload.length) {
+                                            return (
+                                                <div className="glass" style={{ padding: "12px", border: "1px solid var(--primary)", backdropFilter: "blur(10px)" }}>
+                                                    <p style={{ fontWeight: 900, fontSize: "0.8rem", marginBottom: "8px" }}>
+                                                        {label ? new Date(label).toLocaleDateString('fr', { dateStyle: 'long' }) : ''}
+                                                    </p>
+                                                    {payload.map((p: any, i: number) => (
+                                                        <div key={i} style={{ fontSize: "0.75rem", color: p.color, fontWeight: 800, display: "flex", justifyContent: "space-between", gap: "20px" }}>
+                                                            <span>{p.name.replace('_lvl', '')}</span>
+                                                            <span>{p.value} {view === "LEVELS" ? "NV" : "XP"}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                                {evolutionData.users.map((u, i) => (
+                                    <Line 
+                                        key={u.id}
+                                        type="monotone" 
+                                        dataKey={`${u.nickname}${dataKeySuffix}`}
+                                        name={u.nickname}
+                                        stroke={COLORS[i % COLORS.length]} 
+                                        strokeWidth={3}
+                                        dot={false}
+                                        hide={hiddenUsers.has(u.nickname)}
+                                        animationDuration={1000}
+                                    />
+                                ))}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <div className="container" style={{ paddingBottom: "100px" }}>
+            <header style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "1.5rem", padding: "1rem 0" }}>
+                <button 
+                    onClick={() => router.back()} 
+                    style={{ background: "rgba(0,0,0,0.05)", border: "none", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                >
+                    <ChevronLeft size={24} />
+                </button>
+                <div>
+                    <h1 style={{ fontSize: "1.25rem", fontWeight: 900, margin: 0 }}>CLASSEMENT {leagueInfo?.name?.toUpperCase()}</h1>
+                    <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0, fontWeight: 700 }}>Performances & Évolution</p>
+                </div>
+            </header>
+
+            {/* TAB SELECTOR */}
+            <div style={{ display: "flex", background: "rgba(0,0,0,0.05)", borderRadius: "16px", padding: "4px", marginBottom: "1.5rem" }}>
+                <button 
+                    onClick={() => setViewIndex(0)}
+                    style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.8rem", fontWeight: 800, cursor: "pointer", background: view === "STREAKS" ? "white" : "none", color: view === "STREAKS" ? "var(--primary)" : "var(--text-muted)", boxShadow: view === "STREAKS" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                >
+                    🔥 SÉRIES
+                </button>
+                <button 
+                    onClick={() => setViewIndex(1)}
+                    style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.8rem", fontWeight: 800, cursor: "pointer", background: view === "LEVELS" ? "white" : "none", color: view === "LEVELS" ? "var(--secondary)" : "var(--text-muted)", boxShadow: view === "LEVELS" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                >
+                    ⭐ NIVEAUX
+                </button>
+                <button 
+                    onClick={() => setViewIndex(2)}
+                    style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", fontSize: "0.8rem", fontWeight: 800, cursor: "pointer", background: view === "XP" ? "white" : "none", color: view === "XP" ? "var(--primary)" : "var(--text-muted)", boxShadow: view === "XP" ? "0 4px 10px rgba(0,0,0,0.05)" : "none", transition: "all 0.2s" }}
+                >
+                    ✨ XP
+                </button>
+            </div>
+
+            {/* CHART CARD */}
+            <div className="glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", marginBottom: "1.5rem", background: "white" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                    <h3 style={{ fontSize: "0.9rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "8px" }}>
+                        {view === "STREAKS" ? <Flame size={18} className="text-primary"/> : <TrendingUp size={18} className="text-secondary"/>}
+                        {view === "STREAKS" ? "Record des Séries Actuelles" : view === "LEVELS" ? "Progression des Niveaux" : "Accumulation de l'XP"}
+                    </h3>
+                </div>
+                
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <button onClick={prevView} className="carousel-btn left"><ChevronLeft size={20}/></button>
+                    <div style={{ flex: 1, overflow: "hidden" }}>
+                        {renderChart()}
+                    </div>
+                    <button onClick={nextView} className="carousel-btn right"><ChevronRight size={20}/></button>
+                </div>
+
+                {/* LEGEND TOGGLER (For Evolution Charts) */}
+                {view !== "STREAKS" && (
+                    <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
+                        {evolutionData.users.map((u, i) => (
+                            <button 
+                                key={u.id}
+                                onClick={() => toggleUser(u.nickname)}
+                                style={{ 
+                                    padding: "6px 12px", borderRadius: "100px", border: "none", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer", 
+                                    background: hiddenUsers.has(u.nickname) ? "rgba(0,0,0,0.05)" : COLORS[i % COLORS.length],
+                                    color: hiddenUsers.has(u.nickname) ? "var(--text-muted)" : "white",
+                                    opacity: hiddenUsers.has(u.nickname) ? 0.5 : 1,
+                                    textDecoration: hiddenUsers.has(u.nickname) ? "line-through" : "none",
+                                    transition: "all 0.2s"
+                                }}
+                            >
+                                {u.nickname}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* TABLE VIEW (STREAKS ONLY) */}
+            {view === "STREAKS" && (
+                <div className="glass" style={{ padding: "0" }}>
+                    <div style={{ padding: "1rem", fontWeight: 900, fontSize: "0.8rem", borderBottom: "1px solid rgba(0,0,0,0.03)", textTransform: "uppercase", color: "var(--text-muted)" }}>Détails de la Ligue</div>
+                    {streakRankings.map((u, i) => (
+                        <div key={u.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderBottom: i < streakRankings.length - 1 ? "1px solid rgba(0,0,0,0.03)" : "none" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <span style={{ fontSize: "1rem", width: "24px", textAlign: "center", fontWeight: 900 }}>{i + 1}</span>
+                                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: COLORS[i % COLORS.length], color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: 900 }}>{u.nickname.charAt(0)}</div>
+                                <div>
+                                    <div style={{ fontSize: "0.9rem", fontWeight: 900 }}>{u.nickname}</div>
+                                    <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>Record : {u.highestStreak} jours</div>
+                                </div>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                                <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--secondary)" }}>{u.currentStreak}j 🔥</div>
+                                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>{u.totalXP} XP</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <style jsx>{`
+                .glass-premium { box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+                .text-primary { color: var(--primary); }
+                .text-secondary { color: var(--secondary); }
+                .carousel-btn {
+                    background: rgba(0,0,0,0.03); 
+                    border: none; 
+                    width: 36px; 
+                    height: 36px; 
+                    border-radius: 50%; 
+                    display: flex; 
+                    alignItems: center; 
+                    justifyContent: center; 
+                    cursor: pointer;
+                    z-index: 10;
+                    transition: all 0.2s;
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                }
+                .carousel-btn:hover { background: rgba(0,0,0,0.1); }
+                .carousel-btn.left { left: -10px; }
+                .carousel-btn.right { right: -10px; }
+            `}</style>
+        </div>
+    );
+}

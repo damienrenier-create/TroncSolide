@@ -46,74 +46,64 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
         let unit = "";
 
         // 1. Déterminer le seuil (Target)
-        if (isMilestone) {
-            const match = badge.id.match(/\d+/);
-            targetValue = match ? parseInt(match[0]) : 0;
-        } else if (isRecord && records) {
+        let isLeading = false;
+        
+        if (isRecord && records) {
             const exercise = badge.id.includes("PUSHUP") ? "pushups" : badge.id.includes("SQUAT") ? "squats" : "plank";
-            const timeframe = badge.id.includes("DAY") ? "today" : badge.id.includes("WEEK") ? "week" : badge.id.includes("MONTH") ? "month" : "allTime";
+            const timeframeStr = badge.id.includes("_DAY_") ? "DAY" : badge.id.includes("_WEEK_") ? "WEEK" : badge.id.includes("_MONTH_") ? "MONTH" : "SERIES";
             
-            const recordObj = records.find((r: any) => r.type === timeframe.toUpperCase() || (timeframe === "today" && r.type === "DAY"));
-            targetValue = recordObj?.[exercise] || 0;
-        }
+            const dbTimeframe = timeframeStr === "SERIES" ? "YEAR" : timeframeStr;
+            const dbType = timeframeStr === "SERIES" ? "SERIES" : "VOLUME";
+            const dbEx = exercise === "plank" && timeframeStr !== "SERIES" ? "VENTRAL" : exercise.toUpperCase();
 
-        // 2. Déterminer la valeur actuelle de l'utilisateur (Utilise la nouvelle structure allTime, week, today...)
-        if (badge.id.startsWith("HOLISTIC_")) {
-            unit = "/exo";
-            if (badge.id.includes("_LOG_")) {
-                currentValue = userStats.allTime?.maxHolisticSession || 0;
-            } else if (badge.id.includes("_MILESTONE_")) {
-                const allTime = userStats.allTime || {};
-                currentValue = Math.min(
-                    allTime.pushups || 0,
-                    allTime.squats || 0,
-                    allTime.ventral || 0,
-                    allTime.lateral_l || 0,
-                    allTime.lateral_r || 0
-                );
-            }
-        } else if (badge.id.startsWith("REGULARITY_")) {
-            const reg = userStats.allTime?.regularity;
-            unit = "j";
-            if (badge.id.includes("_STREAK_")) {
-                if (badge.id.includes("_1_")) currentValue = reg?.maxStreak1 || 0;
-                else if (badge.id.includes("_3_")) currentValue = reg?.maxStreak3 || 0;
-                else if (badge.id.includes("_30_")) currentValue = reg?.maxStreak30 || 0;
-                else if (badge.id.includes("_3DIFF_")) currentValue = reg?.maxStreak3Diff || 0;
-                else if (badge.id.includes("_TARGET_")) currentValue = reg?.maxStreakTarget || 0;
-            } else {
-                if (badge.id.includes("_EFFORT_")) currentValue = reg?.daysWithEffort || 0;
+            const recordObj = records.find((r: any) => 
+                r.exercise === dbEx && 
+                r.timeframe === dbTimeframe && 
+                r.type === dbType
+            );
+            targetValue = recordObj?.value || 0;
+
+            if (timeframeStr === "DAY") currentValue = userStats.today?.[exercise] || 0;
+            else if (timeframeStr === "WEEK") currentValue = userStats.week?.[exercise] || 0;
+            else if (timeframeStr === "MONTH") currentValue = userStats.month?.[exercise] || 0;
+            else if (timeframeStr === "SERIES") currentValue = userStats.allTime?.[`max${exercise.charAt(0).toUpperCase() + exercise.slice(1)}`] || 0;
+            
+            unit = exercise === "plank" ? "s" : "reps";
+            
+            const isOwnedByMe = badge.users?.some((ub: any) => ub.userId === userStats?.userId);
+            isLeading = !isOwnedByMe && targetValue > 0 && currentValue > targetValue;
+        } else {
+            // ... (rest of the logic for milestones/holistic/regularity - mostly unchanged)
+            if (badge.id.startsWith("HOLISTIC_")) {
+                unit = "/exo";
+                if (badge.id.includes("_LOG_")) currentValue = userStats.allTime?.maxHolisticSession || 0;
+                else currentValue = Math.min(userStats.allTime?.pushups || 0, userStats.allTime?.squats || 0, userStats.allTime?.ventral || 0, userStats.allTime?.lateral_l || 0, userStats.allTime?.lateral_r || 0);
+                const match = badge.id.match(/\d+/);
+                targetValue = match ? parseInt(match[0]) : 0;
+            } else if (badge.id.startsWith("REGULARITY_")) {
+                const reg = userStats.allTime?.regularity; unit = "j";
+                const match = badge.id.match(/\d+/); targetValue = match ? parseInt(match[0]) : 0;
+                if (badge.id.includes("_STREAK_1_")) currentValue = reg?.maxStreak1 || 0;
+                else if (badge.id.includes("_STREAK_3_")) currentValue = reg?.maxStreak3 || 0;
+                else if (badge.id.includes("_STREAK_30_")) currentValue = reg?.maxStreak30 || 0;
+                else if (badge.id.includes("_STREAK_3DIFF_")) currentValue = reg?.maxStreak3Diff || 0;
+                else if (badge.id.includes("_STREAK_TARGET_")) currentValue = reg?.maxStreakTarget || 0;
+                else if (badge.id.includes("_EFFORT_")) currentValue = reg?.daysWithEffort || 0;
                 else if (badge.id.includes("_PUSHUP_")) currentValue = reg?.daysWithPushup || 0;
                 else if (badge.id.includes("_VENTRAL_")) currentValue = reg?.daysWithVentral || 0;
+            } else if (isMilestone) {
+                const match = badge.id.match(/\d+/); targetValue = match ? parseInt(match[0]) : 0;
+                if (badge.id.includes("PUMP")) { unit = "pompes"; currentValue = userStats.allTime?.pushups || 0; }
+                else if (badge.id.includes("SQUAT")) { unit = "squats"; currentValue = userStats.allTime?.squats || 0; }
+                else if (badge.id.includes("PLANK")) { unit = "s"; currentValue = userStats.allTime?.plank || 0; }
             }
-        } else if (badge.id.includes("PUMP") || badge.id.includes("PUSHUP")) {
-            unit = "pompes";
-            if (badge.id.startsWith("SERIE_") || badge.id.includes("SERIES")) currentValue = userStats.allTime?.maxPushups || 0;
-            else if (badge.id.includes("DAY")) currentValue = userStats.today?.pushups || 0;
-            else if (badge.id.includes("WEEK")) currentValue = userStats.week?.pushups || 0;
-            else if (badge.id.includes("MONTH")) currentValue = userStats.month?.pushups || 0;
-            else currentValue = userStats.allTime?.pushups || 0;
-        } else if (badge.id.includes("SQUAT")) {
-            unit = "squats";
-            if (badge.id.startsWith("SERIE_") || badge.id.includes("SERIES")) currentValue = userStats.allTime?.maxSquats || 0;
-            else if (badge.id.includes("DAY")) currentValue = userStats.today?.squats || 0;
-            else if (badge.id.includes("WEEK")) currentValue = userStats.week?.squats || 0;
-            else if (badge.id.includes("MONTH")) currentValue = userStats.month?.squats || 0;
-            else currentValue = userStats.allTime?.squats || 0; // FIX: Was pushups!
-        } else if (badge.id.includes("PLANK")) {
-            unit = badge.id.includes("SERIE") ? "secondes" : "s";
-            if (badge.id.startsWith("SERIE_") || badge.id.includes("SERIES")) currentValue = userStats.allTime?.maxPlank || 0;
-            else if (badge.id.includes("DAY")) currentValue = userStats.today?.plank || 0;
-            else if (badge.id.includes("WEEK")) currentValue = userStats.week?.plank || 0;
-            else if (badge.id.includes("MONTH")) currentValue = userStats.month?.plank || 0;
-            else currentValue = userStats.allTime?.plank || 0;
         }
 
-        if (targetValue === 0) return null;
+        if (targetValue === 0 && !isLeading) return null;
         const gap = Math.max(0, targetValue - currentValue);
-        const percent = Math.min(100, Math.floor((currentValue / targetValue) * 100));
+        const percent = targetValue > 0 ? Math.min(100, Math.floor((currentValue / targetValue) * 100)) : 0;
 
-        return { currentValue, targetValue, gap, unit, percent };
+        return { currentValue, targetValue, gap, unit, percent, isLeading };
     };
 
     const prog = getProgressionData();
@@ -153,7 +143,7 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
                 <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
                     <div className="modal-icon-wrapper">
                         <span>{badge.icon}</span>
-                        {isFirstCome && <Zap size={14} className="modal-spark" />}
+                        {(isFirstCome || prog?.isLeading) && <Zap size={14} className="modal-spark" style={{ color: prog?.isLeading ? "var(--primary)" : "inherit" }} />}
                     </div>
                     <h2 style={{ fontSize: "1.5rem", fontWeight: "900", marginBottom: "0.25rem" }}>{badge.name}</h2>
                     <div style={{ fontSize: "0.7rem", fontWeight: 900, color: isRecord ? "var(--primary)" : "var(--secondary)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "0.75rem" }}>
@@ -176,7 +166,11 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
                             <div style={{ fontSize: "0.85rem", fontWeight: 900 }}>{prog.currentValue} / {prog.targetValue} {prog.unit}</div>
                         </div>
                         <div className="badge-mini-bar"><div className="badge-mini-fill" style={{ width: `${prog.percent}%`, background: isRecord ? "var(--primary)" : "var(--secondary)" }} /></div>
-                        {prog.gap > 0 && <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textAlign: "center", marginTop: "8px" }}>Encore <strong>{prog.gap} {prog.unit}</strong> pour l'obtenir ! 🚀</div>}
+                        {prog.isLeading ? (
+                            <div style={{ fontSize: "0.75rem", color: "var(--primary)", textAlign: "center", marginTop: "8px", fontWeight: "800" }}>👑 Tu es en tête ! <br/><span style={{ fontSize: "0.6rem", fontWeight: "600" }}>Reste premier jusqu'à la fin de la période pour l'obtenir.</span></div>
+                        ) : (
+                            prog.gap > 0 && <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textAlign: "center", marginTop: "8px" }}>Encore <strong>{prog.gap} {prog.unit}</strong> pour l'obtenir ! 🚀</div>
+                        )}
                     </div>
                 )}
 

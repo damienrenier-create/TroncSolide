@@ -1,6 +1,19 @@
 import prisma from "@/lib/prisma";
 import { getBrusselsToday } from "@/lib/date-utils";
-import { startOfWeek, startOfMonth, subWeeks, subMonths, endOfWeek, endOfMonth } from "date-fns";
+import { 
+    startOfWeek, 
+    startOfMonth, 
+    startOfDay, 
+    startOfYear,
+    subWeeks, 
+    subMonths, 
+    subDays, 
+    subYears,
+    endOfWeek, 
+    endOfMonth,
+    endOfDay,
+    endOfYear
+} from "date-fns";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 
 async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: string) {
@@ -24,86 +37,108 @@ async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: str
 
 export async function evaluatePeriodicRecords(leagueId: string) {
     const today = getBrusselsToday();
-    const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
-    const currentMonthStart = startOfMonth(today);
+    
+    const timeframes = [
+        { 
+            id: "DAY", 
+            badgePrefix: "RECORD_DAY_", 
+            getStart: (d: Date) => startOfDay(subDays(d, 1)), 
+            getEnd: (d: Date) => endOfDay(subDays(d, 1)),
+            coef: 0.5,
+            currentStart: startOfDay(today)
+        },
+        { 
+            id: "WEEK", 
+            badgePrefix: "RECORD_WEEK_", 
+            getStart: (d: Date) => startOfWeek(subWeeks(d, 1), { weekStartsOn: 1 }), 
+            getEnd: (d: Date) => endOfWeek(subWeeks(d, 1), { weekStartsOn: 1 }),
+            coef: 1.0,
+            currentStart: startOfWeek(today, { weekStartsOn: 1 })
+        },
+        { 
+            id: "MONTH", 
+            badgePrefix: "RECORD_MONTH_", 
+            getStart: (d: Date) => startOfMonth(subMonths(d, 1)), 
+            getEnd: (d: Date) => endOfMonth(subMonths(d, 1)),
+            coef: 2.0,
+            currentStart: startOfMonth(today)
+        },
+        { 
+            id: "YEAR", 
+            badgePrefix: "RECORD_YEAR_", 
+            getStart: (d: Date) => startOfYear(subYears(d, 1)), 
+            getEnd: (d: Date) => endOfYear(subYears(d, 1)),
+            coef: 5.0,
+            currentStart: startOfYear(today)
+        }
+    ];
 
-    // Get all badges for the league to check if evaluated
+    const exercises = [
+        { suffix: "PUSHUP", ex: "PUSHUP" },
+        { suffix: "SQUAT", ex: "SQUAT" },
+        { suffix: "PLANK", ex: "VENTRAL" }
+    ];
+
+    // Get all records badges for this league
     const badges = await prisma.badge.findMany({
-        where: { OR: [{ leagueId }, { leagueId: null }] },
+        where: { 
+            id: { startsWith: "RECORD_" },
+            OR: [{ leagueId }, { leagueId: null }] 
+        },
         include: { users: true }
     });
 
-    const weekBadgesInfo = [
-        { id: "RECORD_WEEK_PUSHUP", ex: "PUSHUP", coef: 1.0 },
-        { id: "RECORD_WEEK_SQUAT", ex: "SQUAT", coef: 1.0 },
-        { id: "RECORD_WEEK_PLANK", ex: "VENTRAL", coef: 1.0 } 
-    ];
+    for (const tf of timeframes) {
+        for (const exInfo of exercises) {
+            const badgeId = `${tf.badgePrefix}${exInfo.suffix}`;
+            const badgeDef = BADGE_DEFINITIONS.find(b => b.id === badgeId);
+            if (!badgeDef) continue;
 
-    for (const info of weekBadgesInfo) {
-        const badgeDef = BADGE_DEFINITIONS.find(b => b.id === info.id);
-        if (!badgeDef) continue;
-        
-        const badge = badges.find(b => b.name === badgeDef.name);
-        if (badge) {
-            const alreadyEvaluated = badge.users.some(ub => new Date(ub.awardedAt) >= currentWeekStart);
-            if (alreadyEvaluated) continue;
-        }
+            const badge = badges.find(b => b.id === badgeId);
+            
+            // 1. Check if already evaluated for this SPECIFIC period
+            if (badge) {
+                const alreadyEvaluated = badge.users.some(ub => new Date(ub.awardedAt) >= tf.currentStart);
+                if (alreadyEvaluated) continue;
+            }
 
-        const prevWeekStart = startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 });
-        const prevWeekEnd = endOfWeek(subWeeks(today, 1), { weekStartsOn: 1 });
+            // 2. Find the winner of the LAST COMPLETED period
+            const prevStart = tf.getStart(today);
+            const prevEnd = tf.getEnd(today);
 
-        const aggregates = await prisma.exerciseSession.groupBy({
-            by: ['userId'],
-            where: {
-                type: info.ex as any,
-                date: { gte: prevWeekStart, lte: prevWeekEnd },
-                user: { leagueId }
-            },
-            _sum: { value: true },
-            orderBy: { _sum: { value: 'desc' } },
-            take: 1
-        });
+            const aggregates = await prisma.exerciseSession.groupBy({
+                by: ['userId'],
+                where: {
+                    type: exInfo.ex as any,
+                    date: { gte: prevStart, lte: prevEnd },
+                    user: { leagueId }
+                },
+                _sum: { value: true },
+                orderBy: { _sum: { value: 'desc' } },
+                take: 1
+            });
 
-        if (aggregates.length > 0 && aggregates[0]._sum.value && aggregates[0]._sum.value > 0) {
-            const dbBadge = badge || await ensureBadgeExists(badgeDef, leagueId);
-            await grantRollingBadge(dbBadge.id, aggregates[0].userId, aggregates[0]._sum.value, info.coef, leagueId, today);
-        }
-    }
+            const winner = aggregates[0];
+            const winnerValue = winner?._sum.value || 0;
 
-    const monthBadgesInfo = [
-        { id: "RECORD_MONTH_PUSHUP", ex: "PUSHUP", coef: 2.0 },
-        { id: "RECORD_MONTH_SQUAT", ex: "SQUAT", coef: 2.0 },
-        { id: "RECORD_MONTH_PLANK", ex: "VENTRAL", coef: 2.0 } 
-    ];
+            if (winnerValue > 0) {
+                // 3. PERSISTENT LOGIC: Compare with current holder
+                const currentHolderUb = badge?.users[0];
+                const currentRecordValue = currentHolderUb?.baseXP || 0; // We use baseXP to store the volume/score for comparison
 
-    for (const info of monthBadgesInfo) {
-        const badgeDef = BADGE_DEFINITIONS.find(b => b.id === info.id);
-        if (!badgeDef) continue;
-        
-        const badge = badges.find(b => b.name === badgeDef.name);
-        if (badge) {
-            const alreadyEvaluated = badge.users.some(ub => new Date(ub.awardedAt) >= currentMonthStart);
-            if (alreadyEvaluated) continue;
-        }
-
-        const prevMonthStart = startOfMonth(subMonths(today, 1));
-        const prevMonthEnd = endOfMonth(subMonths(today, 1));
-
-        const aggregates = await prisma.exerciseSession.groupBy({
-            by: ['userId'],
-            where: {
-                type: info.ex as any,
-                date: { gte: prevMonthStart, lte: prevMonthEnd },
-                user: { leagueId }
-            },
-            _sum: { value: true },
-            orderBy: { _sum: { value: 'desc' } },
-            take: 1
-        });
-
-        if (aggregates.length > 0 && aggregates[0]._sum.value && aggregates[0]._sum.value > 0) {
-            const dbBadge = badge || await ensureBadgeExists(badgeDef, leagueId);
-            await grantRollingBadge(dbBadge.id, aggregates[0].userId, aggregates[0]._sum.value, info.coef, leagueId, today);
+                if (winnerValue > currentRecordValue || !currentHolderUb) {
+                    // NEW CHAMPION! (or first one)
+                    const dbBadge = badge || await ensureBadgeExists(badgeDef, leagueId);
+                    await grantRollingBadge(dbBadge.id, winner.userId, winnerValue, tf.coef, leagueId, today);
+                } else {
+                    // Current champion defends the title because the new period winner didn't beat the record
+                    // But we still update awardedAt so we don't re-evaluate today/this week
+                    await prisma.userBadge.update({
+                        where: { id: currentHolderUb.id },
+                        data: { awardedAt: today }
+                    });
+                }
+            }
         }
     }
 }

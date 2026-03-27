@@ -73,18 +73,45 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
         } else if (badgeId.startsWith("RECORD_")) {
             const exercise = badgeId.includes("PUSHUP") ? "pushups" : badgeId.includes("SQUAT") ? "squats" : "plank";
             const timeframeStr = badgeId.includes("_DAY_") ? "DAY" : badgeId.includes("_WEEK_") ? "WEEK" : badgeId.includes("_MONTH_") ? "MONTH" : "SERIES";
+            
+            // Fix: Series record uses YEAR in DB
+            const dbTimeframe = timeframeStr === "SERIES" ? "YEAR" : timeframeStr;
+            const dbType = timeframeStr === "SERIES" ? "SERIES" : "VOLUME";
+            const dbEx = exercise === "plank" && timeframeStr !== "SERIES" ? "VENTRAL" : exercise.toUpperCase();
+
             const leagueRecord = records.find(r => 
-                r.exercise === (exercise === "plank" && timeframeStr !== "SERIES" ? "VENTRAL" : exercise.toUpperCase()) && 
-                r.timeframe === (timeframeStr === "SERIES" ? "DAY" : timeframeStr) && 
-                r.type === (timeframeStr === "SERIES" ? "SERIES" : "VOLUME")
+                r.exercise === dbEx && 
+                r.timeframe === dbTimeframe && 
+                r.type === dbType
             );
+            
             targetValue = leagueRecord?.value || 0;
+
             if (timeframeStr === "DAY") userValue = today[exercise] || 0;
             else if (timeframeStr === "WEEK") userValue = week[exercise] || 0;
             else if (timeframeStr === "MONTH") userValue = month[exercise] || 0;
             else if (timeframeStr === "SERIES") userValue = allTime[`max${exercise.charAt(0).toUpperCase() + exercise.slice(1)}`] || 0;
+            
             unit = exercise === "plank" ? "s" : "reps";
-            label = timeframeStr === "SERIES" ? "Ton record" : "Ton volume";
+            label = timeframeStr === "SERIES" ? "Record à battre" : "Volume à battre";
+
+            // SPECIAL LOGIC: isDone only if official badge held
+            // But we show progress towards beating the current holder
+            const hasOfficialBadge = !!badgeInstance;
+            const isDone = hasOfficialBadge;
+            const isLeading = !hasOfficialBadge && targetValue > 0 && userValue > targetValue;
+
+            return { 
+                targetValue, 
+                userValue, 
+                gap: Math.max(0, targetValue - userValue), 
+                unit, 
+                label, 
+                isDone, 
+                isLeading,
+                progress: targetValue > 0 ? Math.min(100, (userValue / targetValue) * 100) : 0, 
+                isNear: targetValue > 0 && !isDone && (userValue / targetValue) >= 0.8 && !isLeading
+            };
         } else if (badgeId.startsWith("HOLISTIC_")) {
             const isLog = badgeId.includes("_LOG_");
             targetValue = extractThreshold(def.name);
@@ -352,7 +379,7 @@ function TrophyCard({ item, highlightId, onSelect }: { item: any, highlightId: s
         <div 
             id={`badge-${id}`} 
             onClick={() => onSelect(badge || { ...def, users: [] })}
-            className={`trophy-card glass ${info.isDone ? 'done' : ''} ${highlightId === id ? 'highlighted-badge' : ''}`} 
+            className={`trophy-card glass ${info.isDone ? 'done' : ''} ${info.isLeading ? 'leading' : ''} ${highlightId === id ? 'highlighted-badge' : ''}`} 
             style={{
                 flex: "0 0 160px",
                 scrollSnapAlign: "center",
@@ -364,13 +391,18 @@ function TrophyCard({ item, highlightId, onSelect }: { item: any, highlightId: s
                 position: "relative",
                 cursor: "pointer",
                 overflow: "hidden",
-                background: info.isDone ? "rgba(5, 150, 105, 0.05)" : "rgba(255,255,255,1)",
-                border: highlightId === id ? "2px solid var(--primary)" : (info.isNear ? "2px solid var(--primary)" : "1px solid rgba(0,0,0,0.05)"),
+                background: info.isDone ? "rgba(5, 150, 105, 0.05)" : (info.isLeading ? "rgba(59, 130, 246, 0.05)" : "rgba(255,255,255,1)"),
+                border: highlightId === id ? "2px solid var(--primary)" : (info.isLeading ? "2px solid var(--primary)" : (info.isNear ? "2px solid var(--primary)" : "1px solid rgba(0,0,0,0.05)")),
                 transition: "transform 0.2s, box-shadow 0.3s"
             }}>
             {info.isNear && (
                 <div style={{ position: "absolute", top: "5px", right: "5px", color: "var(--primary)" }}>
                     <Flame size={16} fill="currentColor" />
+                </div>
+            )}
+            {info.isLeading && (
+                <div style={{ position: "absolute", top: "5px", right: "5px", color: "var(--primary)" }}>
+                    <Zap size={16} fill="currentColor" />
                 </div>
             )}
 
@@ -399,11 +431,14 @@ function TrophyCard({ item, highlightId, onSelect }: { item: any, highlightId: s
                         </div>
 
                         {!info.isDone ? (
-                            <p style={{ fontSize: "0.7rem", fontWeight: "800", color: info.isNear ? "var(--primary)" : "var(--text-muted)" }}>
-                                {info.gap > 0 ? `+${info.gap} ${info.unit}` : "Presque !"}
-                            </p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <p style={{ fontSize: "0.7rem", fontWeight: "800", color: (info.isLeading || info.isNear) ? "var(--primary)" : "var(--text-muted)", margin: 0 }}>
+                                    {info.isLeading ? "👑 En tête !" : (info.gap > 0 ? `+${info.gap} ${info.unit}` : "Presque !")}
+                                </p>
+                                {info.isLeading && <span style={{ fontSize: "0.55rem", color: "var(--primary)", fontWeight: "600" }}>Reste à confirmer</span>}
+                            </div>
                         ) : (
-                            <p style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--secondary)", display: "flex", alignItems: "center", gap: "4px" }}>
+                            <p style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--secondary)", display: "flex", alignItems: "center", gap: "4px", margin: 0 }}>
                                 <CheckCircle size={10} /> Acquis
                             </p>
                         )}
@@ -427,6 +462,9 @@ function TrophyCard({ item, highlightId, onSelect }: { item: any, highlightId: s
                 }
                 .trophy-card.done {
                     border-color: rgba(5, 150, 105, 0.2) !important;
+                }
+                .trophy-card.leading {
+                    border-color: rgba(59, 130, 246, 0.3) !important;
                 }
                 .highlighted-badge {
                     animation: pulseHighlight 2s infinite;

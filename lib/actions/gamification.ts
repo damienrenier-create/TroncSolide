@@ -336,11 +336,8 @@ export async function reSyncLeagueRecords(leagueId: string, targetUserId?: strin
     const awardsForUser: { type: "badge", label: string, xp: number }[] = [];
 
     const recordMapping = [
-        { id: "RECORD_DAY_PUSHUP", type: "VOLUME", tf: "DAY", ex: "PUSHUP", coef: 0.5 },
         { id: "RECORD_SERIES_PUSHUP", type: "SERIES", tf: "YEAR", ex: "PUSHUP", coef: 5.0 },
-        { id: "RECORD_DAY_SQUAT", type: "VOLUME", tf: "DAY", ex: "SQUAT", coef: 0.5 },
         { id: "RECORD_SERIES_SQUAT", type: "SERIES", tf: "YEAR", ex: "SQUAT", coef: 5.0 },
-        { id: "RECORD_DAY_PLANK", type: "VOLUME", tf: "DAY", ex: "VENTRAL", coef: 0.5 },
         { id: "RECORD_SERIES_PLANK", type: "SERIES", tf: "YEAR", ex: "VENTRAL", coef: 5.0 },
     ];
 

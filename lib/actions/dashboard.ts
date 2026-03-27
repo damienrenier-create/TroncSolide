@@ -39,9 +39,9 @@ export async function getUserStats() {
     // 2. League Overview (Top 3)
     const top3 = await prisma.user.findMany({
         where: { leagueId: user.leagueId },
-        orderBy: { totalXP: 'desc' },
+        orderBy: { currentStreak: 'desc' },
         take: 3,
-        select: { nickname: true, totalXP: true }
+        select: { nickname: true, totalXP: true, currentStreak: true }
     });
 
     // 3. Cagnotte Eligibility Progress
