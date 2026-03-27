@@ -19,7 +19,7 @@ import { getBrusselsToday, getBrusselsDate } from "@/lib/date-utils";
 
 
 const exerciseSchema = z.object({
-    type: z.enum(["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP"]),
+    type: z.enum(["VENTRAL", "LATERAL_L", "LATERAL_R", "SQUAT", "PUSHUP", "PULLUP", "RUNNING", "STRETCHING"]),
     value: z.number().min(0),
 });
 
