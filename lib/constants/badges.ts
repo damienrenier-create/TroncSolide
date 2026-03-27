@@ -141,7 +141,7 @@ export const BADGE_DEFINITIONS = [
         description: "A fait vieillir l'arbre sacré jusqu'à son propre âge. Frénétique !",
         icon: "🖱️",
         xpValue: 0,
-        type: "ACHIEVEMENT"
+        type: "ACHIEVEMENT" as BadgeType
     },
     {
         id: "HIDDEN_ZEN_BIRD",
@@ -149,7 +149,7 @@ export const BADGE_DEFINITIONS = [
         description: "A su rester immobile assez longtemps pour que la nature reprenne ses droits. Zen !",
         icon: "🐦",
         xpValue: 50,
-        type: "ACHIEVEMENT"
+        type: "ACHIEVEMENT" as BadgeType
     },
     {
         id: "HIDDEN_RETRO_GAINEUR",
@@ -157,6 +157,6 @@ export const BADGE_DEFINITIONS = [
         description: "A invoqué les anciens esprits du code Konami. Nostalgique !",
         icon: "🕹️",
         xpValue: 0,
-        type: "ACHIEVEMENT"
+        type: "ACHIEVEMENT" as BadgeType
     }
 ];
