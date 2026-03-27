@@ -208,6 +208,31 @@ export async function checkGamification(userId: string, lastSessionId: string) {
     if (minAllTimeValue >= 600) badgesToAward.push("HOLISTIC_MILESTONE_600");
     if (minAllTimeValue >= 6000) badgesToAward.push("HOLISTIC_MILESTONE_6000");
 
+    // --- LOGIQUE RÉGULARITÉ (STREAKS & FREQUENCY) ---
+    const reg = await getRegularityStats(userId);
+    if (reg) {
+        if (reg.daysWithEffort >= 5) badgesToAward.push("REGULARITY_1_EFFORT_5D");
+        if (reg.daysWithPushup >= 5) badgesToAward.push("REGULARITY_1_PUSHUP_5D");
+        if (reg.daysWithVentral >= 5) badgesToAward.push("REGULARITY_1_VENTRAL_5D");
+
+        if (reg.maxStreak1 >= 3) badgesToAward.push("REGULARITY_STREAK_1_3D");
+        if (reg.maxStreak3 >= 3) badgesToAward.push("REGULARITY_STREAK_3_3D");
+        if (reg.maxStreak30 >= 3) badgesToAward.push("REGULARITY_STREAK_30_3D");
+        if (reg.maxStreak30 >= 7) badgesToAward.push("REGULARITY_STREAK_30_7D");
+        if (reg.maxStreak30 >= 21) badgesToAward.push("REGULARITY_STREAK_30_21D");
+
+        if (reg.maxStreak3Diff >= 7) badgesToAward.push("REGULARITY_STREAK_3DIFF_7D");
+        if (reg.maxStreak3Diff >= 10) badgesToAward.push("REGULARITY_STREAK_3DIFF_10D");
+        if (reg.maxStreak3Diff >= 21) badgesToAward.push("REGULARITY_STREAK_3DIFF_21D");
+
+        if (reg.maxStreakTarget >= 3) badgesToAward.push("REGULARITY_STREAK_TARGET_3D");
+        if (reg.maxStreakTarget >= 6) badgesToAward.push("REGULARITY_STREAK_TARGET_6D");
+        if (reg.maxStreakTarget >= 12) badgesToAward.push("REGULARITY_STREAK_TARGET_12D");
+        if (reg.maxStreakTarget >= 24) badgesToAward.push("REGULARITY_STREAK_TARGET_24D");
+        if (reg.maxStreakTarget >= 48) badgesToAward.push("REGULARITY_STREAK_TARGET_48D");
+        if (reg.maxStreakTarget >= 96) badgesToAward.push("REGULARITY_STREAK_TARGET_96D");
+    }
+
     // Process Basic Badges & Tiered FIRST_COME
     for (const badgeId of badgesToAward) {
         const def = BADGE_DEFINITIONS.find(b => b.id === badgeId);
@@ -582,6 +607,20 @@ export async function reSyncUserBadges(userId: string) {
                 return agg?._sum.value || 0;
             })) : 0;
             stillEarned = minAllTime >= req;
+        } else if (bid.startsWith("REGULARITY_")) {
+            const reg = await getRegularityStats(userId);
+            if (!reg) {
+                stillEarned = false;
+            } else {
+                if (bid === "REGULARITY_1_EFFORT_5D") stillEarned = reg.daysWithEffort >= 5;
+                else if (bid === "REGULARITY_1_PUSHUP_5D") stillEarned = reg.daysWithPushup >= 5;
+                else if (bid === "REGULARITY_1_VENTRAL_5D") stillEarned = reg.daysWithVentral >= 5;
+                else if (bid.startsWith("REGULARITY_STREAK_1_")) stillEarned = reg.maxStreak1 >= parseInt(bid.split("_")[3]);
+                else if (bid.startsWith("REGULARITY_STREAK_3_")) stillEarned = reg.maxStreak3 >= parseInt(bid.split("_")[3]);
+                else if (bid.startsWith("REGULARITY_STREAK_30_")) stillEarned = reg.maxStreak30 >= parseInt(bid.split("_")[3]);
+                else if (bid.startsWith("REGULARITY_STREAK_3DIFF_")) stillEarned = reg.maxStreak3Diff >= parseInt(bid.split("_")[3]);
+                else if (bid.startsWith("REGULARITY_STREAK_TARGET_")) stillEarned = reg.maxStreakTarget >= parseInt(bid.split("_")[3]);
+            }
         }
 
         if (!stillEarned) {
@@ -826,8 +865,14 @@ export async function getTrophiesRoomData() {
         return res;
     };
 
+    const regularityStats = await getRegularityStats(userId);
+
     const userStats = {
-        allTime: { ...mapAgg(aggregates), maxHolisticSession: maxHolisticVol },
+        allTime: { 
+            ...mapAgg(aggregates), 
+            maxHolisticSession: maxHolisticVol,
+            regularity: regularityStats
+        },
         month: mapAgg(monthStats),
         week: mapAgg(weekStats),
         today: mapAgg(dayStats),
@@ -842,5 +887,79 @@ export async function getTrophiesRoomData() {
         })),
         records,
         userStats
+    };
+}
+
+export async function getRegularityStats(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { joinedAt: true } });
+    if (!user) return null;
+
+    const sessions = await prisma.exerciseSession.findMany({
+        where: { userId },
+        orderBy: { date: 'asc' },
+        select: { date: true, type: true, value: true }
+    });
+
+    const dailyStats: Record<string, { total: number, pushups: number, ventral: number, types: Set<string>, targetReached: boolean }> = {};
+    
+    sessions.forEach(s => {
+        const dateStr = s.date.toISOString().split('T')[0];
+        if (!dailyStats[dateStr]) {
+            dailyStats[dateStr] = { total: 0, pushups: 0, ventral: 0, types: new Set(), targetReached: false };
+        }
+        dailyStats[dateStr].total += s.value;
+        if (s.type === "PUSHUP") dailyStats[dateStr].pushups += s.value;
+        if (s.type === "VENTRAL") dailyStats[dateStr].ventral += s.value;
+        dailyStats[dateStr].types.add(s.type);
+    });
+
+    const dates = Object.keys(dailyStats).sort();
+    if (dates.length === 0) return null;
+
+    dates.forEach(dateStr => {
+        const d = new Date(dateStr);
+        const daysSince = differenceInDays(d, user.joinedAt);
+        const target = daysSince + 1;
+        if (dailyStats[dateStr].total >= target) {
+            dailyStats[dateStr].targetReached = true;
+        }
+    });
+
+    let currentStreak1 = 0; let maxStreak1 = 0;
+    let currentStreak3 = 0; let maxStreak3 = 0;
+    let currentStreak30 = 0; let maxStreak30 = 0;
+    let currentStreak3Diff = 0; let maxStreak3Diff = 0;
+    let currentStreakTarget = 0; let maxStreakTarget = 0;
+    
+    let prevDate: Date | null = null;
+    for (const dateStr of dates) {
+        const currDate = new Date(dateStr);
+        const day = dailyStats[dateStr];
+        if (prevDate && differenceInDays(currDate, prevDate) > 1) {
+            currentStreak1 = 0; currentStreak3 = 0; currentStreak30 = 0; currentStreak3Diff = 0; currentStreakTarget = 0;
+        }
+        if (day.total >= 1) { currentStreak1++; if (currentStreak1 > maxStreak1) maxStreak1 = currentStreak1; } else currentStreak1 = 0;
+        if (day.total >= 3) { currentStreak3++; if (currentStreak3 > maxStreak3) maxStreak3 = currentStreak3; } else currentStreak3 = 0;
+        if (day.total >= 30) { currentStreak30++; if (currentStreak30 > maxStreak30) maxStreak30 = currentStreak30; } else currentStreak30 = 0;
+        if (day.types.size >= 3) { currentStreak3Diff++; if (currentStreak3Diff > maxStreak3Diff) maxStreak3Diff = currentStreak3Diff; } else currentStreak3Diff = 0;
+        if (day.targetReached) { currentStreakTarget++; if (currentStreakTarget > maxStreakTarget) maxStreakTarget = currentStreakTarget; } else currentStreakTarget = 0;
+        prevDate = currDate;
+    }
+
+    const today = getBrusselsToday();
+    const lastStr = dates[dates.length - 1];
+    const todayStr = today.toISOString().split('T')[0];
+    const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+    const yestStr = yest.toISOString().split('T')[0];
+    if (lastStr !== todayStr && lastStr !== yestStr) {
+        currentStreak1 = 0; currentStreak3 = 0; currentStreak30 = 0; currentStreak3Diff = 0; currentStreakTarget = 0;
+    }
+
+    return {
+        daysWithEffort: dates.length,
+        daysWithPushup: dates.filter(d => dailyStats[d].pushups >= 1).length,
+        daysWithVentral: dates.filter(d => dailyStats[d].ventral >= 1).length,
+        maxStreak1, maxStreak3, maxStreak30, maxStreak3Diff, maxStreakTarget,
+        currentStreak1, currentStreak3, currentStreak30, currentStreak3Diff, currentStreakTarget
     };
 }

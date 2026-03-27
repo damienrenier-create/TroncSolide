@@ -123,6 +123,7 @@ export default function DashboardClient({
             { key: "SQUAT", tags: ["SQUAT"] },
             { key: "PLANK", tags: ["PLANK"] },
             { key: "HOLISTIC", tags: ["HOLISTIC_"] },
+            { key: "REGULARITY", tags: ["REGULARITY_"] },
             { key: "RECORD", tags: ["RECORD_"] }
         ];
 
@@ -180,6 +181,21 @@ export default function DashboardClient({
                             allTime.lateral_l || 0,
                             allTime.lateral_r || 0
                         );
+                    }
+                } else if (badge.id.startsWith("REGULARITY_")) {
+                    const reg = userStats.allTime?.regularity;
+                    if (badge.id.includes("_STREAK_")) {
+                        unit = "j";
+                        if (badge.id.includes("_1_")) currentValue = reg?.maxStreak1 || 0;
+                        else if (badge.id.includes("_3_")) currentValue = reg?.maxStreak3 || 0;
+                        else if (badge.id.includes("_30_")) currentValue = reg?.maxStreak30 || 0;
+                        else if (badge.id.includes("_3DIFF_")) currentValue = reg?.maxStreak3Diff || 0;
+                        else if (badge.id.includes("_TARGET_")) currentValue = reg?.maxStreakTarget || 0;
+                    } else {
+                        unit = "j";
+                        if (badge.id.includes("_EFFORT_")) currentValue = reg?.daysWithEffort || 0;
+                        else if (badge.id.includes("_PUSHUP_")) currentValue = reg?.daysWithPushup || 0;
+                        else if (badge.id.includes("_VENTRAL_")) currentValue = reg?.daysWithVentral || 0;
                     }
                 } else if (badge.id.includes("PUMP") || badge.id.includes("PUSHUP")) {
                     unit = "pompes";

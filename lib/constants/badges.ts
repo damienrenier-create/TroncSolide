@@ -112,4 +112,27 @@ export const BADGE_DEFINITIONS = [
     { id: "HOLISTIC_MILESTONE_100", name: "Apprenti Holistique (100/exo)", description: "Avoir fait au moins 100 de chaque exercice cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💠", xpValue: 500 },
     { id: "HOLISTIC_MILESTONE_600", name: "Expert Holistique (600/exo)", description: "Avoir fait au moins 600 de chaque exercice cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 3000 },
     { id: "HOLISTIC_MILESTONE_6000", name: "Légende Holistique (6000/exo)", description: "Avoir fait au moins 6 000 de chaque exercice cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💎", xpValue: 15000 },
+
+    // --- FAMILLE G : LA VITRINE RÉGULARITÉ (STREAKS & CONSISTENCY) ---
+    { id: "REGULARITY_1_EFFORT_5D", name: "Premier Pas (5j)", description: "Avoir fait au moins 1 effort sur 5 jours différents (pas forcément d'affilé).", type: "FIRST_COME" as BadgeType, icon: "🌱", xpValue: 150 },
+    { id: "REGULARITY_1_PUSHUP_5D", name: "Pousseur Régulier (5j)", description: "Avoir fait au moins 1 pompe sur 5 jours différents.", type: "FIRST_COME" as BadgeType, icon: "⚓", xpValue: 200 },
+    { id: "REGULARITY_1_VENTRAL_5D", name: "Gaineur Régulier (5j)", description: "Avoir fait au moins 1s de gainage ventral sur 5 jours différents.", type: "FIRST_COME" as BadgeType, icon: "🛡️", xpValue: 200 },
+
+    { id: "REGULARITY_STREAK_1_3D", name: "Petite Série (3j)", description: "Avoir fait au moins 1 effort par jour pendant 3 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🔥", xpValue: 100 },
+    { id: "REGULARITY_STREAK_3_3D", name: "Série Active (3j)", description: "Avoir fait au moins 3 efforts par jour pendant 3 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "⚡", xpValue: 200 },
+    { id: "REGULARITY_STREAK_30_3D", name: "Série Intense (3j)", description: "Avoir fait au moins 30 efforts par jour pendant 3 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "💥", xpValue: 500 },
+
+    { id: "REGULARITY_STREAK_30_7D", name: "La Semaine de Fer (7j)", description: "Avoir fait au moins 30 efforts par jour pendant 7 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "⛓️", xpValue: 1500 },
+    { id: "REGULARITY_STREAK_30_21D", name: "L'Habitude de Fer (21j)", description: "Avoir fait au moins 30 efforts par jour pendant 21 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🏗️", xpValue: 5000 },
+
+    { id: "REGULARITY_STREAK_3DIFF_7D", name: "Polyvalence Hebdo (7j)", description: "Avoir fait au moins 3 types d'efforts différents par jour pendant 7 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🌈", xpValue: 2000 },
+    { id: "REGULARITY_STREAK_3DIFF_10D", name: "Maître Varié (10j)", description: "Avoir fait au moins 3 types d'efforts différents par jour pendant 10 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎭", xpValue: 3500 },
+    { id: "REGULARITY_STREAK_3DIFF_21D", name: "Inébranlable & Varié (21j)", description: "Avoir fait au moins 3 types d'efforts différents par jour pendant 21 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🌌", xpValue: 8000 },
+
+    { id: "REGULARITY_STREAK_TARGET_3D", name: "Précision (3j)", description: "Avoir atteint son objectif quotidien pendant 3 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 300 },
+    { id: "REGULARITY_STREAK_TARGET_6D", name: "Précision (6j)", description: "Avoir atteint son objectif quotidien pendant 6 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 1000 },
+    { id: "REGULARITY_STREAK_TARGET_12D", name: "Précision (12j)", description: "Avoir atteint son objectif quotidien pendant 12 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 2500 },
+    { id: "REGULARITY_STREAK_TARGET_24D", name: "Précision (24j)", description: "Avoir atteint son objectif quotidien pendant 24 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 6000 },
+    { id: "REGULARITY_STREAK_TARGET_48D", name: "Précision (48j)", description: "Avoir atteint son objectif quotidien pendant 48 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 15000 },
+    { id: "REGULARITY_STREAK_TARGET_96D", name: "Précision (96j)", description: "Avoir atteint son objectif quotidien pendant 96 jours d'affilé.", type: "FIRST_COME" as BadgeType, icon: "🎯", xpValue: 40000 },
 ];
