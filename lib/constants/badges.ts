@@ -99,4 +99,16 @@ export const BADGE_DEFINITIONS = [
     { id: "RECORD_WEEK_PLANK", name: "Champion de la Sem. (Gainage)", description: "Détenteur actuel du record absolu de Gainage Total sur 1 semaine.", type: "FIRST_COME" as BadgeType, icon: "🏆", xpValue: 0 },
     { id: "RECORD_MONTH_PLANK", name: "Champion du Mois (Gainage)", description: "Détenteur actuel du record absolu de Gainage Total sur 1 mois entier.", type: "FIRST_COME" as BadgeType, icon: "👑", xpValue: 0 },
     { id: "RECORD_SERIES_PLANK", name: "L'Imbattable (Série Gainage)", description: "Détenteur actuel du record ALL-TIME de la plus longue série de gainage.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 0 },
+
+    // --- FAMILLE F : LA VITRINE HOLISTIQUE (FULL BODY) ---
+    // En une séance (Batch) : 1 effort de chaque (Ventral, G, D, Pompes, Squats)
+    { id: "HOLISTIC_SESSION_5", name: "Session Holistique 5", description: "Réaliser au moins 1 effort de chaque exo et 5 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🧘", xpValue: 100 },
+    { id: "HOLISTIC_SESSION_10", name: "Session Holistique 10", description: "Réaliser au moins 1 effort de chaque exo et 10 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🤸", xpValue: 200 },
+    { id: "HOLISTIC_SESSION_30", name: "Session Holistique 30", description: "Réaliser au moins 1 effort de chaque exo et 30 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🧬", xpValue: 500 },
+    { id: "HOLISTIC_SESSION_100", name: "Session Holistique 100", description: "Réaliser au moins 1 effort de chaque exo et 100 efforts total en une seule séance.", type: "FIRST_COME" as BadgeType, icon: "🌌", xpValue: 2000 },
+
+    // Cumulatif : 5 efforts de chaque exo depuis le début
+    { id: "HOLISTIC_CUMULATIVE_50", name: "Parcours Holistique 50", description: "Avoir fait au moins 5 efforts de chaque exo et 50 efforts cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💠", xpValue: 500 },
+    { id: "HOLISTIC_CUMULATIVE_500", name: "Parcours Holistique 500", description: "Avoir fait au moins 5 efforts de chaque exo et 500 efforts cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 2500 },
+    { id: "HOLISTIC_CUMULATIVE_5000", name: "Parcours Holistique 5000", description: "Avoir fait au moins 5 efforts de chaque exo et 5 000 efforts cumulés au total.", type: "FIRST_COME" as BadgeType, icon: "💎", xpValue: 10000 },
 ];
