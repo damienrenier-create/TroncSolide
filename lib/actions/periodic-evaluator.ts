@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { BadgeType } from "@prisma/client";
 import { getBrusselsToday } from "@/lib/date-utils";
 import { 
     startOfWeek, 
@@ -28,7 +29,7 @@ async function ensureBadgeExists(def: typeof BADGE_DEFINITIONS[0], leagueId: str
             name: def.name,
             description: def.description,
             icon: def.icon,
-            type: def.type,
+            type: def.type as BadgeType,
             xpValue: def.xpValue,
             leagueId: leagueId
         }
