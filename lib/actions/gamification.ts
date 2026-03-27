@@ -10,9 +10,11 @@ import {
     startOfDay, 
     startOfWeek, 
     startOfMonth, 
-    startOfYear 
+    startOfYear,
+    format,
+    subDays
 } from "date-fns";
-import { getBrusselsToday } from "@/lib/date-utils";
+import { getBrusselsToday, getBrusselsDate } from "@/lib/date-utils";
 
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import { processAnniversarySettlement } from "./settlement";
@@ -900,7 +902,8 @@ export async function getRegularityStats(userId: string) {
     const dailyStats: Record<string, { total: number, pushups: number, ventral: number, types: Set<string>, targetReached: boolean }> = {};
     
     sessions.forEach(s => {
-        const dateStr = s.date.toISOString().split('T')[0];
+        const bd = getBrusselsDate(s.date);
+        const dateStr = format(bd, 'yyyy-MM-dd');
         if (!dailyStats[dateStr]) {
             dailyStats[dateStr] = { total: 0, pushups: 0, ventral: 0, types: new Set(), targetReached: false };
         }
@@ -913,9 +916,12 @@ export async function getRegularityStats(userId: string) {
     const dates = Object.keys(dailyStats).sort();
     if (dates.length === 0) return null;
 
+    const signupStart = getBrusselsDate(user.joinedAt);
+    signupStart.setHours(0, 0, 0, 0);
+
     dates.forEach(dateStr => {
-        const d = new Date(dateStr);
-        const daysSince = differenceInDays(d, user.joinedAt);
+        const d = new Date(dateStr); // parsed from yyyy-MM-dd is local at midnight
+        const daysSince = differenceInDays(d, signupStart);
         const target = daysSince + 1;
         if (dailyStats[dateStr].total >= target) {
             dailyStats[dateStr].targetReached = true;
@@ -945,9 +951,9 @@ export async function getRegularityStats(userId: string) {
 
     const today = getBrusselsToday();
     const lastStr = dates[dates.length - 1];
-    const todayStr = today.toISOString().split('T')[0];
-    const yest = new Date(today); yest.setDate(yest.getDate() - 1);
-    const yestStr = yest.toISOString().split('T')[0];
+    const todayStr = format(today, 'yyyy-MM-dd');
+    const yest = subDays(today, 1);
+    const yestStr = format(yest, 'yyyy-MM-dd');
     if (lastStr !== todayStr && lastStr !== yestStr) {
         currentStreak1 = 0; currentStreak3 = 0; currentStreak30 = 0; currentStreak3Diff = 0; currentStreakTarget = 0;
     }
