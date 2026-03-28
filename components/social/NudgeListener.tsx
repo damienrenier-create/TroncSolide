@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Twitter } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import { getUnreadNudges, markNudgeRead } from "@/lib/actions/nudges";
 
 export default function NudgeListener() {
@@ -82,20 +82,25 @@ export default function NudgeListener() {
             onMouseUp={onTouchEnd}
             onMouseLeave={onTouchEnd}
         >
-            <div className="nudge-card">
+            <div className="nudge-card glass-premium">
                 <button className="nudge-close" onClick={(e) => { e.stopPropagation(); handleDismiss(); }}>
                     <X size={14} />
                 </button>
                 
                 <div className="nudge-header">
-                    <div className="nudge-avatar">
-                        {currentNudge.sender.nickname.charAt(0).toUpperCase()}
+                    <div className="nudge-mascot">🐹</div>
+                    <div className="nudge-avatar-container">
+                        <div className="nudge-avatar">
+                            {currentNudge.sender.nickname.charAt(0).toUpperCase()}
+                        </div>
                     </div>
                     <div className="nudge-user-info">
                         <span className="nudge-name">{currentNudge.sender.nickname}</span>
-                        <span className="nudge-handle">@{currentNudge.sender.nickname.toLowerCase().replace(/\s/g, '')}</span>
+                        <span className="nudge-tag">t'envoie un petit mot !</span>
                     </div>
-                    <Twitter size={14} className="nudge-twitter-icon" />
+                    <div className="nudge-type-icon">
+                        <Mail size={16} />
+                    </div>
                 </div>
                 
                 <div className="nudge-content">
@@ -103,7 +108,7 @@ export default function NudgeListener() {
                 </div>
 
                 <div className="nudge-footer">
-                    {new Date(currentNudge.createdAt).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })} • Tronc Solide for Web
+                    {new Date(currentNudge.createdAt).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })} • Pop up Tronc Solide
                 </div>
                 
                 <div className="swipe-indicator">Balayez pour effacer →</div>

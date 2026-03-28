@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { Send, X, Twitter } from "lucide-react";
+import { Send, X, Mail } from "lucide-react";
 import { sendNudge } from "@/lib/actions/nudges";
 
 interface NudgeModalProps {
@@ -33,24 +33,24 @@ export default function NudgeModal({ receiverId, receiverName, onClose }: NudgeM
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content tweet-modal" onClick={e => e.stopPropagation()}>
-                <header className="tweet-modal-header">
-                    <div className="tweet-icon-container">
-                        <Twitter size={20} fill="currentColor" />
+            <div className="modal-content popup-modal" onClick={e => e.stopPropagation()}>
+                <header className="popup-modal-header">
+                    <div className="popup-icon-container">
+                        <Mail size={20} />
                     </div>
-                    <h2>Envoyer un "Tweet" à {receiverName}</h2>
+                    <h2>Envoyer un Pop up à {receiverName}</h2>
                     <button className="close-btn" onClick={onClose}><X size={20}/></button>
                 </header>
 
-                <div className="tweet-input-wrapper">
+                <div className="popup-input-wrapper">
                     <textarea 
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Quoi de neuf ? (Spamme ton pote !)"
+                        placeholder="Écris un petit mot gentil (ou un petit troll)..."
                         maxLength={140}
                         autoFocus
                     />
-                    <div className="tweet-char-count" style={{ color: message.length > 130 ? 'var(--error)' : 'inherit' }}>
+                    <div className="popup-char-count" style={{ color: message.length > 130 ? 'var(--error)' : 'inherit' }}>
                         {message.length}/140
                     </div>
                 </div>
@@ -58,13 +58,13 @@ export default function NudgeModal({ receiverId, receiverName, onClose }: NudgeM
                 {error && <p className="error-message">{error}</p>}
                 {success && <p className="success-message">🚀 Tweet envoyé !</p>}
 
-                <footer className="tweet-modal-footer">
+                <footer className="popup-modal-footer">
                     <button 
-                        className="btn-primary tweet-btn" 
+                        className="btn-primary popup-btn" 
                         disabled={isSending || !message.trim() || success}
                         onClick={handleSend}
                     >
-                        {isSending ? "Envoi..." : <><Send size={18} /><span>Tweeter</span></>}
+                        {isSending ? "Envoi..." : <><Send size={18} /><span>Envoyer le Pop up</span></>}
                     </button>
                 </footer>
             </div>
@@ -81,88 +81,98 @@ export default function NudgeModal({ receiverId, receiverName, onClose }: NudgeM
                     z-index: 1000;
                     padding: 20px;
                 }
-                .tweet-modal {
+                .popup-modal {
                     background: white;
                     width: 100%;
                     max-width: 500px;
-                    border-radius: 20px;
-                    padding: 20px;
-                    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+                    border-radius: var(--radius-md, 20px);
+                    padding: 24px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
                     animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    border: 1px solid rgba(0,0,0,0.05);
                 }
                 @keyframes modalPop {
                     from { transform: scale(0.9); opacity: 0; }
                     to { transform: scale(1); opacity: 1; }
                 }
-                .tweet-modal-header {
+                .popup-modal-header {
                     display: flex;
                     align-items: center;
                     gap: 12px;
-                    margin-bottom: 20px;
+                    margin-bottom: 24px;
                 }
-                .tweet-icon-container {
-                    color: #1DA1F2;
+                .popup-icon-container {
+                    color: var(--primary);
+                    background: rgba(var(--primary-rgb, 217, 119, 6), 0.1);
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
-                .tweet-modal-header h2 {
-                    font-size: 1.1rem;
+                .popup-modal-header h2 {
+                    font-size: 1.25rem;
                     font-weight: 900;
                     margin: 0;
                     flex: 1;
+                    color: #0f172a;
                 }
                 .close-btn {
-                    background: none; border: none; cursor: pointer; color: var(--text-muted);
+                    background: rgba(0,0,0,0.03); border: none; cursor: pointer; color: var(--text-muted);
+                    width: 32px; height: 32px; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    transition: all 0.2s;
                 }
-                .tweet-input-wrapper {
+                .close-btn:hover { background: rgba(0,0,0,0.08); color: var(--foreground); }
+                .popup-input-wrapper {
                     position: relative;
-                    margin-bottom: 20px;
+                    margin-bottom: 24px;
                 }
                 textarea {
                     width: 100%;
-                    height: 120px;
+                    height: 140px;
                     border: 1px solid rgba(0,0,0,0.1);
-                    border-radius: 12px;
-                    padding: 15px;
+                    border-radius: 16px;
+                    padding: 16px;
                     font-size: 1rem;
                     resize: none;
                     font-family: inherit;
-                    transition: border-color 0.2s;
+                    transition: all 0.2s;
+                    background: #f8fafc;
                 }
                 textarea:focus {
                     outline: none;
-                    border-color: #1DA1F2;
+                    border-color: var(--primary);
+                    background: white;
+                    box-shadow: 0 0 0 4px rgba(217,119,6,0.1);
                 }
-                .tweet-char-count {
+                .popup-char-count {
                     position: absolute;
-                    bottom: 10px;
-                    right: 15px;
+                    bottom: 12px;
+                    right: 16px;
                     font-size: 0.75rem;
-                    font-weight: 700;
+                    font-weight: 800;
+                    padding: 4px 8px;
+                    background: rgba(255,255,255,0.8);
+                    border-radius: 8px;
                     opacity: 0.6;
                 }
-                .tweet-modal-footer {
+                .popup-modal-footer {
                     display: flex;
                     justify-content: flex-end;
                 }
-                .tweet-btn {
-                    background: #1DA1F2;
-                    color: white;
+                .popup-btn {
                     border: none;
-                    border-radius: 9999px;
-                    padding: 10px 24px;
-                    font-weight: 800;
+                    border-radius: 16px;
+                    padding: 12px 28px;
+                    font-weight: 900;
+                    font-size: 1rem;
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: 10px;
                     cursor: pointer;
-                    transition: transform 0.2s, background 0.2s;
-                }
-                .tweet-btn:hover:not(:disabled) {
-                    background: #1a91da;
-                    transform: translateY(-2px);
-                }
-                .tweet-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
+                    box-shadow: 0 10px 20px rgba(217,119,6,0.2);
                 }
                 .error-message {
                     color: var(--error);

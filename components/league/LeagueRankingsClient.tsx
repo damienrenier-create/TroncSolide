@@ -8,7 +8,7 @@ import {
 import { useRouter } from "next/navigation";
 import { 
     Flame, TrendingUp, Award, ChevronLeft, ChevronRight, Share2, Filter,
-    Twitter, MessageSquare 
+    Mail, MessageSquare 
 } from "lucide-react";
 import NudgeModal from "@/components/social/NudgeModal";
 import { useSession } from "next-auth/react";
@@ -287,10 +287,10 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                             {session?.user?.id !== u.id && (
                                 <button 
                                     onClick={() => setSelectedUser({ id: u.id, nickname: u.nickname })}
-                                    className="tweet-action-btn"
-                                    title={`Envoyer un tweet à ${u.nickname}`}
+                                    className="popup-action-btn"
+                                    title={`Envoyer un pop up à ${u.nickname}`}
                                 >
-                                    <Twitter size={18} fill="currentColor" />
+                                    <Mail size={18} />
                                 </button>
                             )}
                         </div>
@@ -329,23 +329,24 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                 .carousel-btn:hover { background: rgba(0,0,0,0.1); }
                 .carousel-btn.left { left: -10px; }
                 .carousel-btn.right { right: -10px; }
-                .tweet-action-btn {
+                .popup-action-btn {
                     width: 36px;
                     height: 36px;
                     border-radius: 50%;
                     border: none;
-                    background: #F0F7FF;
-                    color: #1DA1F2;
+                    background: rgba(var(--primary-rgb, 217, 119, 6), 0.1);
+                    color: var(--primary);
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
                     transition: all 0.2s;
                 }
-                .tweet-action-btn:hover {
-                    background: #1DA1F2;
+                .popup-action-btn:hover {
+                    background: var(--primary);
                     color: white;
-                    transform: scale(1.1) rotate(-10deg);
+                    transform: scale(1.1) translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
                 }
             `}</style>
         </div>
