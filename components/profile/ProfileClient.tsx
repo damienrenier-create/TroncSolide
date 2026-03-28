@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { submitMedicalCertificate, exitCagnotte } from "@/lib/actions/economy";
 import { signOut, useSession } from "next-auth/react";
-import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info, HelpCircle, BarChart2 } from "lucide-react";
+import { User, ShieldAlert, FileText, Wallet, LogOut, Award, TreePine, Zap, Info, HelpCircle, BarChart2, Users, Mail } from "lucide-react";
+import NudgeModal from "@/components/social/NudgeModal";
 import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
@@ -12,6 +13,7 @@ import BadgeModal from "@/components/badges/BadgeModal";
 export default function ProfileClient({ user }: { user: any }) {
     const [loading, setLoading] = useState(false);
     const [selectedBadge, setSelectedBadge] = useState<any>(null);
+    const [selectedNudgeUser, setSelectedNudgeUser] = useState<{ id: string, nickname: string } | null>(null);
     const { update } = useSession();
     const levelInfo = getLevelInfo(user.totalXP);
 
@@ -135,9 +137,53 @@ export default function ProfileClient({ user }: { user: any }) {
                     )}
                 </div>
             </section>
-            
-            {/* INJECT MODAL */}
+
+            {/* 2. My League Section (Discovery improvement) */}
+            <section className="glass-premium" style={{ padding: "1.5rem", marginBottom: "1.5rem", borderRadius: "28px" }}>
+                <div className="card-header" style={{ marginBottom: "1rem" }}>
+                    <Users size={18} className="text-secondary" />
+                    <span>Ma Ligue ({user.league?.name || "Ligue de Base"})</span>
+                </div>
+                
+                <div className="league-members-list">
+                    {user.league?.users?.filter((u: any) => u.id !== user.id).map((member: any) => (
+                        <div key={member.id} className="league-member-row">
+                            <Link href={`/profile/${encodeURIComponent(member.nickname)}`} className="member-info">
+                                <div className="member-avatar">
+                                    {member.nickname.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div className="member-name">{member.nickname}</div>
+                                    <div className="member-meta">NV. {member.level} • {member.totalXP} XP</div>
+                                </div>
+                            </Link>
+                            <button 
+                                onClick={() => setSelectedNudgeUser({ id: member.id, nickname: member.nickname })}
+                                className="nudge-action-btn"
+                                title={`Envoyer un Pop up à ${member.nickname}`}
+                            >
+                                <Mail size={16} />
+                            </button>
+                        </div>
+                    ))}
+                    {(!user.league?.users || user.league.users.length <= 1) && (
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center", padding: "1rem" }}>
+                            Tu es seul dans ta ligue pour le moment.
+                        </p>
+                    )}
+                </div>
+            </section>
+
+            {/* INJECT MODALS */}
             {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />}
+            
+            {selectedNudgeUser && (
+                <NudgeModal 
+                    receiverId={selectedNudgeUser.id}
+                    receiverName={selectedNudgeUser.nickname}
+                    onClose={() => setSelectedNudgeUser(null)}
+                />
+            )}
 
             <style jsx>{`
                 .showcase-grid {
@@ -196,6 +242,74 @@ export default function ProfileClient({ user }: { user: any }) {
                     text-transform: uppercase;
                     letter-spacing: 0.08em;
                     line-height: 1.2;
+                }
+
+                /* League Members Styling */
+                .league-members-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                .league-member-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(0,0,0,0.03);
+                    padding: 8px 12px;
+                    border-radius: 16px;
+                    transition: all 0.2s;
+                }
+                .league-member-row:hover {
+                    background: white;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                }
+                .member-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    text-decoration: none;
+                    color: inherit;
+                    flex: 1;
+                }
+                .member-avatar {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 10px;
+                    background: var(--foreground);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 950;
+                    font-size: 0.75rem;
+                }
+                .member-name {
+                    font-size: 0.85rem;
+                    font-weight: 900;
+                }
+                .member-meta {
+                    font-size: 0.65rem;
+                    color: var(--text-muted);
+                    font-weight: 700;
+                }
+                .nudge-action-btn {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 10px;
+                    border: none;
+                    background: rgba(var(--primary-rgb, 217, 119, 6), 0.1);
+                    color: var(--primary);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .nudge-action-btn:hover {
+                    background: var(--primary);
+                    color: white;
+                    transform: scale(1.1);
                 }
             `}</style>
 

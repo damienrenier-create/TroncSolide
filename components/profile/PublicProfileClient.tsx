@@ -1,15 +1,19 @@
 "use client"
 
 import { useState } from "react";
-import { User, Award, Flame, Calendar, Medal } from "lucide-react";
+import { User, Award, Flame, Calendar, Medal, Mail } from "lucide-react";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import BadgeModal from "@/components/badges/BadgeModal";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import Link from "next/link";
+import NudgeModal from "@/components/social/NudgeModal";
+import { useSession } from "next-auth/react";
 
 export default function PublicProfileClient({ profile }: { profile: any }) {
     const [selectedBadge, setSelectedBadge] = useState<any>(null);
+    const [showNudgeModal, setShowNudgeModal] = useState(false);
+    const { data: session } = useSession();
     const levelInfo = getLevelInfo(profile.totalXP);
 
     // Compute Chart Data
@@ -58,6 +62,17 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
                         <div className="since-date">
                             <Calendar size={12} style={{ display: "inline", marginRight: "4px" }} />
                             MEMBRE DEPUIS LE {new Date(profile.joinedAt).toLocaleDateString()}
+                        </div>
+
+                        {/* Pop up Action Button */}
+                        <div style={{ marginTop: "1rem" }}>
+                            <button 
+                                onClick={() => setShowNudgeModal(true)}
+                                className="popup-hero-btn"
+                            >
+                                <Mail size={18} />
+                                <span>Lui envoyer un Pop up</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -181,6 +196,14 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
             </section>
 
             {selectedBadge && <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />}
+            
+            {showNudgeModal && (
+                <NudgeModal 
+                    receiverId={profile.id}
+                    receiverName={profile.nickname}
+                    onClose={() => setShowNudgeModal(false)}
+                />
+            )}
 
             {/* Floating Nav Bar - Improved 5-User Carousel */}
             {profile.leagueContext && profile.leagueContext.length > 0 && (
@@ -317,9 +340,30 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
                     font-size: 2.2rem;
                     font-weight: 950;
                     line-height: 1.1;
-                    margin: 0 0 10px 0;
+                    margin: 0 0 4px 0;
                     text-transform: uppercase;
                     letter-spacing: -0.02em;
+                }
+
+                .popup-hero-btn {
+                    background: var(--primary);
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    padding: 8px 16px;
+                    font-size: 0.8rem;
+                    font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+                }
+                .popup-hero-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 15px rgba(217, 119, 6, 0.4);
+                    filter: brightness(1.1);
                 }
 
                 .since-date {

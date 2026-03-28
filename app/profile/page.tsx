@@ -22,6 +22,14 @@ export default async function ProfilePage() {
             },
             badges: {
                 include: { badge: true }
+            },
+            league: {
+                include: {
+                    users: {
+                        select: { id: true, nickname: true, totalXP: true, level: true },
+                        orderBy: { totalXP: 'desc' }
+                    }
+                }
             }
         }
     });
