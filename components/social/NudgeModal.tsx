@@ -56,7 +56,15 @@ export default function NudgeModal({ receiverId, receiverName, onClose }: NudgeM
                 </div>
 
                 {error && <p className="error-message">{error}</p>}
-                {success && <p className="success-message">🚀 Tweet envoyé !</p>}
+                {success && (
+                    <div className="success-container">
+                        <div className="marmot-delivery">
+                            <span className="marmot-emoji">🐹</span>
+                            <span className="letter-emoji">✉️</span>
+                        </div>
+                        <p className="success-message">Pop up envoyé !</p>
+                    </div>
+                )}
 
                 <footer className="popup-modal-footer">
                     <button 
@@ -186,6 +194,39 @@ export default function NudgeModal({ receiverId, receiverName, onClose }: NudgeM
                     font-weight: 800;
                     text-align: center;
                     margin-bottom: 15px;
+                    animation: fadeIn 0.3s ease-out;
+                }
+                .success-container {
+                    position: relative;
+                    height: 80px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                }
+                .marmot-delivery {
+                    position: absolute;
+                    font-size: 2rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    animation: marmotRun 1.5s infinite linear;
+                }
+                .letter-emoji {
+                    font-size: 1.2rem;
+                    margin-top: 10px;
+                }
+                @keyframes marmotRun {
+                    0% { transform: translateX(-150%) translateY(0); }
+                    25% { transform: translateX(-75%) translateY(-5px); }
+                    50% { transform: translateX(0) translateY(0); }
+                    75% { transform: translateX(75%) translateY(-5px); }
+                    100% { transform: translateX(150%) translateY(0); }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
         </div>
