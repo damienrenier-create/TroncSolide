@@ -17,10 +17,6 @@ export default function SeasonalTree() {
     const [seasonIndex, setSeasonIndex] = useState(0); // 0: Printemps
     const [clicks, setClicks] = useState(0);
     const [isWon, setIsWon] = useState(false);
-    
-    // Zen Bird State
-    const [showZen, setShowZen] = useState(false);
-    const [zenLevel, setZenLevel] = useState(0);
 
     // Calcul de l'âge de l'utilisateur
     const userAge = session?.user?.birthday 
@@ -29,48 +25,7 @@ export default function SeasonalTree() {
 
     const currentSeason = SEASONS[seasonIndex];
 
-    // Inactivity Timer for Zen Bird
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        const resetTimer = () => {
-            setShowZen(false);
-            clearTimeout(timer);
-            timer = setTimeout(() => setShowZen(true), 60000); // 60s
-        };
-
-        window.addEventListener('mousemove', resetTimer);
-        window.addEventListener('keydown', resetTimer);
-        window.addEventListener('click', resetTimer);
-
-        resetTimer();
-
-        return () => {
-            window.removeEventListener('mousemove', resetTimer);
-            window.removeEventListener('keydown', resetTimer);
-            window.removeEventListener('click', resetTimer);
-            clearTimeout(timer);
-        };
-    }, []);
-
     const handleClick = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (showZen) {
-            // Click sur l'oiseau ou le chat
-            const res = await claimZenReward();
-            if (res.success) {
-                if (zenLevel === 7) {
-                    alert("🐱 GRIFFURE ! Le chat maléfique vous a griffé. Vous perdez un niveau... Ne restez pas trop longtemps immobile !");
-                } else {
-                    alert("🐦 CHAT ! Vous avez attrapé l'oiseau zen. +XP !");
-                }
-                setZenLevel(res.zenLevel ?? 0);
-            }
-            setShowZen(false);
-            return;
-        }
-
         const newIndex = (seasonIndex + 1) % 4;
         const newClicks = clicks + 1;
         
@@ -91,69 +46,130 @@ export default function SeasonalTree() {
     return (
         <div 
             onClick={handleClick} 
-            style={{ 
-                cursor: "pointer", 
-                display: "inline-flex", 
-                alignItems: "center", 
-                justifyContent: "center",
-                userSelect: "none",
-                marginLeft: "4px"
-            }}
+            className={`seasonal-tree-container season-${seasonIndex}`}
             title={`Arbre Sacré - ${currentSeason.name}`}
-            className="seasonal-tree"
         >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Tronc */}
-                <path d="M11 18H13V22H11V18Z" fill="#5D4037" />
-                
-                {/* Feuillage */}
+            <svg viewBox="0 0 100 100" className="tree-svg">
+                <defs>
+                    <linearGradient id="trunk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#5D4037" />
+                        <stop offset="100%" stopColor="#3E2723" />
+                    </linearGradient>
+                    <filter id="shadow">
+                        <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.2"/>
+                    </filter>
+                </defs>
+
+                {/* Tronc organique */}
                 <path 
-                    d="M12 2C8 2 5 5 5 9C5 12.5 7.5 15.5 10.5 16.5V18H13.5V16.5C16.5 15.5 19 12.5 19 9C19 5 16 2 12 2Z" 
-                    fill={currentSeason.color} 
-                    style={{ transition: "fill 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }}
+                    d="M48 95 Q50 80 50 65 L52 65 Q52 80 54 95 Z" 
+                    fill="url(#trunk-grad)" 
+                />
+                <path 
+                    d="M50 75 Q45 70 40 72" 
+                    fill="none" stroke="#3E2723" strokeWidth="2" strokeLinecap="round" 
+                />
+                <path 
+                    d="M52 70 Q58 65 62 67" 
+                    fill="none" stroke="#3E2723" strokeWidth="2" strokeLinecap="round" 
                 />
 
-                {/* Fleurs de Printemps */}
+                {/* Feuillage multicouche */}
+                <g filter="url(#shadow)">
+                    {/* Couche arrière */}
+                    <path 
+                        className="leaves-back"
+                        d="M50 15 C30 15 15 35 15 55 C15 70 30 80 50 82 C70 80 85 70 85 55 C85 35 70 15 50 15Z" 
+                        fill={currentSeason.color}
+                        opacity="0.6"
+                    />
+                    {/* Couche avant */}
+                    <path 
+                        className="leaves-front"
+                        d="M50 20 C35 20 22 38 22 55 C22 68 35 78 50 80 C65 78 78 68 78 55 C78 38 65 20 50 20Z" 
+                        fill={currentSeason.color}
+                    />
+                </g>
+
+                {/* Détails saisonniers alternatifs */}
                 {currentSeason.flowers && (
-                    <g style={{ transition: "opacity 0.6s" }}>
-                        <circle cx="8" cy="7" r="1" fill="#FFC1E3" />
-                        <circle cx="15" cy="6" r="1" fill="#FFC1E3" />
-                        <circle cx="12" cy="10" r="1" fill="#FFC1E3" />
-                        <circle cx="9" cy="12" r="1" fill="#FFC1E3" />
-                        <circle cx="15" cy="11" r="1" fill="#FFC1E3" />
+                    <g className="seasonal-details">
+                        <circle cx="35" cy="40" r="3" fill="#FFC1E3" className="petal" />
+                        <circle cx="65" cy="35" r="2.5" fill="#FFF" className="petal" />
+                        <circle cx="50" cy="55" r="3.5" fill="#FFC1E3" className="petal" />
+                        <circle cx="42" cy="30" r="2" fill="#FFF" className="petal" />
                     </g>
                 )}
 
-                {/* Neige d'Hiver */}
+                {seasonIndex === 2 && ( // Automne : feuilles tombantes
+                    <g className="seasonal-details">
+                        <path d="M30 65 L35 68" stroke="#D84315" strokeWidth="2" className="falling-leaf" />
+                        <path d="M70 60 L75 63" stroke="#BF360C" strokeWidth="2" className="falling-leaf" />
+                    </g>
+                )}
+
                 {currentSeason.snow && (
-                    <path 
-                        d="M7 6C9 4 15 4 17 6C15 5 9 5 7 6Z" 
-                        fill="#FFFFFF" 
-                        fillOpacity="0.8"
-                        style={{ transition: "opacity 0.6s" }}
-                    />
+                    <g className="seasonal-details">
+                        <path d="M30 25 Q50 18 70 25" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.8" />
+                        <circle cx="40" cy="45" r="1.5" fill="white" className="snowflake" />
+                        <circle cx="60" cy="50" r="1.5" fill="white" className="snowflake" />
+                    </g>
                 )}
             </svg>
 
-            {/* ZEN BIRD / CAT emoji overlay */}
-            {showZen && (
-                <div style={{
-                    position: "absolute",
-                    top: "-15px",
-                    left: "14px",
-                    fontSize: "1.2rem",
-                    animation: "bounce 1s infinite",
-                    zIndex: 10
-                }}>
-                    {zenLevel === 7 ? "🐱" : 
-                     ["🐦", "🦜", "🕊️", "🦅", "🦆", "🦉", "🐧"][zenLevel % 7]}
-                </div>
-            )}
-
             <style jsx>{`
-                @keyframes bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-5px); }
+                .seasonal-tree-container {
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    user-select: none;
+                    margin-left: 8px;
+                    width: 32px;
+                    height: 32px;
+                    position: relative;
+                }
+                .tree-svg {
+                    width: 100%;
+                    height: 100%;
+                    transition: all 0.5s ease;
+                }
+                .leaves-back, .leaves-front {
+                    transition: fill 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .seasonal-tree-container:hover .tree-svg {
+                    transform: scale(1.1) rotate(5deg);
+                }
+                .seasonal-tree-container:active .tree-svg {
+                    transform: scale(0.9);
+                }
+                
+                /* Animations */
+                .petal { animation: petalFloat 3s infinite ease-in-out; }
+                .falling-leaf { animation: leafFall 4s infinite linear; }
+                .snowflake { animation: snowSpin 2s infinite linear; }
+
+                @keyframes petalFloat {
+                    0%, 100% { transform: translate(0, 0); opacity: 0.8; }
+                    50% { transform: translate(2px, -2px); opacity: 1; }
+                }
+                @keyframes leafFall {
+                    0% { transform: translate(0, -10px) rotate(0); opacity: 0; }
+                    20% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { transform: translate(-5px, 20px) rotate(45deg); opacity: 0; }
+                }
+                @keyframes snowSpin {
+                    from { transform: rotate(0); }
+                    to { transform: rotate(360deg); }
+                }
+
+                /* Mobile optimization */
+                @media (max-width: 640px) {
+                    .seasonal-tree-container {
+                        width: 28px;
+                        height: 28px;
+                    }
                 }
             `}</style>
         </div>

@@ -5,9 +5,13 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
     BarChart, Bar, Cell 
 } from "recharts";
-import { Flame, TrendingUp, Award, ChevronLeft, ChevronRight, Share2, Filter } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { 
+    Flame, TrendingUp, Award, ChevronLeft, ChevronRight, Share2, Filter,
+    Twitter, MessageSquare 
+} from "lucide-react";
+import NudgeModal from "@/components/social/NudgeModal";
+import { useSession } from "next-auth/react";
 
 interface User {
     id: string;
@@ -48,6 +52,9 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
         return hidden;
     });
     const router = useRouter();
+    const { data: session } = useSession();
+
+    const [selectedUser, setSelectedUser] = useState<{ id: string, nickname: string } | null>(null);
 
     const nextView = () => setViewIndex(prev => (prev + 1) % views.length);
     const prevView = () => setViewIndex(prev => (prev - 1 + views.length) % views.length);
@@ -271,13 +278,33 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                                 <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>NV {u.level} • Record : {u.highestStreak}j</div>
                             </div>
                         </div>
-                        <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--secondary)" }}>{u.currentStreak}j 🔥</div>
-                            <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>{u.totalXP.toLocaleString()} XP</div>
+                        <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "12px" }}>
+                            <div style={{ textAlign: "right" }}>
+                                <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--secondary)" }}>{u.currentStreak}j 🔥</div>
+                                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)" }}>{u.totalXP.toLocaleString()} XP</div>
+                            </div>
+                            
+                            {session?.user?.id !== u.id && (
+                                <button 
+                                    onClick={() => setSelectedUser({ id: u.id, nickname: u.nickname })}
+                                    className="tweet-action-btn"
+                                    title={`Envoyer un tweet à ${u.nickname}`}
+                                >
+                                    <Twitter size={18} fill="currentColor" />
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}
             </div>
+
+            {selectedUser && (
+                <NudgeModal 
+                    receiverId={selectedUser.id}
+                    receiverName={selectedUser.nickname}
+                    onClose={() => setSelectedUser(null)}
+                />
+            )}
 
             <style jsx>{`
                 .glass-premium { box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
@@ -302,6 +329,24 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
                 .carousel-btn:hover { background: rgba(0,0,0,0.1); }
                 .carousel-btn.left { left: -10px; }
                 .carousel-btn.right { right: -10px; }
+                .tweet-action-btn {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    border: none;
+                    background: #F0F7FF;
+                    color: #1DA1F2;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .tweet-action-btn:hover {
+                    background: #1DA1F2;
+                    color: white;
+                    transform: scale(1.1) rotate(-10deg);
+                }
             `}</style>
         </div>
     );

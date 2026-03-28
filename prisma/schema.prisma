@@ -100,6 +100,8 @@ model User {
   messages      Message[]
   messageLikes  MessageLike[]
   torchHolders  TorchHolder[]
+  nudgesSent    Nudge[]   @relation("NudgeSender")
+  nudgesReceived Nudge[]  @relation("NudgeReceiver")
 
   @@map("users")
 }
@@ -294,4 +296,18 @@ model TorchHolder {
 
   @@unique([leagueId, date])
   @@map("torch_holders")
+}
+
+model Nudge {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  message     String?  @db.VarChar(140)
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender    User     @relation("NudgeSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver  User     @relation("NudgeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("nudges")
 }

@@ -8,6 +8,8 @@ import { HelpCircle, User } from "lucide-react";
 import SeasonalTree from "./SeasonalTree";
 import { useEffect, useState } from "react";
 import { claimRetroBadge } from "@/lib/actions/gamification";
+import NudgeListener from "@/components/social/NudgeListener";
+import ZenBirdGlobal from "./ZenBirdGlobal";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -75,6 +77,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </main>
 
             <BottomNav />
+            <NudgeListener />
+            <ZenBirdGlobal />
         </div>
     );
 }
