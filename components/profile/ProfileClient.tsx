@@ -71,7 +71,8 @@ export default function ProfileClient({ user }: { user: any }) {
                         {[
                             { name: "Original", id: "cmn29996b0001jw3325gxiasp", email: "damienrenier@hotmail.com", league: "Ligue de Base" },
                             { name: "Clone 1", id: "cmn2e73ds0001iesbmk6zfl5v", email: "damienrenier+clone@hotmail.com", league: "Ligue 060488" },
-                            { name: "Clone 2", id: "cmn3ocfbp0002sem2pvmxvtw1", email: "damienrenier+clone2@hotmail.com", league: "Ligue CLANPRIGNON" }
+                            { name: "Clone 2", id: "cmn3ocfbp0002sem2pvmxvtw1", email: "damienrenier+clone2@hotmail.com", league: "Ligue CLANPRIGNON" },
+                            { name: "LES COPAINS", id: "cmnan6yv30002jx7fbfy7mlj4", email: "damienrenier+lescopains@hotmail.com", league: "LES COPAINS" }
                         ].map((dim) => {
                             const isCurrent = user.email === dim.email;
                             return (

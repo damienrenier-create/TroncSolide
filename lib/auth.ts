@@ -48,7 +48,8 @@ export const authOptions: NextAuthOptions = {
                 const damienAccounts = [
                     { id: "cmn29996b0001jw3325gxiasp", email: "damienrenier@hotmail.com" },
                     { id: "cmn2e73ds0001iesbmk6zfl5v", email: "damienrenier+clone@hotmail.com" },
-                    { id: "cmn3ocfbp0002sem2pvmxvtw1", email: "damienrenier+clone2@hotmail.com" }
+                    { id: "cmn3ocfbp0002sem2pvmxvtw1", email: "damienrenier+clone2@hotmail.com" },
+                    { id: "cmnan6yv30002jx7fbfy7mlj4", email: "damienrenier+lescopains@hotmail.com" }
                 ];
 
                 const isCurrentDamien = damienAccounts.some(acc => acc.email === token.email);
