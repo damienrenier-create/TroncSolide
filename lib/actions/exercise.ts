@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
     differenceInDays,
+    differenceInCalendarDays,
     startOfDay,
     startOfWeek,
     startOfMonth,
@@ -367,8 +368,10 @@ export async function getDailyTarget(userId: string) {
     });
 
     if (!user) return 0;
-
-    const daysSince = differenceInDays(new Date(), user.joinedAt);
+    
+    const today = getBrusselsToday();
+    const joinedDay = getBrusselsDate(user.joinedAt);
+    const daysSince = differenceInCalendarDays(today, joinedDay);
     return daysSince + 1;
 }
 

@@ -1,7 +1,8 @@
 "use server"
 
 import prisma from "@/lib/prisma";
-import { startOfDay, subDays, eachDayOfInterval, isWithinInterval } from "date-fns";
+import { startOfDay, subDays, eachDayOfInterval, isWithinInterval, differenceInCalendarDays } from "date-fns";
+import { getBrusselsDate } from "@/lib/date-utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getActiveEvents } from "@/lib/actions/events";
@@ -70,7 +71,8 @@ export async function getUserStats() {
             continue;
         }
 
-        const daysSinceSignup = Math.floor((checkTime - user.joinedAt.getTime()) / (1000 * 60 * 60 * 24));
+        const joinedDay = getBrusselsDate(user.joinedAt);
+        const daysSinceSignup = differenceInCalendarDays(day, joinedDay);
         const targetValue = daysSinceSignup + 1;
 
         // Sum sessions for this specific day from pre-fetched list
