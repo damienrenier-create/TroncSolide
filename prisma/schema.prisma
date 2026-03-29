@@ -87,6 +87,7 @@ model User {
   active        Boolean   @default(true) // For "Abandon project"
   hasSeenOnboarding Boolean @default(false)
   zenLevel        Int      @default(0)
+  pushReminderEnabled Boolean @default(false)
   
   league        League    @relation(fields: [leagueId], references: [id])
   sessions      ExerciseSession[]
@@ -102,6 +103,7 @@ model User {
   torchHolders  TorchHolder[]
   nudgesSent    Nudge[]   @relation("NudgeSender")
   nudgesReceived Nudge[]  @relation("NudgeReceiver")
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -310,4 +312,17 @@ model Nudge {
   receiver  User     @relation("NudgeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@map("nudges")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }

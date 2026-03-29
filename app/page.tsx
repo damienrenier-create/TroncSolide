@@ -7,6 +7,7 @@ import { getTrophiesRoomData } from "@/lib/actions/gamification";
 import { syncPenalties } from "@/lib/actions/economy";
 import { getFeedItems } from "@/lib/actions/social";
 import DashboardClient from "@/components/dashboard/DashboardClient";
+import { PushReminderPopup } from "@/components/social/PushReminderPopup";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -38,13 +39,16 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <DashboardClient
-      userId={session.user.id}
-      initialTarget={target}
-      initialProgress={progress}
-      stats={stats}
-      trophiesData={trophiesData}
-      feedItems={feedItems}
-    />
+    <>
+      <DashboardClient
+        userId={session.user.id}
+        initialTarget={target}
+        initialProgress={progress}
+        stats={stats}
+        trophiesData={trophiesData}
+        feedItems={feedItems}
+      />
+      <PushReminderPopup user={stats} />
+    </>
   );
 }

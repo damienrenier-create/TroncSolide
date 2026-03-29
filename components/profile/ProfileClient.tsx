@@ -9,6 +9,7 @@ import Link from "next/link";
 import { getLevelInfo } from "@/lib/constants/levels";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import BadgeModal from "@/components/badges/BadgeModal";
+import { PushSettingsToggle } from "@/components/profile/PushSettingsToggle";
 
 export default function ProfileClient({ user }: { user: any }) {
     const [loading, setLoading] = useState(false);
