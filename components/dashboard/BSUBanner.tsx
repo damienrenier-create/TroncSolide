@@ -75,7 +75,7 @@ export default function BSUBanner() {
                         <label>POMPES (reps)</label>
                         <input 
                             type="number" 
-                            placeholder="Ex: 42" 
+                            placeholder="Ex: 6" 
                             value={repsPushup} 
                             onChange={(e) => setRepsPushup(e.target.value)}
                             disabled={loading}
@@ -85,7 +85,7 @@ export default function BSUBanner() {
                         <label>SQUATS (reps)</label>
                         <input 
                             type="number" 
-                            placeholder="Ex: 60" 
+                            placeholder="Ex: 12" 
                             value={repsSquat} 
                             onChange={(e) => setRepsSquat(e.target.value)}
                             disabled={loading}
