@@ -4,18 +4,10 @@ import prisma from "@/lib/prisma";
 import { ExerciseType, RecordType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getBrusselsToday } from "@/lib/date-utils";
+import { getBrusselsToday, isLastDayOfMonth } from "@/lib/date-utils";
 import { revalidatePath } from "next/cache";
 import crypto from "node:crypto";
-import { startOfYear, endOfMonth, isSameDay } from "date-fns";
-
-/**
- * Checks if a given date is the last day of the month.
- */
-export function isLastDayOfMonth(date: Date): boolean {
-    const lastDay = endOfMonth(date);
-    return isSameDay(date, lastDay);
-}
+import { startOfYear } from "date-fns";
 
 export async function logBSUChallenge(repsPushup?: number, repsSquat?: number) {
     const session = await getServerSession(authOptions);

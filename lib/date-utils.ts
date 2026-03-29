@@ -1,5 +1,5 @@
 
-import { startOfDay } from "date-fns";
+import { startOfDay, endOfMonth, isSameDay } from "date-fns";
 
 /**
  * Returns the current date shifted to Europe/Brussels timezone.
@@ -32,4 +32,12 @@ export function getEasterDate(year: number): Date {
     const month = Math.floor((h + l - 7 * m + 114) / 31);
     const day = ((h + l - 7 * m + 114) % 31) + 1;
     return new Date(year, month - 1, day);
+}
+
+/**
+ * Checks if a given date is the last day of the month.
+ */
+export function isLastDayOfMonth(date: Date): boolean {
+    const lastDay = endOfMonth(date);
+    return isSameDay(date, lastDay);
 }
