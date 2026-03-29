@@ -25,7 +25,7 @@ export async function logBSUChallenge(repsPushup?: number, repsSquat?: number) {
     });
     if (!user) return { error: "Utilisateur non trouvé" };
 
-    const entries = [];
+    const entries: { type: ExerciseType; value: number; challenge: string }[] = [];
     if (repsPushup && repsPushup > 0) entries.push({ type: "PUSHUP" as ExerciseType, value: repsPushup, challenge: "BSU_PUSHUP" });
     if (repsSquat && repsSquat > 0) entries.push({ type: "SQUAT" as ExerciseType, value: repsSquat, challenge: "BSU_SQUAT" });
 
