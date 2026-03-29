@@ -388,15 +388,9 @@ export default function DashboardClient({
                             
                             {(() => {
                                 const today = getBrusselsToday();
-                                const now = new Date();
                                 const isBSUDay = isLastDayOfMonth(today);
-                                const isDamTest = stats.nickname?.toLowerCase().includes("dam") 
-                                    && now.getDate() === 29 
-                                    && now.getMonth() === 2 
-                                    && now.getFullYear() === 2026
-                                    && now.getHours() === 15;
                                 
-                                if (isBSUDay || isDamTest) {
+                                if (isBSUDay) {
                                     return (
                                         <div style={{ marginTop: "1rem" }}>
                                             <BSUBanner />
@@ -404,7 +398,7 @@ export default function DashboardClient({
                                     );
                                 }
                                 return null;
-                            })()}
+                            })() }
 
                             <button className="glass-hover" style={{ width: "100%", borderRadius: "16px", padding: "0.85rem", fontSize: "0.85rem", fontWeight: "900", background: "rgba(0,0,0,0.15)", border: "none", color: "var(--foreground)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "10px", cursor: "pointer" }} onClick={() => setShowSecondaryForm(true)}><PlusCircle size={16} /> Pour en faire plus ✨</button>
                         </>

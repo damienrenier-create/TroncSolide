@@ -14,7 +14,7 @@ export async function logBSUChallenge(repsPushup?: number, repsSquat?: number) {
     if (!session?.user?.id) return { error: "Non autorisé" };
 
     const today = getBrusselsToday();
-    if (!isLastDayOfMonth(today) && process.env.NODE_ENV === "production") {
+    if (!isLastDayOfMonth(today)) {
         return { error: "Le challenge n'est disponible que le dernier jour du mois." };
     }
 
