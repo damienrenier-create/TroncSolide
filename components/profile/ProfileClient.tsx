@@ -56,7 +56,7 @@ export default function ProfileClient({ user }: { user: any }) {
             </header>
 
             {/* NEW: ADMIN TWIN SWITCH BUTTON (Multi-Dimension) */}
-            {["damienrenier@hotmail.com", "damienrenier+clone@hotmail.com", "damienrenier+clone2@hotmail.com"].includes(user.email) && (
+            {["damienrenier@hotmail.com", "damienrenier+clone@hotmail.com", "damienrenier+clone2@hotmail.com", "damienrenier+lescopains@hotmail.com"].includes(user.email) && (
                 <section className="glass" style={{ padding: "1.25rem", marginBottom: "1.5rem", border: "1px solid var(--primary)", background: "rgba(245, 158, 11, 0.05)", borderRadius: "24px" }}>
                     <div style={{ marginBottom: "1rem" }}>
                         <h4 style={{ fontWeight: 900, color: "var(--primary)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", textTransform: "uppercase", letterSpacing: "1px" }}>

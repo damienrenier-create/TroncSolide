@@ -261,7 +261,7 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         }
 
         // ==== ADMIN TWIN REPLICATION (Multi-Dimension Damien) ====
-        const damienEmails = ["damienrenier@hotmail.com", "damienrenier+clone@hotmail.com", "damienrenier+clone2@hotmail.com", "damienrenier+lescopains@hotmail.com"];
+        const damienEmails = ["damienrenier@hotmail.com", "damienrenier+lescopains@hotmail.com"];
         if (damienEmails.includes(user.email)) {
             const otherDamiens = await prisma.user.findMany({ 
                 where: { 
