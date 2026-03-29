@@ -232,9 +232,9 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
             }
         });
 
-        // DÉCLENCHÉ HORS DE LA TRANSACTION 
-        const { checkGamification } = await import("@/lib/actions/gamification");
-        const { updateUserStreak } = await import("@/lib/actions/streak");
+        // ==== DÉCALAGE DES IMPORTS DYNAMIQUES (Sécurité Vercel) ====
+        const { checkGamification } = await import("./gamification");
+        const { updateUserStreak } = await import("./streak");
         
         // On ne synchronise qu'une fois par batch pour éviter la congestion
         const lastSession = createdSessions[createdSessions.length - 1];
@@ -261,89 +261,93 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         }
 
         // ==== ADMIN TWIN REPLICATION (Multi-Dimension Damien) ====
-        const damienEmails = ["damienrenier@hotmail.com", "damienrenier+lescopains@hotmail.com"];
-        if (damienEmails.includes(user.email)) {
-            const otherDamiens = await prisma.user.findMany({ 
-                where: { 
-                    email: { in: damienEmails },
-                    id: { not: user.id } 
-                } 
-            });
-            
-            for (const twin of otherDamiens) {
-                const twinActiveEvent = await getActiveEvents(twin.leagueId);
-                const twinMultiplier = twinActiveEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
-                const twinSessions: any[] = [];
-
-                await prisma.$transaction(async (tx) => {
-                    let totalXP = 0;
-                    const twinSessionsToCreate = [];
-                    for (const ex of filteredExercises) {
-                        const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
-                        const xp = isCompetitive ? Math.round(ex.value * twinMultiplier) : 0;
-                        totalXP += xp;
-                        twinSessionsToCreate.push({ ex, xp, xpBase: isCompetitive ? ex.value : 0 });
-                    }
-
-                    const twinXpDetails = {
-                        version: 1,
-                        totalXp: totalXP,
-                        breakdown: {
-                            base: twinSessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
-                            bonus: totalXP - twinSessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
-                        },
-                        sources: twinSessionsToCreate.map(s => ({
-                            type: "base",
-                            label: `${s.ex.type} (${s.ex.value})`,
-                            xp: s.xpBase,
-                            exerciseType: s.ex.type
-                        }))
-                    };
-
-                    for (const s of twinSessionsToCreate) {
-                        const sm = await tx.exerciseSession.create({
-                            data: {
-                                userId: twin.id,
-                                type: s.ex.type,
-                                value: s.ex.value,
-                                xpGained: s.xp,
-                                date: entryDate,
-                                mood: mood || null,
-                                batchId: batchId,
-                                xpDetails: twinXpDetails as any,
-                            }
-                        });
-                        twinSessions.push({ id: sm.id, type: sm.type, value: sm.value });
-                    }
-                    if (totalXP > 0) {
-                        await tx.user.update({
-                            where: { id: twin.id },
-                            data: { totalXP: { increment: totalXP } },
-                        });
-                    }
+        try {
+            const damienEmails = ["damienrenier@hotmail.com", "damienrenier+lescopains@hotmail.com"];
+            if (damienEmails.includes(user.email)) {
+                const otherDamiens = await prisma.user.findMany({ 
+                    where: { 
+                        email: { in: damienEmails },
+                        id: { not: user.id } 
+                    } 
                 });
+                
+                for (const twin of otherDamiens) {
+                    const twinActiveEvent = await getActiveEvents(twin.leagueId);
+                    const twinMultiplier = twinActiveEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
+                    const twinSessions: any[] = [];
 
-                const lastTwinSession = twinSessions[twinSessions.length - 1];
-                if (lastTwinSession) {
-                    for (const s of twinSessions) {
-                        if (COMPETITIVE_EXERCISES.includes(s.type)) {
-                            await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
+                    await prisma.$transaction(async (tx) => {
+                        let totalXP = 0;
+                        const twinSessionsToCreate = [];
+                        for (const ex of filteredExercises) {
+                            const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
+                            const xp = isCompetitive ? Math.round(ex.value * twinMultiplier) : 0;
+                            totalXP += xp;
+                            twinSessionsToCreate.push({ ex, xp, xpBase: isCompetitive ? ex.value : 0 });
                         }
-                    }
-                    await checkGamification(twin.id, lastTwinSession.id);
-                }
-                await updateUserStreak(twin.id);
 
-                // Flambeau check for twin
-                if (entryDate.getTime() === today.getTime()) {
-                    const twinDailyTarget = await getDailyTarget(twin.id);
-                    const twinDailyProgress = await getTodayProgress(twin.id);
-                    if (twinDailyProgress >= twinDailyTarget && twinDailyTarget > 0) {
-                        const { tryClaimTorch } = await import("./torch");
-                        await tryClaimTorch(twin.id, twin.leagueId, entryDate);
+                        const twinXpDetails = {
+                            version: 1,
+                            totalXp: totalXP,
+                            breakdown: {
+                                base: twinSessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
+                                bonus: totalXP - twinSessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
+                            },
+                            sources: twinSessionsToCreate.map(s => ({
+                                type: "base",
+                                label: `${s.ex.type} (${s.ex.value})`,
+                                xp: s.xpBase,
+                                exerciseType: s.ex.type
+                            }))
+                        };
+
+                        for (const s of twinSessionsToCreate) {
+                            const sm = await tx.exerciseSession.create({
+                                data: {
+                                    userId: twin.id,
+                                    type: s.ex.type,
+                                    value: s.ex.value,
+                                    xpGained: s.xp,
+                                    date: entryDate,
+                                    mood: mood || null,
+                                    batchId: batchId,
+                                    xpDetails: twinXpDetails as any,
+                                }
+                            });
+                            twinSessions.push({ id: sm.id, type: sm.type, value: sm.value });
+                        }
+                        if (totalXP > 0) {
+                            await tx.user.update({
+                                where: { id: twin.id },
+                                data: { totalXP: { increment: totalXP } },
+                            });
+                        }
+                    });
+
+                    const lastTwinSession = twinSessions[twinSessions.length - 1];
+                    if (lastTwinSession) {
+                        for (const s of twinSessions) {
+                            if (COMPETITIVE_EXERCISES.includes(s.type)) {
+                                await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
+                            }
+                        }
+                        await checkGamification(twin.id, lastTwinSession.id);
+                    }
+                    await updateUserStreak(twin.id);
+
+                    // Flambeau check for twin
+                    if (entryDate.getTime() === today.getTime()) {
+                        const twinDailyTarget = await getDailyTarget(twin.id);
+                        const twinDailyProgress = await getTodayProgress(twin.id);
+                        if (twinDailyProgress >= twinDailyTarget && twinDailyTarget > 0) {
+                            const { tryClaimTorch } = await import("./torch");
+                            await tryClaimTorch(twin.id, twin.leagueId, entryDate);
+                        }
                     }
                 }
             }
+        } catch (syncError) {
+            console.error("Twin synchronization failed but main log should be okay:", syncError);
         }
         // ==== END TWIN REPLICATION ====
 
