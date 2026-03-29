@@ -13,6 +13,9 @@ import HistoryDetailsModal from "./HistoryDetailsModal";
 import { getRecentBatches } from "@/lib/actions/exercise";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import BadgeModal from "@/components/badges/BadgeModal";
+import BSUBanner from "./BSUBanner";
+import { isLastDayOfMonth } from "@/lib/actions/bsu";
+import { getBrusselsToday } from "@/lib/date-utils";
 
 interface DashboardProps {
     userId: string;
@@ -383,6 +386,13 @@ export default function DashboardClient({
                     {!showForm && !showSecondaryForm ? (
                         <>
                             <button className={`btn-primary start-button ${!isGoalReached ? 'btn-pulse' : ''}`} onClick={() => setShowForm(true)}>LOGGER UNE SÉANCE</button>
+                            
+                            {isLastDayOfMonth(getBrusselsToday()) && (
+                                <div style={{ marginTop: "1rem" }}>
+                                    <BSUBanner />
+                                </div>
+                            )}
+
                             <button className="glass-hover" style={{ width: "100%", borderRadius: "16px", padding: "0.85rem", fontSize: "0.85rem", fontWeight: "900", background: "rgba(0,0,0,0.15)", border: "none", color: "var(--foreground)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "10px", cursor: "pointer" }} onClick={() => setShowSecondaryForm(true)}><PlusCircle size={16} /> Pour en faire plus ✨</button>
                         </>
                     ) : showForm ? (

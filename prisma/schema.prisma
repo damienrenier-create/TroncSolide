@@ -39,6 +39,7 @@ enum RecordTimeframe {
 enum RecordType {
   VOLUME
   SERIES
+  BSU
 }
 
 enum FeedItemType {
@@ -118,6 +119,7 @@ model ExerciseSession {
   createdAt DateTime     @default(now())
   mood      String?      @db.VarChar(50)
   batchId   String?
+  challenge String?
   xpDetails Json?        @map("xp_details")
 
   user      User         @relation(fields: [userId], references: [id])

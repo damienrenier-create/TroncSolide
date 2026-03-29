@@ -158,5 +158,10 @@ export const BADGE_DEFINITIONS = [
         icon: "🕹️",
         xpValue: 0,
         type: "ACHIEVEMENT" as BadgeType
-    }
+    },
+    // --- FAMILLE H : BRING SALLY UP (CHALLENGES MENSUELS) ---
+    { id: "BSU_PARTICIPANT", name: "Sally's Guest", description: "A participé au challenge Bring Sally Up pour la première fois.", type: "ACHIEVEMENT" as BadgeType, icon: "🎵", xpValue: 150 },
+    { id: "BSU_DOUBLE_THREAT", name: "Double Challenge", description: "A complété les variantes Pompes ET Squats du Bring Sally Up le même mois.", type: "ACHIEVEMENT" as BadgeType, icon: "⚔️", xpValue: 300 },
+    { id: "BSU_STREAK_3", name: "Régularité Sally (3 mois)", description: "A participé au challenge Bring Sally Up pendant 3 mois consécutifs.", type: "ACHIEVEMENT" as BadgeType, icon: "🎖️", xpValue: 1000 },
+    { id: "BSU_RECORD_PUSHUP", name: "L'Imbattable (BSU Pompes)", description: "Détenteur du record absolu du Bring Sally Up (Pompes). Volable !", type: "FIRST_COME" as BadgeType, icon: "🔱", xpValue: 0 }
 ];

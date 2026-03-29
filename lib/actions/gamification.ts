@@ -12,6 +12,8 @@ import {
     startOfWeek, 
     startOfMonth, 
     startOfYear,
+    endOfMonth,
+    isSameDay,
     format,
     subDays
 } from "date-fns";
@@ -237,6 +239,49 @@ export async function checkGamification(userId: string, lastSessionId: string) {
         if (reg.maxStreakTarget >= 96) badgesToAward.push("REGULARITY_STREAK_TARGET_96D");
     }
 
+    // --- LOGIQUE BRING SALLY UP ---
+    if (session.challenge?.startsWith("BSU_")) {
+        if (!userBadgeNames.has("Sally's Guest")) badgesToAward.push("BSU_PARTICIPANT");
+
+        // Double Threat: Pushups AND Squats BSU on the same day
+        if (!userBadgeNames.has("Double Challenge")) {
+            const bsuTypesToday = await prisma.exerciseSession.groupBy({
+                by: ['challenge'],
+                where: { 
+                    userId, 
+                    date: session.date, 
+                    challenge: { in: ["BSU_PUSHUP", "BSU_SQUAT"] } 
+                }
+            });
+            if (bsuTypesToday.length >= 2) badgesToAward.push("BSU_DOUBLE_THREAT");
+        }
+
+        // Streak 3 months
+        if (!userBadgeNames.has("Régularité Sally (3 mois)")) {
+            const last3Months = [];
+            for (let i = 0; i < 3; i++) {
+                const d = subDays(today, i * 28); // Rough estimate for previous months
+                last3Months.push({
+                    start: startOfMonth(d),
+                    end: endOfMonth(d)
+                });
+            }
+            
+            let monthsActive = 0;
+            for (const range of last3Months) {
+                const count = await prisma.exerciseSession.count({
+                    where: { 
+                        userId, 
+                        challenge: { startsWith: "BSU_" },
+                        date: { gte: range.start, lte: range.end }
+                    }
+                });
+                if (count > 0) monthsActive++;
+            }
+            if (monthsActive >= 3) badgesToAward.push("BSU_STREAK_3");
+        }
+    }
+
     // Process Basic Badges & Tiered FIRST_COME
     for (const badgeId of badgesToAward) {
         const def = BADGE_DEFINITIONS.find(b => b.id === badgeId);
@@ -340,9 +385,10 @@ export async function reSyncLeagueRecords(leagueId: string, targetUserId?: strin
     const awardsForUser: { type: "badge", label: string, xp: number }[] = [];
 
     const recordMapping = [
-        { id: "RECORD_SERIES_PUSHUP", type: "SERIES", tf: "YEAR", ex: "PUSHUP", coef: 5.0 },
-        { id: "RECORD_SERIES_SQUAT", type: "SERIES", tf: "YEAR", ex: "SQUAT", coef: 5.0 },
-        { id: "RECORD_SERIES_PLANK", type: "SERIES", tf: "YEAR", ex: "VENTRAL", coef: 5.0 },
+        { id: "RECORD_SERIES_PUSHUP", type: "SERIES" as RecordType, tf: "YEAR" as RecordTimeframe, ex: "PUSHUP" as ExerciseType, coef: 5.0 },
+        { id: "RECORD_SERIES_SQUAT", type: "SERIES" as RecordType, tf: "YEAR" as RecordTimeframe, ex: "SQUAT" as ExerciseType, coef: 5.0 },
+        { id: "RECORD_SERIES_PLANK", type: "SERIES" as RecordType, tf: "YEAR" as RecordTimeframe, ex: "VENTRAL" as ExerciseType, coef: 5.0 },
+        { id: "BSU_RECORD_PUSHUP", type: "BSU" as RecordType, tf: "YEAR" as RecordTimeframe, ex: "PUSHUP" as ExerciseType, coef: 10.0 }, // Higher coef for BSU? Let's say 10XP per rep for the record
     ];
 
     for (const mapping of recordMapping) {
