@@ -8,6 +8,7 @@ import { syncPenalties } from "@/lib/actions/economy";
 import { getFeedItems } from "@/lib/actions/social";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 import { PushReminderPopup } from "@/components/social/PushReminderPopup";
+import { getTorchStatus } from "@/lib/actions/torch";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -31,11 +32,12 @@ export default async function DashboardPage() {
     </div>
   );
 
-  const [target, progress, trophiesData, feedItems] = await Promise.all([
+  const [target, progress, trophiesData, feedItems, torchData] = await Promise.all([
     getDailyTarget(session.user.id),
     getTodayProgress(session.user.id),
     getTrophiesRoomData(),
-    getFeedItems(stats.leagueId)
+    getFeedItems(stats.leagueId),
+    getTorchStatus(stats.leagueId)
   ]);
 
   return (
@@ -47,6 +49,7 @@ export default async function DashboardPage() {
         stats={stats}
         trophiesData={trophiesData}
         feedItems={feedItems}
+        torchData={torchData}
       />
       <PushReminderPopup user={stats} />
     </>

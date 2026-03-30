@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { ExerciseType, RecordType, RecordTimeframe } from "@prisma/client";
-import { Trophy, Calendar, Filter, Zap, Target, Flame, TrendingUp, ChevronRight } from "lucide-react";
+import { Trophy, Calendar, Filter, Zap, Target, Flame, TrendingUp, ChevronRight, Heart, Rocket } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import GazetteComponent from "./GazetteComponent";
+import { postMessage, toggleMessageLike } from "@/lib/actions/messages";
 
 interface Ranking {
     userId: string;
@@ -52,9 +53,10 @@ interface LeagueClientProps {
     leagueName: string;
     currentUserId: string;
     initialFeedItems: any[];
-    allRecords: any[];
+    allRecords: { allTime: any[], current: any[] };
     top3AbsoluteRecords: Record<string, any[]>;
     trendData?: { chartData: any[], users: string[] };
+    messages: any[];
     onFilterChange: (exercise: ExerciseType, type: RecordType, timeframe: RecordTimeframe) => Promise<Ranking[]>;
 }
 
@@ -66,6 +68,7 @@ export default function LeagueClient({
     allRecords,
     top3AbsoluteRecords,
     trendData,
+    messages,
     onFilterChange
 }: LeagueClientProps) {
     const searchParams = useSearchParams();
@@ -74,12 +77,57 @@ export default function LeagueClient({
     const [rankings, setRankings] = useState<Ranking[]>(initialRankings);
     const [exercise, setExercise] = useState<ExerciseType>("VENTRAL");
     const [type, setType] = useState<RecordType>("VOLUME");
-    const [timeframe, setTimeframe] = useState<RecordTimeframe>("WEEK");
+    const [timeframe, setTimeframe] = useState<RecordTimeframe>("DAY");
     const [loading, setLoading] = useState(false);
     const [view, setView] = useState<"RANKINGS" | "GAZETTE" | "GLOBAL" | "TRENDS">(initialTab);
 
     // --- NEW: Reward Modal State ---
     const [rewardModal, setRewardModal] = useState<{ rank: number; label: string } | null>(null);
+
+    // MESSAGE STATE (MIGRATED FROM SQUARE)
+    const [content, setContent] = useState("");
+    const [msgLoading, setMsgLoading] = useState(false);
+    const [optimisticLikes, setOptimisticLikes] = useState<Record<string, { count: number, hasLiked: boolean }>>({});
+    const [isPending, startTransition] = useTransition();
+    const router = useRouter();
+
+    async function handlePostMessage() {
+        if (!content.trim() || content.length > 240) return;
+        setMsgLoading(true);
+        const res = await postMessage(content);
+        if (res.success) {
+            setContent("");
+            router.refresh();
+        } else {
+            alert(res.error);
+        }
+        setMsgLoading(false);
+    }
+
+    function handleToggleLike(msg: any) {
+        const currentCount = optimisticLikes[msg.id]?.count ?? msg.likes?.length ?? 0;
+        const currentHasLiked = optimisticLikes[msg.id]?.hasLiked ?? (msg.likes?.some((l: any) => l.userId === currentUserId) || false);
+
+        setOptimisticLikes(prev => ({
+            ...prev,
+            [msg.id]: {
+                count: currentHasLiked ? currentCount - 1 : currentCount + 1,
+                hasLiked: !currentHasLiked
+            }
+        }));
+
+        startTransition(async () => {
+            await toggleMessageLike(msg.id);
+        });
+    }
+
+    function getLikeIcon(count: number, hasLiked: boolean) {
+        if (count === 0) return <Heart size={16} color={hasLiked ? "#ef4444" : "var(--text-muted)"} strokeWidth={hasLiked ? 3 : 2} />;
+        if (count <= 2) return <Heart size={16} fill="#ef4444" color="#ef4444" />;
+        if (count <= 4) return <Flame size={16} fill="#f97316" color="#f97316" />;
+        if (count <= 9) return <Zap size={16} fill="#fbbf24" color="#fbbf24" />;
+        return <Rocket size={16} fill="#a855f7" color="#a855f7" style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.5))" }} />;
+    }
 
     async function handleUpdate(newExercise: ExerciseType, newType: RecordType, newTimeframe: RecordTimeframe) {
         setLoading(true);
@@ -361,7 +409,7 @@ export default function LeagueClient({
                     )}
                 </>
             ) : view === "GLOBAL" ? (
-                <section className="global-records-view" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
+                <section className="global-records-view" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "2rem", marginBottom: "3rem" }}>
                     {[
                         { id: "VENTRAL", label: "Gainage Ventral", icon: "🛡️", unit: "s" },
                         { id: "PUSHUP", label: "Pompes", icon: "💪", unit: "" },
@@ -369,7 +417,7 @@ export default function LeagueClient({
                         { id: "LATERAL_L", label: "Gainage Gauche", icon: "👈", unit: "s" },
                         { id: "LATERAL_R", label: "Gainage Droit", icon: "👉", unit: "s" }
                     ].map(ex => {
-                        const getRec = (t: string, tf: string) => allRecords.find((r: any) => r.exercise === ex.id && r.type === t && r.timeframe === tf);
+                        const getRec = (t: string, tf: string, pool: any[]) => pool?.find((r: any) => r.exercise === ex.id && r.type === t && r.timeframe === tf);
                         
                         return (
                             <div key={ex.id} className="glass-premium" style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "24px", padding: "1.5rem", background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)" }}>
@@ -377,35 +425,48 @@ export default function LeagueClient({
                                     <span>{ex.icon}</span> {ex.label}
                                 </h3>
                                 
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                     {[
-                                        { l: "Record Jour", r: getRec("VOLUME", "DAY") },
-                                        { l: "Record Semaine", r: getRec("VOLUME", "WEEK") },
-                                        { l: "Record Mois", r: getRec("VOLUME", "MONTH") }
-                                    ].map((cell, idx) => (
-                                        <div key={idx} style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "6px" }}>
-                                            <div style={{ fontSize: "0.65rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-                                                {cell.l}
-                                            </div>
-                                            {cell.r ? (
-                                                <>
-                                                    <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--foreground)" }}>
-                                                        {cell.r.value}<span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{ex.unit}</span>
+                                        { l: "Record Jour", tf: "DAY" },
+                                        { l: "Record Semaine", tf: "WEEK" },
+                                        { l: "Record Mois", tf: "MONTH" }
+                                    ].map((row, idx) => {
+                                        const hist = getRec("VOLUME", row.tf, allRecords.allTime);
+                                        const curr = getRec("VOLUME", row.tf, allRecords.current);
+                                        
+                                        return (
+                                            <div key={idx} style={{ background: "rgba(0,0,0,0.1)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "1rem", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", alignItems: "center" }}>
+                                                <div style={{ fontSize: "0.7rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                                                    {row.l}
+                                                </div>
+                                                
+                                                {/* Current Column */}
+                                                <div style={{ textAlign: "center" }}>
+                                                    <div style={{ fontSize: "0.55rem", fontWeight: "900", color: "var(--primary)", marginBottom: "4px" }}>EN COURS</div>
+                                                    <div style={{ fontSize: "1.1rem", fontWeight: "900", color: "white" }}>
+                                                        {curr?.value || 0}<span style={{ fontSize: "0.6rem", opacity: 0.5 }}>{ex.unit}</span>
                                                     </div>
-                                                    <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", background: "rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: "8px", marginTop: "4px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                        <Link href={`/profile/${encodeURIComponent(cell.r.user?.nickname || cell.r.user?.id || 'inconnu')}`} className="profile-link">
-                                                            {cell.r.user?.nickname}
-                                                        </Link>
+                                                    <div style={{ fontSize: "0.6rem", fontWeight: "800", color: "var(--text-muted)", marginTop: "2px" }}>
+                                                        {curr?.user?.nickname || "-"}
                                                     </div>
-                                                </>
-                                            ) : (
-                                                <div style={{ fontSize: "1.2rem", fontWeight: "900", color: "rgba(255,255,255,0.1)", marginTop: "10px" }}>-</div>
-                                            )}
-                                        </div>
-                                    ))}
+                                                </div>
 
-                                    {/* Podium Absolu */}
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(217, 119, 6, 0.1)", border: "1px solid rgba(217, 119, 6, 0.3)", borderRadius: "16px", padding: "1rem", gridColumn: "1 / -1" }}>
+                                                {/* All-Time Column */}
+                                                <div style={{ textAlign: "center" }}>
+                                                    <div style={{ fontSize: "0.55rem", fontWeight: "900", color: "#fbbf24", marginBottom: "4px" }}>ALL TIME</div>
+                                                    <div style={{ fontSize: "1.1rem", fontWeight: "900", color: "#fbbf24" }}>
+                                                        {hist?.value || 0}<span style={{ fontSize: "0.6rem", opacity: 0.5 }}>{ex.unit}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: "0.6rem", fontWeight: "800", color: "var(--text-muted)", marginTop: "2px" }}>
+                                                        {hist?.user?.nickname || "-"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Podium Absolu (One Series) */}
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(217, 119, 6, 0.1)", border: "1px solid rgba(217, 119, 6, 0.3)", borderRadius: "16px", padding: "1rem", marginTop: "10px" }}>
                                         <div style={{ fontSize: "0.7rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--primary)", textTransform: "uppercase", textAlign: "center" }}>Podium Absolu (1 série)</div>
                                         <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", flexWrap: "wrap", alignItems: "flex-end" }}>
                                             {top3AbsoluteRecords[ex.id]?.slice(0, 3).map((r: any, idx: number) => {
@@ -413,10 +474,10 @@ export default function LeagueClient({
                                                 const icons = ["🥇", "🥈", "🥉"];
                                                 return (
                                                     <div key={idx} style={{ flex: 1, minWidth: "100px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "4px" }}>
-                                                        <div style={{ fontSize: idx===0 ? "1.6rem" : "1.2rem", fontWeight: "900", color: "var(--foreground)", textShadow: idx===0 ? "0 2px 10px rgba(217, 119, 6, 0.3)" : "none" }}>
+                                                        <div style={{ fontSize: idx===0 ? "1.4rem" : "1.1rem", fontWeight: "900", color: "var(--foreground)", textShadow: idx===0 ? "0 2px 10px rgba(217, 119, 6, 0.3)" : "none" }}>
                                                             {r.value}<span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{ex.unit}</span>
                                                         </div>
-                                                        <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "white", background: colors[idx], padding: "2px 8px", borderRadius: "8px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                        <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "white", background: colors[idx], padding: "2px 8px", borderRadius: "8px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                                             <Link href={`/profile/${encodeURIComponent(r.nickname)}`} className="profile-link-white">
                                                                 {icons[idx]} {r.nickname}
                                                             </Link>
@@ -435,13 +496,15 @@ export default function LeagueClient({
                     })}
                 </section>
             ) : view === "GAZETTE" ? (
-                <GazetteComponent initialItems={initialFeedItems} currentUserId={currentUserId} />
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                    <GazetteComponent initialItems={initialFeedItems} currentUserId={currentUserId} />
+                </div>
             ) : (
                 <section className="trends-view" style={{ marginTop: "1rem" }}>
                     <div className="glass-premium" style={{ padding: "1.5rem", borderRadius: "24px", minHeight: "450px" }}>
                         <div style={{ marginBottom: "2rem" }}>
                             <h3 style={{ fontSize: "1.1rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "8px" }}>
-                                <TrendingUp size={20} className="text-primary"/> Évolution de l'XP de la Ligue
+                                <TrendingUp size={20} className="text-primary"/> Évolution de l'XP du Panthéon
                             </h3>
                             <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px", fontWeight: 700 }}>Progression cumulative sur les 14 derniers jours</p>
                         </div>
@@ -506,6 +569,94 @@ export default function LeagueClient({
                         )}
                     </div>
                 </section>
+            )}
+
+            {/* SHARED SOCIAL SECTION BELOW RANKINGS (Move from La Place) */}
+            {view === "RANKINGS" && (
+                <div style={{ marginTop: "3rem", borderTop: "1px solid rgba(0,0,0,0.05)", paddingTop: "2rem" }}>
+                    <div style={{ marginBottom: "2rem" }}>
+                        <GazetteComponent initialItems={initialFeedItems} currentUserId={currentUserId} />
+                    </div>
+
+                    {/* SHOUTBOX (MIGRATED) */}
+                    <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <Zap className="text-primary" size={18} />
+                        <h3 style={{ fontSize: "1rem", fontWeight: 900, textTransform: "uppercase" }}>Dernières Paroles</h3>
+                    </div>
+
+                    <section className="glass" style={{ marginBottom: "1.5rem", padding: "1.25rem", borderRadius: "20px" }}>
+                        <textarea
+                            value={content}
+                            onChange={e => setContent(e.target.value)}
+                            placeholder="Quoi de neuf ? Partage tes exploits ou encourage ta ligue !..."
+                            maxLength={240}
+                            style={{
+                                width: "100%", background: "transparent", border: "none", color: "var(--foreground)", 
+                                outline: "none", resize: "none", height: "60px", fontSize: "0.9rem",
+                                fontFamily: "inherit"
+                            }}
+                        />
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", borderTop: "1px solid rgba(0,0,0,0.03)", paddingTop: "10px" }}>
+                            <span style={{ fontSize: "0.7rem", color: content.length >= 240 ? "var(--accent)" : "var(--text-muted)", fontWeight: 800 }}>
+                                {content.length}/240
+                            </span>
+                            <button 
+                                onClick={handlePostMessage} 
+                                disabled={msgLoading || content.trim().length === 0}
+                                style={{
+                                    background: "var(--foreground)", color: "var(--background)", border: "none",
+                                    padding: "6px 16px", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 800,
+                                    cursor: msgLoading || content.trim().length === 0 ? "not-allowed" : "pointer"
+                                }}
+                            >
+                                {msgLoading ? "..." : "Publier"}
+                            </button>
+                        </div>
+                    </section>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {messages.length === 0 ? (
+                            <div className="glass" style={{ padding: "1.5rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>
+                                Pas encore de messages...
+                            </div>
+                        ) : (
+                            messages.map((msg: any) => {
+                                const currentCount = optimisticLikes[msg.id]?.count ?? msg.likes?.length ?? 0;
+                                const currentHasLiked = optimisticLikes[msg.id]?.hasLiked ?? (msg.likes?.some((l: any) => l.userId === currentUserId) || false);
+                                
+                                return (
+                                    <div key={msg.id} className="glass" style={{ padding: "1rem", borderRadius: "16px" }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "rgba(0,0,0,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.6rem" }}>
+                                                    {msg.user.nickname.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span style={{ fontWeight: 900, fontSize: "0.8rem" }}>{msg.user.nickname}</span>
+                                            </div>
+                                            <span style={{ fontSize: "0.6rem", color: "var(--text-muted)", fontWeight: 700 }}>
+                                                {new Date(msg.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <p style={{ fontSize: "0.85rem", opacity: 0.9, lineHeight: 1.4, marginBottom: "8px" }}>{msg.content}</p>
+                                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                            <button 
+                                                onClick={() => handleToggleLike(msg)}
+                                                style={{
+                                                    display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer"
+                                                }}
+                                            >
+                                                {getLikeIcon(currentCount, currentHasLiked)}
+                                                {currentCount > 0 && (
+                                                    <span style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--text-muted)" }}>{currentCount}</span>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
             )}
 
             <style jsx>{`

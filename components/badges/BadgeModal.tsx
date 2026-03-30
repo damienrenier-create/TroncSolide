@@ -147,7 +147,7 @@ export default function BadgeModal({ badge, onClose, userStats, records }: { bad
                     </div>
                     <h2 style={{ fontSize: "1.5rem", fontWeight: "900", marginBottom: "0.25rem" }}>{badge.name}</h2>
                     <div style={{ fontSize: "0.7rem", fontWeight: 900, color: isRecord ? "var(--primary)" : "var(--secondary)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "0.75rem" }}>
-                        {isRecord ? "🏆 Record de Ligue" : isMilestone ? "🎯 Palier Pionnier" : "✨ Succès Personnel"}
+                        {isRecord ? "🏆 Record du Panthéon" : isMilestone ? "🎯 Palier Pionnier" : "✨ Succès Personnel"}
                     </div>
                     <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", lineHeight: "1.4" }}>{badge.description}</p>
                 </div>

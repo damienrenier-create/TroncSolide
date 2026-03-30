@@ -180,7 +180,7 @@ export default function FAQClient({ badges, groups, catalogue, faqItems, agenda,
                     <section className="glass" style={{ padding: "1.5rem" }}>
                         <h2 style={{ fontSize: "1.1rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
                             <Calendar size={20} className="text-secondary" />
-                            Agenda de la Ligue & Événements 🏆
+                            Agenda du Panthéon & Événements 🏆
                         </h2>
                         <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
                             Marquez vos calendriers ! Ces journées spéciales offrent des multiplicateurs massifs et des trophées uniques que vous ne pouvez obtenir qu'une fois par an.

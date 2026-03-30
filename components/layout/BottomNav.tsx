@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Trophy, Megaphone, HelpCircle } from "lucide-react";
+import { Home, Trophy, Award, HelpCircle } from "lucide-react";
 
 const navItems = [
     { label: "Home", href: "/", icon: Home },
-    { label: "Ligue", href: "/league", icon: Trophy },
-    { label: "La Place", href: "/square", icon: Megaphone },
-    { label: "Trophées", href: "/trophies", icon: Trophy },
+    { label: "Panthéon", href: "/league", icon: Trophy },
+    { label: "Trophées", href: "/trophies", icon: Award },
 ];
 
 export default function BottomNav() {

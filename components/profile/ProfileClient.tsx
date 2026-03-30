@@ -144,7 +144,7 @@ export default function ProfileClient({ user }: { user: any }) {
             <section className="glass-premium" style={{ padding: "1.5rem", marginBottom: "1.5rem", borderRadius: "28px" }}>
                 <div className="card-header" style={{ marginBottom: "1rem" }}>
                     <Users size={18} className="text-secondary" />
-                    <span>Ma Ligue ({user.league?.name || "Ligue de Base"})</span>
+                    <span>Mon Panthéon ({user.league?.name || "Panthéon de Base"})</span>
                 </div>
                 
                 <div className="league-members-list">

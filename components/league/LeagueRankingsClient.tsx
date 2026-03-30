@@ -267,7 +267,7 @@ export default function LeagueRankingsClient({ evolutionData, streakRankings, le
 
             {/* TABLE VIEW (Always visible as reference) */}
             <div className="glass" style={{ padding: "0" }}>
-                <div style={{ padding: "1rem", fontWeight: 900, fontSize: "0.8rem", borderBottom: "1px solid rgba(0,0,0,0.03)", textTransform: "uppercase", color: "var(--text-muted)" }}>Détails de la Ligue</div>
+                <div style={{ padding: "1rem", fontWeight: 900, fontSize: "0.8rem", borderBottom: "1px solid rgba(0,0,0,0.03)", textTransform: "uppercase", color: "var(--text-muted)" }}>Détails du Panthéon</div>
                 {streakRankings.map((u, i) => (
                     <div key={u.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", borderBottom: i < streakRankings.length - 1 ? "1px solid rgba(0,0,0,0.03)" : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

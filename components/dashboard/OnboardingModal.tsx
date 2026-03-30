@@ -22,7 +22,7 @@ const slides = [
         color: "var(--secondary)"
     },
     {
-        title: "La Ligue & Ses Paliers 💎",
+        title: "Le Panthéon & Ses Paliers 💎",
         content: "Gagne des niveaux via tes XP et franchis des paliers de performance. Sois le premier à atteindre un palier pour devenir un Pionnier et marquer l'histoire !",
         icon: <Award size={48} style={{ color: "var(--accent)" }} />,
         color: "var(--accent)"

@@ -91,14 +91,86 @@ export async function getLeagueRankings(
 }
 
 export async function getLeagueRecords(leagueId: string) {
-    return prisma.record.findMany({
-        where: { leagueId },
-        include: {
-            user: {
-                select: { nickname: true }
+    const [allTime, current] = await Promise.all([
+        prisma.record.findMany({
+            where: { leagueId },
+            include: {
+                user: {
+                    select: { nickname: true }
+                }
+            }
+        }),
+        getCurrentBestRecords(leagueId)
+    ]);
+    
+    return { allTime, current };
+}
+
+async function getCurrentBestRecords(leagueId: string) {
+    const exercises: ExerciseType[] = ["VENTRAL", "PUSHUP", "SQUAT", "LATERAL_L", "LATERAL_R"];
+    const timeframes: RecordTimeframe[] = ["DAY", "WEEK", "MONTH"];
+    const now = new Date();
+    
+    const results: any[] = [];
+    
+    for (const timeframe of timeframes) {
+        let startDate: Date;
+        switch (timeframe) {
+            case "DAY": startDate = startOfDay(now); break;
+            case "WEEK": startDate = startOfWeek(now, { weekStartsOn: 1 }); break;
+            case "MONTH": startDate = startOfMonth(now); break;
+            default: startDate = startOfDay(now);
+        }
+        
+        for (const ex of exercises) {
+            // 1. VOLUME Current Best
+            const volumeAgg = await prisma.exerciseSession.groupBy({
+                by: ['userId'],
+                where: {
+                    user: { leagueId },
+                    type: ex,
+                    date: { gte: startDate }
+                },
+                _sum: { value: true },
+                orderBy: { _sum: { value: 'desc' } },
+                take: 1
+            });
+            
+            if (volumeAgg.length > 0) {
+                const user = await prisma.user.findUnique({ where: { id: volumeAgg[0].userId }, select: { nickname: true } });
+                results.push({
+                    exercise: ex,
+                    type: "VOLUME",
+                    timeframe,
+                    value: volumeAgg[0]._sum.value,
+                    user: { nickname: user?.nickname || "Inconnu" }
+                });
+            }
+            
+            // 2. SERIES Current Best
+            const seriesMax = await prisma.exerciseSession.findFirst({
+                where: {
+                    user: { leagueId },
+                    type: ex,
+                    date: { gte: startDate }
+                },
+                orderBy: { value: 'desc' },
+                include: { user: { select: { nickname: true } } }
+            });
+            
+            if (seriesMax) {
+                results.push({
+                    exercise: ex,
+                    type: "SERIES",
+                    timeframe,
+                    value: seriesMax.value,
+                    user: { nickname: seriesMax.user?.nickname || "Inconnu" }
+                });
             }
         }
-    });
+    }
+    
+    return results;
 }
 
 export async function getTop3AbsoluteRecords(leagueId: string) {
