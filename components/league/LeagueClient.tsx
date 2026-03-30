@@ -80,6 +80,7 @@ export default function LeagueClient({
     const [timeframe, setTimeframe] = useState<RecordTimeframe>("DAY");
     const [loading, setLoading] = useState(false);
     const [view, setView] = useState<"RANKINGS" | "GAZETTE" | "GLOBAL" | "TRENDS">(initialTab);
+    const [currentRecordSlide, setCurrentRecordSlide] = useState(0);
 
     // --- NEW: Reward Modal State ---
     const [rewardModal, setRewardModal] = useState<{ rank: number; label: string } | null>(null);
@@ -409,91 +410,148 @@ export default function LeagueClient({
                     )}
                 </>
             ) : view === "GLOBAL" ? (
-                <section className="global-records-view" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "2rem", marginBottom: "3rem" }}>
-                    {[
-                        { id: "VENTRAL", label: "Gainage Ventral", icon: "🛡️", unit: "s" },
-                        { id: "PUSHUP", label: "Pompes", icon: "💪", unit: "" },
-                        { id: "SQUAT", label: "Squats", icon: "🦵", unit: "" },
-                        { id: "LATERAL_L", label: "Gainage Gauche", icon: "👈", unit: "s" },
-                        { id: "LATERAL_R", label: "Gainage Droit", icon: "👉", unit: "s" }
-                    ].map(ex => {
-                        const getRec = (t: string, tf: string, pool: any[]) => pool?.find((r: any) => r.exercise === ex.id && r.type === t && r.timeframe === tf);
-                        
-                        return (
-                            <div key={ex.id} className="glass-premium" style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "24px", padding: "1.5rem", background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)" }}>
-                                <h3 style={{ fontSize: "1.2rem", fontWeight: "900", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "8px", color: "var(--foreground)" }}>
-                                    <span>{ex.icon}</span> {ex.label}
-                                </h3>
-                                
-                                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                                    {[
-                                        { l: "Record Jour", tf: "DAY" },
-                                        { l: "Record Semaine", tf: "WEEK" },
-                                        { l: "Record Mois", tf: "MONTH" }
-                                    ].map((row, idx) => {
-                                        const hist = getRec("VOLUME", row.tf, allRecords.allTime);
-                                        const curr = getRec("VOLUME", row.tf, allRecords.current);
+                <section className="global-records-view" style={{ marginTop: "1rem", marginBottom: "3rem", position: "relative" }}>
+                    <div className="carousel-container" onScroll={(e) => {
+                        const container = e.currentTarget;
+                        const slideWidth = container.offsetWidth;
+                        const newSlide = Math.round(container.scrollLeft / slideWidth);
+                        if (newSlide !== currentRecordSlide) setCurrentRecordSlide(newSlide);
+                    }}>
+                        {[
+                            { id: "VENTRAL", label: "Gainage Ventral", icon: "🛡️", unit: "s" },
+                            { id: "PUSHUP", label: "Pompes", icon: "💪", unit: "" },
+                            { id: "SQUAT", label: "Squats", icon: "🦵", unit: "" },
+                            { id: "LATERAL_L", label: "Gainage Gauche", icon: "👈", unit: "s" },
+                            { id: "LATERAL_R", label: "Gainage Droit", icon: "👉", unit: "s" }
+                        ].map((ex, exIdx) => {
+                            const getRec = (t: string, tf: string, pool: any[]) => pool?.find((r: any) => r.exercise === ex.id && r.type === t && r.timeframe === tf);
+                            
+                            return (
+                                <div key={ex.id} className="carousel-slide">
+                                    <div className="glass-premium record-card">
+                                        <h3 style={{ fontSize: "1.2rem", fontWeight: "900", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "8px", color: "var(--foreground)" }}>
+                                            <span>{ex.icon}</span> {ex.label}
+                                        </h3>
                                         
-                                        return (
-                                            <div key={idx} style={{ background: "rgba(0,0,0,0.1)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "1rem", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", alignItems: "center" }}>
-                                                <div style={{ fontSize: "0.7rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-                                                    {row.l}
-                                                </div>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                            {[
+                                                { l: "Record Jour", tf: "DAY" },
+                                                { l: "Record Semaine", tf: "WEEK" },
+                                                { l: "Record Mois", tf: "MONTH" }
+                                            ].map((row, idx) => {
+                                                const hist = getRec("VOLUME", row.tf, allRecords.allTime);
+                                                const curr = getRec("VOLUME", row.tf, allRecords.current);
                                                 
-                                                {/* Current Column */}
-                                                <div style={{ textAlign: "center" }}>
-                                                    <div style={{ fontSize: "0.55rem", fontWeight: "900", color: "var(--primary)", marginBottom: "4px" }}>EN COURS</div>
-                                                    <div style={{ fontSize: "1.1rem", fontWeight: "900", color: "white" }}>
-                                                        {curr?.value || 0}<span style={{ fontSize: "0.6rem", opacity: 0.5 }}>{ex.unit}</span>
-                                                    </div>
-                                                    <div style={{ fontSize: "0.6rem", fontWeight: "800", color: "var(--text-muted)", marginTop: "2px" }}>
-                                                        {curr?.user?.nickname || "-"}
-                                                    </div>
-                                                </div>
-
-                                                {/* All-Time Column */}
-                                                <div style={{ textAlign: "center" }}>
-                                                    <div style={{ fontSize: "0.55rem", fontWeight: "900", color: "#fbbf24", marginBottom: "4px" }}>ALL TIME</div>
-                                                    <div style={{ fontSize: "1.1rem", fontWeight: "900", color: "#fbbf24" }}>
-                                                        {hist?.value || 0}<span style={{ fontSize: "0.6rem", opacity: 0.5 }}>{ex.unit}</span>
-                                                    </div>
-                                                    <div style={{ fontSize: "0.6rem", fontWeight: "800", color: "var(--text-muted)", marginTop: "2px" }}>
-                                                        {hist?.user?.nickname || "-"}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-
-                                    {/* Podium Absolu (One Series) */}
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(217, 119, 6, 0.1)", border: "1px solid rgba(217, 119, 6, 0.3)", borderRadius: "16px", padding: "1rem", marginTop: "10px" }}>
-                                        <div style={{ fontSize: "0.7rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--primary)", textTransform: "uppercase", textAlign: "center" }}>Podium Absolu (1 série)</div>
-                                        <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", flexWrap: "wrap", alignItems: "flex-end" }}>
-                                            {top3AbsoluteRecords[ex.id]?.slice(0, 3).map((r: any, idx: number) => {
-                                                const colors = ["var(--primary)", "#94a3b8", "#d97706"];
-                                                const icons = ["🥇", "🥈", "🥉"];
                                                 return (
-                                                    <div key={idx} style={{ flex: 1, minWidth: "100px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "4px" }}>
-                                                        <div style={{ fontSize: idx===0 ? "1.4rem" : "1.1rem", fontWeight: "900", color: "var(--foreground)", textShadow: idx===0 ? "0 2px 10px rgba(217, 119, 6, 0.3)" : "none" }}>
-                                                            {r.value}<span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{ex.unit}</span>
+                                                    <div key={idx} style={{ background: "rgba(0,0,0,0.1)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "1rem", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", alignItems: "center" }}>
+                                                        <div style={{ fontSize: "0.7rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                                                            {row.l}
                                                         </div>
-                                                        <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "white", background: colors[idx], padding: "2px 8px", borderRadius: "8px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                            <Link href={`/profile/${encodeURIComponent(r.nickname)}`} className="profile-link-white">
-                                                                {icons[idx]} {r.nickname}
-                                                            </Link>
+                                                        
+                                                        {/* Current Column */}
+                                                        <div style={{ textAlign: "center" }}>
+                                                            <div style={{ fontSize: "0.55rem", fontWeight: "900", color: "var(--primary)", marginBottom: "4px" }}>EN COURS</div>
+                                                            <div style={{ fontSize: "1.1rem", fontWeight: "900", color: "white" }}>
+                                                                {curr?.value || 0}<span style={{ fontSize: "0.6rem", opacity: 0.5 }}>{ex.unit}</span>
+                                                            </div>
+                                                            <div style={{ fontSize: "0.6rem", fontWeight: "800", color: "var(--text-muted)", marginTop: "2px", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {curr?.user?.nickname || "-"}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {/* All-Time Column */}
+                                                        <div style={{ textAlign: "center" }}>
+                                                            <div style={{ fontSize: "0.55rem", fontWeight: "900", color: "#fbbf24", marginBottom: "4px" }}>ALL TIME</div>
+                                                            <div style={{ fontSize: "1.1rem", fontWeight: "900", color: "#fbbf24" }}>
+                                                                {hist?.value || 0}<span style={{ fontSize: "0.6rem", opacity: 0.5 }}>{ex.unit}</span>
+                                                            </div>
+                                                            <div style={{ fontSize: "0.6rem", fontWeight: "800", color: "var(--text-muted)", marginTop: "2px", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {hist?.user?.nickname || "-"}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 );
                                             })}
-                                            {(!top3AbsoluteRecords[ex.id] || top3AbsoluteRecords[ex.id].length === 0) && (
-                                                <div style={{ width: "100%", textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>Aucun record</div>
-                                            )}
+
+                                            {/* Podium Absolu (One Series) */}
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(217, 119, 6, 0.1)", border: "1px solid rgba(217, 119, 6, 0.3)", borderRadius: "16px", padding: "1rem", marginTop: "10px" }}>
+                                                <div style={{ fontSize: "0.7rem", fontWeight: "900", letterSpacing: "0.05em", color: "var(--primary)", textTransform: "uppercase", textAlign: "center" }}>Podium Absolu (1 série)</div>
+                                                <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", flexWrap: "nowrap", overflow: 'hidden', alignItems: "flex-end" }}>
+                                                    {top3AbsoluteRecords[ex.id]?.slice(0, 3).map((r: any, idx: number) => {
+                                                        const colors = ["var(--primary)", "#94a3b8", "#d97706"];
+                                                        const icons = ["🥇", "🥈", "🥉"];
+                                                        return (
+                                                            <div key={idx} style={{ flex: 1, minWidth: "0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: "4px" }}>
+                                                                <div style={{ fontSize: idx===0 ? "1.4rem" : "1.1rem", fontWeight: "900", color: "var(--foreground)", textShadow: idx===0 ? "0 2px 10px rgba(217, 119, 6, 0.3)" : "none" }}>
+                                                                    {r.value}<span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{ex.unit}</span>
+                                                                </div>
+                                                                <div style={{ fontSize: "0.6rem", fontWeight: "700", color: "white", background: colors[idx], padding: "2px 4px", borderRadius: "8px", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                                    <Link href={`/profile/${encodeURIComponent(r.nickname)}`} className="profile-link-white">
+                                                                        {icons[idx]} {r.nickname}
+                                                                    </Link>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {(!top3AbsoluteRecords[ex.id] || top3AbsoluteRecords[ex.id].length === 0) && (
+                                                        <div style={{ width: "100%", textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>Aucun record</div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
+
+                    {/* Pagination Indicators */}
+                    <div className="carousel-nav">
+                        <div className="carousel-dots">
+                            {[0, 1, 2, 3, 4].map(idx => (
+                                <div key={idx} 
+                                    className={`carousel-dot ${currentRecordSlide === idx ? 'active' : ''}`}
+                                    onClick={() => {
+                                        const container = document.querySelector('.carousel-container');
+                                        if (container) {
+                                            container.scrollTo({
+                                                left: idx * (container as HTMLElement).offsetWidth,
+                                                behavior: 'smooth'
+                                            });
+                                        }
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                            ))}
+                        </div>
+                        <div className="carousel-info-hint">Fais glisser pour voir les autres exercices ➔</div>
+                    </div>
+
+                    {/* Navigation Arrows (Desktop) */}
+                    <button 
+                        className="carousel-arrow prev"
+                        disabled={currentRecordSlide === 0}
+                        onClick={() => {
+                            const container = document.querySelector('.carousel-container');
+                            if (container) {
+                                container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
+                            }
+                        }}
+                    >
+                        <ChevronRight size={24} style={{ transform: 'rotate(180deg)' }} />
+                    </button>
+                    <button 
+                        className="carousel-arrow next"
+                        disabled={currentRecordSlide === 4}
+                        onClick={() => {
+                            const container = document.querySelector('.carousel-container');
+                            if (container) {
+                                container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
+                            }
+                        }}
+                    >
+                        <ChevronRight size={24} />
+                    </button>
                 </section>
             ) : view === "GAZETTE" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -793,9 +851,99 @@ export default function LeagueClient({
           z-index: 2;
         }
         .rank-emoji { font-size: 1.6rem; }
-        .player-avatar-ring.gold { border-color: #fbbf24; }
-        .player-avatar-ring.silver { border-color: #94a3b8; }
         .player-avatar-ring.bronze { border-color: #ca8a04; }
+
+        /* CAROUSEL RECORDS */
+        .carousel-container {
+          display: flex;
+          gap: 15px;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+          padding: 10px 5px;
+        }
+        .carousel-container::-webkit-scrollbar { display: none; }
+        .carousel-slide {
+          flex: 0 0 100%;
+          scroll-snap-align: center;
+          width: 100%;
+        }
+        .record-card {
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 28px;
+          padding: 1.5rem;
+          background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+          height: 100%;
+        }
+        .carousel-nav {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          margin-top: 1.5rem;
+        }
+        .carousel-dots {
+          display: flex;
+          gap: 8px;
+        }
+        .carousel-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: rgba(0,0,0,0.1);
+          transition: all 0.3s ease;
+        }
+        .carousel-dot.active {
+          width: 24px;
+          border-radius: 4px;
+          background: var(--foreground);
+        }
+        .carousel-info-hint {
+          font-size: 0.7rem;
+          font-weight: 900;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          animation: side-hint-move 3s infinite ease-in-out;
+        }
+        @keyframes side-hint-move {
+          0%, 100% { transform: translateX(0); opacity: 0.5; }
+          50% { transform: translateX(5px); opacity: 0.8; }
+        }
+
+        .carousel-arrow {
+          position: absolute;
+          top: 35%;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: white;
+          border: 1px solid rgba(0,0,0,0.05);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          transition: all 0.2s;
+          color: var(--foreground);
+        }
+        .carousel-arrow:disabled {
+          opacity: 0;
+          pointer-events: none;
+        }
+        .carousel-arrow:hover {
+          background: var(--foreground);
+          color: white;
+          transform: scale(1.1);
+        }
+        .carousel-arrow.prev { left: -10px; }
+        .carousel-arrow.next { right: -10px; }
+
+        @media (max-width: 768px) {
+          .carousel-arrow { display: none; }
+        }
 
         .player-name-bubble {
           background: white;
