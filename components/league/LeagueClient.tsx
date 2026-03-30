@@ -574,10 +574,7 @@ export default function LeagueClient({
             {/* SHARED SOCIAL SECTION BELOW RANKINGS (Move from La Place) */}
             {view === "RANKINGS" && (
                 <div style={{ marginTop: "3rem", borderTop: "1px solid rgba(0,0,0,0.05)", paddingTop: "2rem" }}>
-                    <div style={{ marginBottom: "2rem" }}>
-                        <GazetteComponent initialItems={initialFeedItems} currentUserId={currentUserId} />
-                    </div>
-
+                    
                     {/* SHOUTBOX (MIGRATED) */}
                     <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
                         <Zap className="text-primary" size={18} />
