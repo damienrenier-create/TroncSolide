@@ -67,7 +67,12 @@ export async function getTorchStatus(leagueId: string) {
     });
 
     return {
-        detenteur: todayTorch ? todayTorch.user : null,
+        detenteur: todayTorch ? { 
+            id: todayTorch.userId,
+            nickname: todayTorch.user.nickname, 
+            currentTorchStreak: todayTorch.user.currentTorchStreak,
+            claimedAt: todayTorch.createdAt 
+        } : null,
         gardien: gardien
     };
 }

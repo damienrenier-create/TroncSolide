@@ -14,6 +14,7 @@ import { getRecentBatches } from "@/lib/actions/exercise";
 import { BADGE_DEFINITIONS } from "@/lib/constants/badges";
 import BadgeModal from "@/components/badges/BadgeModal";
 import BSUBanner from "./BSUBanner";
+import AprilFoolsBanner from "@/components/events/AprilFoolsBanner";
 import { isLastDayOfMonth, getBrusselsToday } from "@/lib/date-utils";
 
 interface DashboardProps {
@@ -359,6 +360,8 @@ export default function DashboardClient({
                 return null;
             })()}
 
+            {stats.activeEvent?.type === "APRIL_FOOLS" && <AprilFoolsBanner />}
+
             {/* 3. HERO : CORE APP (Daily Goal & Logger) */}
             <div className="hero-card" style={{ display: "block", textDecoration: "none", color: "inherit", marginBottom: "1rem", position: "relative", zIndex: 10 }}>
                 <Link href="/faq#concept" style={{ textDecoration: "none", color: "inherit" }}>
@@ -473,9 +476,14 @@ export default function DashboardClient({
                             <div style={{ fontSize: "0.6rem", fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "4px", marginBottom: "8px" }}>
                                 <Clock size={12} /> Détenteur
                             </div>
-                            <h4 style={{ fontSize: "1rem", fontWeight: 900, lineHeight: 1.2, marginBottom: "0.4rem" }}>
-                                {torchData.detenteur ? torchData.detenteur.nickname : "PERSONNE"}
-                            </h4>
+                             <h4 style={{ fontSize: "1rem", fontWeight: 900, lineHeight: 1.2, marginBottom: "0.4rem", display: "flex", alignItems: "baseline", gap: "8px" }}>
+                                 {torchData.detenteur ? torchData.detenteur.nickname : "PERSONNE"}
+                                 {torchData.detenteur?.claimedAt && (
+                                     <span style={{ fontSize: "0.65rem", fontWeight: 800, opacity: 0.6 }}>
+                                         à {new Date(torchData.detenteur.claimedAt).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}
+                                     </span>
+                                 )}
+                             </h4>
                             <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", lineHeight: 1.3 }}>
                                 {torchData.detenteur ? "A allumé la flamme aujourd'hui." : "Valide ton quota le premier !"}
                             </p>
