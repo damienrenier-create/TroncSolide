@@ -463,7 +463,7 @@ export async function getRecentBatches() {
                         date: s.date,
                         mood: s.mood,
                         exercises: batchSessions.map(x => ({ type: x.type, value: x.value })),
-                        xpTotal: batchSessions.reduce((acc, x) => acc + x.xpGained, 0),
+                        xpTotal: (s.xpDetails as any)?.totalXp ?? batchSessions.reduce((acc, x) => acc + x.xpGained, 0),
                         xpDetails: s.xpDetails, // Source de vérité (V1: stocké sur chaque session)
                         isBatch: true
                     });
@@ -475,8 +475,8 @@ export async function getRecentBatches() {
                     date: s.date,
                     mood: s.mood,
                     exercises: [{ type: s.type, value: s.value }],
-                    xpTotal: s.xpGained,
-                    xpDetails: null, // Fallback pour les anciennes sessions
+                    xpTotal: (s.xpDetails as any)?.totalXp ?? s.xpGained,
+                    xpDetails: s.xpDetails || null, // Fallback pour les anciennes sessions
                     isBatch: false
                 });
             }

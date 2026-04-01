@@ -210,8 +210,10 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
                 element.scrollIntoView({ behavior: "smooth", block: "center" });
             }
             // Optional: Auto-select it
-            const b = initialBadges.find(b => b.id === highlightId);
-            if (b) setSelectedBadge(b);
+            const b = initialBadges.find(b => b.id === highlightId) || BADGE_DEFINITIONS.find(b => b.id === highlightId);
+            if (b) {
+                setTimeout(() => setSelectedBadge(b), 100);
+            }
         }
     }, [highlightId, initialBadges]);
 

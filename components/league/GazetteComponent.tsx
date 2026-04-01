@@ -67,7 +67,7 @@ export default function GazetteComponent({
                     ) : (
                         "S'est fait lâchement dérober le titre : "
                     )}
-                    <Link href={`/badges?highlight=${item.badgeId}`} style={{ color: "inherit", fontWeight: 800 }}>
+                    <Link href={`/trophies?highlight=${item.badgeId}`} style={{ color: "inherit", fontWeight: 800 }}>
                         {badgeName}
                     </Link>
                     {" "}! 💔
@@ -126,7 +126,7 @@ export default function GazetteComponent({
                                 </button>
 
                                 {item.badgeId ? (
-                                    <Link href={`/badges?highlight=${item.badgeId}`} className="feed-link" title="Voir le trophée">
+                                    <Link href={`/trophies?highlight=${item.badgeId}`} className="feed-link" title="Voir le trophée">
                                         <div style={{ fontSize: "1.2rem", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>
                                             {item.badge?.icon || "🏆"}
                                         </div>

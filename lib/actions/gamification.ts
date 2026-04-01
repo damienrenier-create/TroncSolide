@@ -350,7 +350,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                 
                 await prisma.exerciseSession.update({
                     where: { id: s.id },
-                    data: { xpDetails: details }
+                    data: { xpDetails: details, xpGained: details.totalXp }
                 });
             }
         } else {
@@ -365,7 +365,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
             
             await prisma.exerciseSession.update({
                 where: { id: lastSessionId },
-                data: { xpDetails: details }
+                data: { xpDetails: details, xpGained: details.totalXp }
             });
         }
     }

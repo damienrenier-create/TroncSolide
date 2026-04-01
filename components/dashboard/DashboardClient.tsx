@@ -301,7 +301,7 @@ export default function DashboardClient({
                                 <div style={{ fontWeight: 900, color: "#ef4444", marginBottom: "4px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}><Flame size={16} /> 🚨 TROPHÉE VOLÉ !</div>
                                 <p style={{ fontSize: "0.80rem", margin: "0 0 10px 0", color: "rgba(255,255,255,0.9)", lineHeight: 1.4 }}>
                                     {alert.thief ? (<><Link href={`/profile/${encodeURIComponent(alert.thief.nickname)}`} className="text-primary" style={{ fontWeight: 900 }} onClick={(e) => e.stopPropagation()}>@{alert.thief.nickname}</Link> vient de t'arracher le titre :</>) : "Tu as perdu le titre (fin de période ou nouveau record) :"}
-                                    <br/><Link href={`/badges?highlight=${alert.badge?.id}`} style={{ color: "white", fontWeight: 800, textDecoration: "none" }} onClick={(e) => e.stopPropagation()}><strong>{alert.badge?.icon} {alert.badge?.name}</strong></Link>.
+                                    <br/><Link href={`/trophies?highlight=${alert.badge?.id}`} style={{ color: "white", fontWeight: 800, textDecoration: "none" }} onClick={(e) => e.stopPropagation()}><strong>{alert.badge?.icon} {alert.badge?.name}</strong></Link>.
                                 </p>
                                 <button onClick={() => dismissLostBadge(alert.id)} style={{ width: "100%", background: "none", border: "1px solid #ef4444", color: "#ef4444", padding: "6px 8px", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer", fontWeight: 800 }}>Ça ne se passera pas comme ça !</button>
                             </div>
