@@ -66,6 +66,7 @@ export default function TrophiesClient({ initialBadges, userStats, records = [],
             else if (name.includes("2m")) targetValue = 120;
             else if (name.includes("3m")) targetValue = 180;
             else if (name.includes("5m")) targetValue = 300;
+            else if (name.includes("10m")) targetValue = 600;
             else targetValue = extractThreshold(def.name);
             userValue = allTime.maxPlank || 0;
             unit = "s";
@@ -413,7 +414,7 @@ function TrophyCard({ item, highlightId, onSelect }: { item: any, highlightId: s
             </div>
 
             <div className="trophy-info" style={{ flex: 1 }}>
-                <h3 style={{ fontSize: "0.80rem", fontWeight: "900", marginBottom: "4px", lineHeight: "1.2", height: "1.2rem", overflow: "hidden" }}>{def.name}</h3>
+                <h3 style={{ fontSize: "0.80rem", fontWeight: "900", marginBottom: "4px", lineHeight: "1.2", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{def.name}</h3>
                 
                 {holderNickname && (
                     <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginBottom: "8px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

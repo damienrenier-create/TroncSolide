@@ -120,6 +120,55 @@ async function syncRecords(
     }
 }
 
+function prepareBatchSessions(exercises: { type: ExerciseType, value: number }[], activeEvent: any) {
+    const COMPETITIVE_EXERCISES: ExerciseType[] = ["PUSHUP", "SQUAT", "VENTRAL", "LATERAL_L", "LATERAL_R"];
+    let totalXPGained = 0;
+    const sessionsToCreate: any[] = [];
+    
+    for (const ex of exercises) {
+        const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
+        let multiplier = activeEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
+        
+        if (activeEvent?.type === "LABOR_DAY") multiplier = 5;
+        else if (activeEvent?.type === "MOTHERS_DAY" && (ex.type === "VENTRAL" || ex.type === "SQUAT")) multiplier = 5;
+        else if (activeEvent?.type === "FATHERS_DAY" && ex.type === "PUSHUP") multiplier = 5;
+
+        const xp = isCompetitive ? Math.round(ex.value * multiplier) : 0;
+        totalXPGained += xp;
+
+        const xpBase = isCompetitive ? ex.value : 0;
+        const xpEvent = xp - xpBase;
+
+        sessionsToCreate.push({ ex, xp, xpBase, xpEvent, multiplier });
+    }
+
+    const xpDetails = {
+        version: 1,
+        totalXp: totalXPGained,
+        breakdown: {
+            base: sessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
+            bonus: sessionsToCreate.reduce((sum, s) => sum + s.xpEvent, 0),
+        },
+        sources: sessionsToCreate.map(s => ({
+            type: "base",
+            label: `${s.ex.type === 'PUSHUP' ? 'Pompes' : s.ex.type === 'SQUAT' ? 'Squats' : 'Gainage'} (${s.ex.value}${s.ex.type === 'PUSHUP' || s.ex.type === 'SQUAT' ? ' reps' : 's'})`,
+            xp: s.xpBase,
+            exerciseType: s.ex.type
+        }))
+    };
+
+    if (activeEvent && xpDetails.breakdown.bonus > 0) {
+        xpDetails.sources.push({
+            type: "event",
+            label: `Bonus Événement : ${activeEvent.title}`,
+            xp: xpDetails.breakdown.bonus,
+            exerciseType: null as any
+        });
+    }
+
+    return { totalXPGained, sessionsToCreate, xpDetails };
+}
+
 export async function logBatchExercises(exercises: { type: ExerciseType, value: number }[], dateStr: string, mood?: string) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return { error: "Non autorisé" };
@@ -153,63 +202,10 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
         const createdSessions: { id: string, type: ExerciseType, value: number }[] = [];
         const batchId = crypto.randomUUID();
 
+        const batchData = prepareBatchSessions(filteredExercises, activeEvent);
+
         await prisma.$transaction(async (tx) => {
-            let totalXPGained = 0;
-            const sessionsToCreate = [];
-
-            // Première passe pour calculer le total du batch pour le JSON
-            for (const ex of filteredExercises) {
-                const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
-                let multiplier = activeEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
-                
-                if (activeEvent?.type === "LABOR_DAY") multiplier = 5;
-                else if (activeEvent?.type === "MOTHERS_DAY" && (ex.type === "VENTRAL" || ex.type === "SQUAT")) multiplier = 5;
-                else if (activeEvent?.type === "FATHERS_DAY" && ex.type === "PUSHUP") multiplier = 5;
-
-                const xp = isCompetitive ? Math.round(ex.value * multiplier) : 0;
-                totalXPGained += xp;
-
-                // Préparation du détail individuel pour le snapshot
-                const xpBase = isCompetitive ? ex.value : 0;
-                const xpEvent = xp - xpBase;
-
-                sessionsToCreate.push({
-                    ex,
-                    xp,
-                    xpBase,
-                    xpEvent,
-                    multiplier
-                });
-            }
-
-            // Version v1 du JSON détaillé (Snapshot)
-            // Note: On stocke le total du BATCH dans chaque session pour la résilience
-            const xpDetails = {
-                version: 1,
-                totalXp: totalXPGained,
-                breakdown: {
-                    base: sessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
-                    bonus: sessionsToCreate.reduce((sum, s) => sum + s.xpEvent, 0),
-                },
-                sources: sessionsToCreate.map(s => ({
-                    type: "base",
-                    label: `${s.ex.type === 'PUSHUP' ? 'Pompes' : s.ex.type === 'SQUAT' ? 'Squats' : 'Gainage'} (${s.ex.value}${s.ex.type === 'PUSHUP' || s.ex.type === 'SQUAT' ? ' reps' : 's'})`,
-                    xp: s.xpBase,
-                    exerciseType: s.ex.type
-                }))
-            };
-
-            // Ajout du bonus d'événement dans les sources si présent
-            if (activeEvent && xpDetails.breakdown.bonus > 0) {
-                xpDetails.sources.push({
-                    type: "event",
-                    label: `Bonus Événement : ${activeEvent.title}`,
-                    xp: xpDetails.breakdown.bonus,
-                    exerciseType: null as any
-                });
-            }
-
-            for (const item of sessionsToCreate) {
+            for (const item of batchData.sessionsToCreate) {
                 const newSession = await tx.exerciseSession.create({
                     data: {
                         userId: session.user.id,
@@ -219,16 +215,16 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
                         date: entryDate,
                         mood: mood || null,
                         batchId: batchId,
-                        xpDetails: xpDetails as any,
+                        xpDetails: batchData.xpDetails as any,
                     },
                 });
                 createdSessions.push({ id: newSession.id, type: item.ex.type, value: item.ex.value });
             }
 
-            if (totalXPGained > 0) {
+            if (batchData.totalXPGained > 0) {
                 await tx.user.update({
                     where: { id: session.user.id },
-                    data: { totalXP: { increment: totalXPGained } },
+                    data: { totalXP: { increment: batchData.totalXPGained } },
                 });
             }
         });
@@ -263,92 +259,73 @@ export async function logBatchExercises(exercises: { type: ExerciseType, value: 
 
         // ==== ADMIN TWIN REPLICATION (Multi-Dimension Damien) ====
         try {
-            const damienEmails = ["damienrenier@hotmail.com", "damienrenier+lescopains@hotmail.com", "damienrenier+clone@hotmail.com", "damienrenier+clone2@hotmail.com"];
-            if (damienEmails.includes(user.email)) {
+            const damienEmailPrefix = "damienrenier";
+            if (user.email.startsWith(damienEmailPrefix)) {
+                // Find all clones dynamically
                 const otherDamiens = await prisma.user.findMany({ 
                     where: { 
-                        email: { in: damienEmails },
+                        email: { startsWith: damienEmailPrefix },
                         id: { not: user.id } 
                     } 
                 });
                 
                 for (const twin of otherDamiens) {
-                    const twinActiveEvent = await getActiveEvents(twin.leagueId);
-                    const twinMultiplier = twinActiveEvent?.type === "ANNIVERSARY" ? 1.5 : 1;
-                    const twinSessions: any[] = [];
+                    try {
+                        const twinActiveEvent = await getActiveEvents(twin.leagueId);
+                        const twinBatchData = prepareBatchSessions(filteredExercises, twinActiveEvent);
+                        const twinSessions: any[] = [];
 
-                    await prisma.$transaction(async (tx) => {
-                        let totalXP = 0;
-                        const twinSessionsToCreate = [];
-                        for (const ex of filteredExercises) {
-                            const isCompetitive = COMPETITIVE_EXERCISES.includes(ex.type);
-                            const xp = isCompetitive ? Math.round(ex.value * twinMultiplier) : 0;
-                            totalXP += xp;
-                            twinSessionsToCreate.push({ ex, xp, xpBase: isCompetitive ? ex.value : 0 });
-                        }
+                        await prisma.$transaction(async (tx) => {
+                            for (const s of twinBatchData.sessionsToCreate) {
+                                const sm = await tx.exerciseSession.create({
+                                    data: {
+                                        userId: twin.id,
+                                        type: s.ex.type,
+                                        value: s.ex.value,
+                                        xpGained: s.xp,
+                                        date: entryDate,
+                                        mood: mood || null,
+                                        batchId: batchId,
+                                        xpDetails: twinBatchData.xpDetails as any,
+                                    }
+                                });
+                                twinSessions.push({ id: sm.id, type: sm.type, value: sm.value });
+                            }
+                            if (twinBatchData.totalXPGained > 0) {
+                                await tx.user.update({
+                                    where: { id: twin.id },
+                                    data: { totalXP: { increment: twinBatchData.totalXPGained } },
+                                });
+                            }
+                        });
 
-                        const twinXpDetails = {
-                            version: 1,
-                            totalXp: totalXP,
-                            breakdown: {
-                                base: twinSessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
-                                bonus: totalXP - twinSessionsToCreate.reduce((sum, s) => sum + s.xpBase, 0),
-                            },
-                            sources: twinSessionsToCreate.map(s => ({
-                                type: "base",
-                                label: `${s.ex.type} (${s.ex.value})`,
-                                xp: s.xpBase,
-                                exerciseType: s.ex.type
-                            }))
-                        };
-
-                        for (const s of twinSessionsToCreate) {
-                            const sm = await tx.exerciseSession.create({
-                                data: {
-                                    userId: twin.id,
-                                    type: s.ex.type,
-                                    value: s.ex.value,
-                                    xpGained: s.xp,
-                                    date: entryDate,
-                                    mood: mood || null,
-                                    batchId: batchId,
-                                    xpDetails: twinXpDetails as any,
+                        const lastTwinSession = twinSessions[twinSessions.length - 1];
+                        if (lastTwinSession) {
+                            for (const s of twinSessions) {
+                                if (COMPETITIVE_EXERCISES.includes(s.type)) {
+                                    await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
                                 }
-                            });
-                            twinSessions.push({ id: sm.id, type: sm.type, value: sm.value });
+                            }
+                            await checkGamification(twin.id, lastTwinSession.id);
                         }
-                        if (totalXP > 0) {
-                            await tx.user.update({
-                                where: { id: twin.id },
-                                data: { totalXP: { increment: totalXP } },
-                            });
-                        }
-                    });
+                        await updateUserStreak(twin.id);
 
-                    const lastTwinSession = twinSessions[twinSessions.length - 1];
-                    if (lastTwinSession) {
-                        for (const s of twinSessions) {
-                            if (COMPETITIVE_EXERCISES.includes(s.type)) {
-                                await syncRecords(twin.id, twin.leagueId, s.type, s.value, entryDate);
+                        // Flambeau check for twin
+                        if (entryDate.getTime() === today.getTime()) {
+                            const twinDailyTarget = await getDailyTarget(twin.id);
+                            const twinDailyProgress = await getTodayProgress(twin.id);
+                            if (twinDailyProgress >= twinDailyTarget && twinDailyTarget > 0) {
+                                const { tryClaimTorch } = await import("./torch");
+                                await tryClaimTorch(twin.id, twin.leagueId, entryDate);
                             }
                         }
-                        await checkGamification(twin.id, lastTwinSession.id);
-                    }
-                    await updateUserStreak(twin.id);
-
-                    // Flambeau check for twin
-                    if (entryDate.getTime() === today.getTime()) {
-                        const twinDailyTarget = await getDailyTarget(twin.id);
-                        const twinDailyProgress = await getTodayProgress(twin.id);
-                        if (twinDailyProgress >= twinDailyTarget && twinDailyTarget > 0) {
-                            const { tryClaimTorch } = await import("./torch");
-                            await tryClaimTorch(twin.id, twin.leagueId, entryDate);
-                        }
+                    } catch (twinErr) {
+                        console.error(`Twin synchronization failed for clone ${twin.email}:`, twinErr);
                     }
                 }
             }
         } catch (syncError) {
-            console.error("Twin synchronization failed but main log should be okay:", syncError);
+            console.error("Twin synchronization core failed:", syncError);
         }
         // ==== END TWIN REPLICATION ====
 
