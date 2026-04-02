@@ -451,14 +451,29 @@ export default function DashboardClient({
                 <section className="glass" style={{ marginBottom: "1rem", padding: "1.25rem" }}>
                     <div className="card-header" style={{ marginBottom: "1rem" }}><Award size={18} className="text-secondary" /> <span>Revenus de la veille</span></div>
                     
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                        <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>Efforts & Exploits en séance</span>
-                        <span style={{ fontSize: "0.9rem", fontWeight: 900, color: "var(--primary)" }}>+{invoice.yesterday.sessions.reduce((acc: any, s: any) => acc + s.xpGained, 0)} XP</span>
-                    </div>
+                    {/* HIER */}
+                    <details style={{ background: "rgba(255,255,255,0.02)", borderRadius: "12px", marginBottom: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <summary style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", cursor: "pointer", outline: "none", listStyle: "none" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>Efforts & Exploits (Séance)</span>
+                            </div>
+                            <span style={{ fontSize: "0.9rem", fontWeight: 900, color: "var(--primary)" }}>+{invoice.yesterday.sessions.reduce((acc: any, s: any) => acc + s.xpGained, 0)} XP</span>
+                        </summary>
+                        {invoice.yesterday.sessions.length > 0 && (
+                            <div style={{ padding: "0 12px 12px 12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                                {invoice.yesterday.sessions.map((s: any) => (
+                                    <div key={s.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-muted)", marginLeft: "12px", paddingLeft: "8px", borderLeft: "2px solid rgba(255,255,255,0.1)" }}>
+                                        <span>{s.type === 'PUSHUP' ? 'Pompes' : s.type === 'SQUAT' ? 'Squats' : 'Gainage'} ({s.value}{['PUSHUP', 'SQUAT'].includes(s.type) ? '' : 's'})</span>
+                                        <span style={{ fontWeight: 800 }}>+{s.xpGained} XP</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </details>
 
                     {invoice.yesterday.transactions.map((t: any) => (
-                        <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                        <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px" }}>
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 600 }}>
                                 {t.source === "RENT_DAILY" ? "Rente des trophées (Intérêts)" :
                                  t.source === "TORCH_BONUS" ? "Prime du Flambeau" :
                                  t.source.includes("SETTLEMENT") ? "Bonus d'Événement" :
@@ -478,14 +493,43 @@ export default function DashboardClient({
                         </div>
                     )}
 
-                    <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px dashed rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ marginTop: "8px", paddingTop: "12px", borderTop: "1px dashed rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontSize: "0.9rem", fontWeight: 900, textTransform: "uppercase" }}>Total Encaissé</span>
                         <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "white" }}>{invoice.yesterday.total >= 0 ? '+' : ''}{invoice.yesterday.total} XP</span>
                     </div>
 
-                    <div style={{ marginTop: "1rem", background: "rgba(0,0,0,0.2)", borderRadius: "12px", padding: "10px", textAlign: "center" }}>
-                        <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 800 }}>Prévision pour ce soir (à minuit)</span>
-                        <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--primary)", marginTop: "4px" }}>+{invoice.today.projectedRent} XP</div>
+                    {/* AUJOURD'HUI & PREVISION */}
+                    <div style={{ marginTop: "1.5rem", background: "rgba(0,0,0,0.2)", borderRadius: "16px", padding: "12px", border: "1px dashed var(--primary)" }}>
+                        <div style={{ fontSize: "0.75rem", color: "white", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 900, marginBottom: "8px" }}>En cours : Aujourd'hui</div>
+                        
+                        {(invoice.today.sessionTotal > 0 || invoice.today.transactionTotal > 0) ? (
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
+                                <span>Déjà gagné aujourd'hui :</span>
+                                <span style={{ fontWeight: 800, color: "white" }}>+{invoice.today.sessionTotal + invoice.today.transactionTotal} XP</span>
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", marginBottom: "8px" }}>Aucun XP gagné pour le moment aujourd'hui.</div>
+                        )}
+
+                        <details style={{ background: "rgba(255,255,255,0.03)", borderRadius: "8px", marginTop: "8px" }}>
+                            <summary style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", cursor: "pointer", outline: "none", listStyle: "none" }}>
+                                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)" }}>Prévision Rente minuit :</span>
+                                <span style={{ fontSize: "0.9rem", fontWeight: 900, color: "var(--primary)" }}>+{invoice.today.projectedRent} XP</span>
+                            </summary>
+                            {invoice.today.rentDetails && invoice.today.rentDetails.length > 0 && (
+                                <div style={{ padding: "0 8px 8px 8px", display: "flex", flexDirection: "column", gap: "2px" }}>
+                                    {invoice.today.rentDetails.map((rent: any, idx: number) => (
+                                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "var(--text-muted)" }}>
+                                            <span>{rent.name}</span>
+                                            <span style={{ fontWeight: 800 }}>+{rent.amount} XP</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {(!invoice.today.rentDetails || invoice.today.rentDetails.length === 0) && (
+                                <div style={{ padding: "0 8px 8px 8px", fontSize: "0.65rem", color: "var(--text-muted)", fontStyle: "italic" }}>Aucune rente active. Gagne des trophées !</div>
+                            )}
+                        </details>
                     </div>
                 </section>
             )}

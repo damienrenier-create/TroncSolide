@@ -145,38 +145,64 @@ export async function getDailyInvoice() {
 
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        include: { badges: true }
+        include: { 
+            badges: {
+                include: { badge: true }
+            }
+        }
     });
     if (!user) return null;
 
     const today = startOfDay(getBrusselsToday());
     const yesterday = subDays(today, 1);
+    const tomorrow = getBrusselsDate(new Date(today.getTime() + 24 * 60 * 60 * 1000));
 
-    const [sessionsYesterday, transactionsYesterday] = await Promise.all([
+    const [sessionsYesterday, transactionsYesterday, sessionsToday, transactionsToday] = await Promise.all([
         prisma.exerciseSession.findMany({
             where: { userId, date: yesterday }
         }),
         prisma.xpTransaction.findMany({
             where: { userId, date: { gte: yesterday, lt: today } }
+        }),
+        prisma.exerciseSession.findMany({
+            where: { userId, date: today }
+        }),
+        prisma.xpTransaction.findMany({
+            where: { userId, date: { gte: today, lt: tomorrow } }
         })
     ]);
 
-    const sessionTotal = sessionsYesterday.reduce((acc: number, s: any) => acc + s.xpGained, 0);
-    const transactionTotal = transactionsYesterday.reduce((acc: number, t: any) => acc + t.amount, 0);
-
-    const invoiceSum = sessionTotal + transactionTotal;
+    const sessionTotalYesterday = sessionsYesterday.reduce((acc: number, s: any) => acc + s.xpGained, 0);
+    const transactionTotalYesterday = transactionsYesterday.reduce((acc: number, t: any) => acc + t.amount, 0);
+    const invoiceSumYesterday = sessionTotalYesterday + transactionTotalYesterday;
     
+    const sessionTotalToday = sessionsToday.reduce((acc: number, s: any) => acc + s.xpGained, 0);
+    const transactionTotalToday = transactionsToday.reduce((acc: number, t: any) => acc + t.amount, 0);
+
     // Future Rent calculation
-    const projectedRent = user.badges.reduce((acc, b) => acc + (b.rateXP || 0), 0);
+    const rentDetails = user.badges
+        .filter(b => b.rateXP && b.rateXP > 0)
+        .map(b => ({
+            name: b.badge.name,
+            amount: b.rateXP
+        }));
+    const projectedRent = rentDetails.reduce((acc, b) => acc + (b.amount || 0), 0);
 
     return {
         yesterday: {
             sessions: sessionsYesterday,
             transactions: transactionsYesterday,
-            total: invoiceSum
+            sessionTotal: sessionTotalYesterday,
+            transactionTotal: transactionTotalYesterday,
+            total: invoiceSumYesterday
         },
         today: {
-            projectedRent
+            sessions: sessionsToday,
+            transactions: transactionsToday,
+            sessionTotal: sessionTotalToday,
+            transactionTotal: transactionTotalToday,
+            projectedRent,
+            rentDetails
         }
     };
 }
