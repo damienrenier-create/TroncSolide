@@ -35,14 +35,24 @@ export async function tryClaimTorch(userId: string, leagueId: string, entryDate:
 
         const newHighest = Math.max(newStreak, user.highestTorchStreak);
 
-        await prisma.user.update({
-            where: { id: userId },
-            data: {
-                currentTorchStreak: newStreak,
-                highestTorchStreak: newHighest,
-                totalXP: { increment: 100 } // Bonus for taking the torch
-            }
-        });
+        await prisma.$transaction([
+            prisma.user.update({
+                where: { id: userId },
+                data: {
+                    currentTorchStreak: newStreak,
+                    highestTorchStreak: newHighest,
+                    totalXP: { increment: 100 } // Bonus for taking the torch
+                }
+            }),
+            prisma.xpTransaction.create({
+                data: {
+                    userId,
+                    amount: 100,
+                    source: "TORCH_BONUS",
+                    date: entryDate
+                }
+            })
+        ]);
 
         return true;
     } catch (e: any) {

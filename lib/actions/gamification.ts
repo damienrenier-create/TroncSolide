@@ -1059,6 +1059,15 @@ export async function claimClickEasterEgg() {
                 }
             });
 
+            await tx.xpTransaction.create({
+                data: {
+                    userId,
+                    amount: xpToNext,
+                    source: "EASTER_EGG_CLIC",
+                    date: new Date()
+                }
+            });
+
             // Add to feed for the gazette
             await tx.feedItem.create({
                 data: {
@@ -1117,6 +1126,15 @@ export async function claimZenReward() {
                     }
                 });
 
+                await tx.xpTransaction.create({
+                    data: {
+                        userId,
+                        amount: xpGain,
+                        source: "EASTER_EGG_ZEN",
+                        date: new Date()
+                    }
+                });
+
                 // Award first time zen badge
                 if (birdIndex === 0) {
                     await tx.userBadge.upsert({
@@ -1148,6 +1166,17 @@ export async function claimZenReward() {
                         totalXP: targetXP,
                         level: targetLevel,
                         zenLevel: 0 // Reset
+                    }
+                });
+
+                // Calculate exact amount lost
+                const lostXP = targetXP - user.totalXP; // Will be negative
+                await tx.xpTransaction.create({
+                    data: {
+                        userId,
+                        amount: lostXP,
+                        source: "EASTER_EGG_MALUS",
+                        date: new Date()
                     }
                 });
 

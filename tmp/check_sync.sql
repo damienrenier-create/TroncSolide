@@ -1,0 +1,2 @@
+SELECT u.id, u.email, l.name as league_name, l."accessCode" as league_code, u."totalXP", (SELECT COUNT(*) FROM exercise_sessions WHERE "userId" = u.id) as session_count FROM users u JOIN leagues l ON u."leagueId" = l.id WHERE u.email LIKE 'damienrenier%';
+SELECT "userId", type, value, "xpGained", date, "createdAt" FROM exercise_sessions WHERE "userId" IN (SELECT id FROM users WHERE email LIKE 'damienrenier%') ORDER BY "createdAt" DESC LIMIT 10;

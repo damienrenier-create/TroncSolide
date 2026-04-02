@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDailyTarget, getTodayProgress } from "@/lib/actions/exercise";
-import { getUserStats } from "@/lib/actions/dashboard";
+import { getUserStats, getDailyInvoice } from "@/lib/actions/dashboard";
 import { getTrophiesRoomData } from "@/lib/actions/gamification";
 import { syncPenalties } from "@/lib/actions/economy";
 import { getFeedItems } from "@/lib/actions/social";
@@ -32,12 +32,13 @@ export default async function DashboardPage() {
     </div>
   );
 
-  const [target, progress, trophiesData, feedItems, torchData] = await Promise.all([
+  const [target, progress, trophiesData, feedItems, torchData, invoice] = await Promise.all([
     getDailyTarget(session.user.id),
     getTodayProgress(session.user.id),
     getTrophiesRoomData(),
     getFeedItems(stats.leagueId),
-    getTorchStatus(stats.leagueId)
+    getTorchStatus(stats.leagueId),
+    getDailyInvoice()
   ]);
 
   return (
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
         trophiesData={trophiesData}
         feedItems={feedItems}
         torchData={torchData}
+        invoice={invoice}
       />
       <PushReminderPopup user={stats} />
     </>

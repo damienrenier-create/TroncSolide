@@ -186,6 +186,15 @@ async function grantRollingBadge(badgeId: string, newWinnerId: string, volume: n
             await tx.feedItem.create({
                 data: { leagueId, userId: newWinnerId, type: "BADGE_WON", badgeId }
             });
+            
+            await tx.xpTransaction.create({
+                data: {
+                    userId: newWinnerId,
+                    amount: finalXP + CASSEUR_BONUS,
+                    source: "RECORD_STOLEN",
+                    date: today
+                }
+            });
         }
     });
 }

@@ -105,6 +105,7 @@ model User {
   nudgesSent    Nudge[]   @relation("NudgeSender")
   nudgesReceived Nudge[]  @relation("NudgeReceiver")
   pushSubscriptions PushSubscription[]
+  xpTransactions    XpTransaction[]
 
   @@map("users")
 }
@@ -327,4 +328,16 @@ model PushSubscription {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("push_subscriptions")
+}
+
+model XpTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  source    String   @db.VarChar(50) // e.g. RENT_DAILY, TORCH_BONUS, MANUAL_ADJUST, SETTLEMENT
+  date      DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("xp_transactions")
 }

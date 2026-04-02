@@ -77,10 +77,15 @@ export async function processAnniversarySettlement(leagueId: string) {
         await awardBadge(star.id, "BIRTHDAY_STAR", leagueId, badgeXP);
         
         if (extraXP > 0) {
-            await prisma.user.update({
-                where: { id: star.id },
-                data: { totalXP: { increment: extraXP } }
-            });
+            await prisma.$transaction([
+                prisma.user.update({
+                    where: { id: star.id },
+                    data: { totalXP: { increment: extraXP } }
+                }),
+                prisma.xpTransaction.create({
+                    data: { userId: star.id, amount: extraXP, source: "SETTLEMENT_BIRTHDAY", date: getBrusselsToday() }
+                })
+            ]);
         }
     } else {
         // BP battu ! Les "chasseurs" qui ont fait plus que la star gagnent x3 (+1.5x)
@@ -93,10 +98,15 @@ export async function processAnniversarySettlement(leagueId: string) {
             await awardBadge(hunter.userId, "BIRTHDAY_HUNTER", leagueId, 100);
             
             if (extraXP > 0) {
-                await prisma.user.update({
-                    where: { id: hunter.userId },
-                    data: { totalXP: { increment: extraXP } }
-                });
+                await prisma.$transaction([
+                    prisma.user.update({
+                        where: { id: hunter.userId },
+                        data: { totalXP: { increment: extraXP } }
+                    }),
+                    prisma.xpTransaction.create({
+                        data: { userId: hunter.userId, amount: extraXP, source: "SETTLEMENT_BIRTHDAY_HUNTER", date: getBrusselsToday() }
+                    })
+                ]);
             }
         }
     }

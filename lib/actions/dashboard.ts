@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { startOfDay, subDays, eachDayOfInterval, isWithinInterval, differenceInCalendarDays } from "date-fns";
-import { getBrusselsDate } from "@/lib/date-utils";
+import { getBrusselsDate, getBrusselsToday } from "@/lib/date-utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getActiveEvents } from "@/lib/actions/events";
@@ -135,5 +135,48 @@ export async function getUserStats() {
         unpaidPenalties: unpaidPenaltiesList,
         activeEvent,
         recentLostBadges
+    };
+}
+
+export async function getDailyInvoice() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return null;
+    const userId = session.user.id;
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { badges: true }
+    });
+    if (!user) return null;
+
+    const today = startOfDay(getBrusselsToday());
+    const yesterday = subDays(today, 1);
+
+    const [sessionsYesterday, transactionsYesterday] = await Promise.all([
+        prisma.exerciseSession.findMany({
+            where: { userId, date: yesterday }
+        }),
+        prisma.xpTransaction.findMany({
+            where: { userId, date: { gte: yesterday, lt: today } }
+        })
+    ]);
+
+    const sessionTotal = sessionsYesterday.reduce((acc: number, s: any) => acc + s.xpGained, 0);
+    const transactionTotal = transactionsYesterday.reduce((acc: number, t: any) => acc + t.amount, 0);
+
+    const invoiceSum = sessionTotal + transactionTotal;
+    
+    // Future Rent calculation
+    const projectedRent = user.badges.reduce((acc, b) => acc + (b.rateXP || 0), 0);
+
+    return {
+        yesterday: {
+            sessions: sessionsYesterday,
+            transactions: transactionsYesterday,
+            total: invoiceSum
+        },
+        today: {
+            projectedRent
+        }
     };
 }

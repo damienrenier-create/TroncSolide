@@ -25,6 +25,7 @@ interface DashboardProps {
     trophiesData?: any;
     feedItems?: any[];
     torchData?: any;
+    invoice?: any;
 }
 
 export default function DashboardClient({
@@ -34,7 +35,8 @@ export default function DashboardClient({
     stats,
     trophiesData,
     feedItems = [],
-    torchData
+    torchData,
+    invoice
 }: DashboardProps) {
     const [showForm, setShowForm] = useState(false);
     const [showSecondaryForm, setShowSecondaryForm] = useState(false);
@@ -443,6 +445,50 @@ export default function DashboardClient({
                     </div>
                 </div>
             </div>
+
+            {/* 3.5. BILAN FINANCIER XP */}
+            {invoice && (
+                <section className="glass" style={{ marginBottom: "1rem", padding: "1.25rem" }}>
+                    <div className="card-header" style={{ marginBottom: "1rem" }}><Award size={18} className="text-secondary" /> <span>Revenus de la veille</span></div>
+                    
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 700 }}>Efforts & Exploits en séance</span>
+                        <span style={{ fontSize: "0.9rem", fontWeight: 900, color: "var(--primary)" }}>+{invoice.yesterday.sessions.reduce((acc: any, s: any) => acc + s.xpGained, 0)} XP</span>
+                    </div>
+
+                    {invoice.yesterday.transactions.map((t: any) => (
+                        <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                                {t.source === "RENT_DAILY" ? "Rente des trophées (Intérêts)" :
+                                 t.source === "TORCH_BONUS" ? "Prime du Flambeau" :
+                                 t.source.includes("SETTLEMENT") ? "Bonus d'Événement" :
+                                 t.source.includes("EASTER_EGG") ? "Intervention Holistique" : 
+                                 t.source === "RECORD_STOLEN" ? "Trophée Asynchrone" :
+                                 t.source === "MANUAL_ADJUST" ? "Intervention divine ⚡" : t.source}
+                            </span>
+                            <span style={{ fontSize: "0.85rem", fontWeight: 800, color: t.amount >= 0 ? "var(--secondary)" : "#ef4444" }}>
+                                {t.amount >= 0 ? '+' : ''}{t.amount} XP
+                            </span>
+                        </div>
+                    ))}
+                    
+                    {invoice.yesterday.transactions.length === 0 && invoice.yesterday.sessions.length === 0 && (
+                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", margin: "10px 0" }}>
+                            Aucun mouvement financier hier.
+                        </div>
+                    )}
+
+                    <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px dashed rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.9rem", fontWeight: 900, textTransform: "uppercase" }}>Total Encaissé</span>
+                        <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "white" }}>{invoice.yesterday.total >= 0 ? '+' : ''}{invoice.yesterday.total} XP</span>
+                    </div>
+
+                    <div style={{ marginTop: "1rem", background: "rgba(0,0,0,0.2)", borderRadius: "12px", padding: "10px", textAlign: "center" }}>
+                        <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 800 }}>Prévision pour ce soir (à minuit)</span>
+                        <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--primary)", marginTop: "4px" }}>+{invoice.today.projectedRent} XP</div>
+                    </div>
+                </section>
+            )}
 
             {/* 4. NEXT OBJECTIVES */}
             {nextObjectives.length > 0 && (
