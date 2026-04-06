@@ -5,12 +5,12 @@ import { revalidatePath } from "next/cache";
 import { BadgeType, FeedItemType, ExerciseType, RecordType, RecordTimeframe } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { 
+import {
     differenceInDays,
     differenceInYears,
-    startOfDay, 
-    startOfWeek, 
-    startOfMonth, 
+    startOfDay,
+    startOfWeek,
+    startOfMonth,
     startOfYear,
     endOfMonth,
     isSameDay,
@@ -94,7 +94,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
     if (!user || user.sessions.length === 0) return;
     const session = user.sessions[0];
     const { getLevelInfo } = await import("@/lib/constants/levels");
-    
+
     let currentTotalXP = user.totalXP;
     const today = getBrusselsToday();
 
@@ -190,7 +190,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
     batchSessionsForHolistic.forEach(s => {
         batchValues[s.type] = (batchValues[s.type] || 0) + s.value;
     });
-    
+
     const minBatchValue = holisticTypes.every(t => batchValues[t] !== undefined)
         ? Math.min(...holisticTypes.map(t => batchValues[t]))
         : 0;
@@ -247,10 +247,10 @@ export async function checkGamification(userId: string, lastSessionId: string) {
         if (!userBadgeNames.has("Double Challenge")) {
             const bsuTypesToday = await prisma.exerciseSession.groupBy({
                 by: ['challenge'],
-                where: { 
-                    userId, 
-                    date: session.date, 
-                    challenge: { in: ["BSU_PUSHUP", "BSU_SQUAT"] } 
+                where: {
+                    userId,
+                    date: session.date,
+                    challenge: { in: ["BSU_PUSHUP", "BSU_SQUAT"] }
                 }
             });
             if (bsuTypesToday.length >= 2) badgesToAward.push("BSU_DOUBLE_THREAT");
@@ -266,12 +266,12 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                     end: endOfMonth(d)
                 });
             }
-            
+
             let monthsActive = 0;
             for (const range of last3Months) {
                 const count = await prisma.exerciseSession.count({
-                    where: { 
-                        userId, 
+                    where: {
+                        userId,
                         challenge: { startsWith: "BSU_" },
                         date: { gte: range.start, lte: range.end }
                     }
@@ -304,8 +304,8 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                 finalXP = Math.floor(def.xpValue * multiplier);
             }
 
-            await tx.userBadge.create({ 
-                data: { userId, badgeId: badge.id, rank, baseXP: finalXP } 
+            await tx.userBadge.create({
+                data: { userId, badgeId: badge.id, rank, baseXP: finalXP }
             });
 
             if (finalXP > 0) {
@@ -339,7 +339,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
             const batchSessions = await prisma.exerciseSession.findMany({ where: { batchId } });
             for (const s of batchSessions) {
                 const details = (s.xpDetails as any) || { version: 1, totalXp: s.xpGained, sources: [] };
-                
+
                 // Add all awards but make sure they are distinct from base exercise
                 details.sources.push(...finalAwards.map(a => ({
                     type: "badge",
@@ -347,7 +347,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                     xp: a.xp
                 })));
                 details.totalXp += finalAwards.reduce((acc, a) => acc + a.xp, 0);
-                
+
                 await prisma.exerciseSession.update({
                     where: { id: s.id },
                     data: { xpDetails: details, xpGained: details.totalXp }
@@ -362,7 +362,7 @@ export async function checkGamification(userId: string, lastSessionId: string) {
                 xp: a.xp
             })));
             details.totalXp += finalAwards.reduce((acc, a) => acc + a.xp, 0);
-            
+
             await prisma.exerciseSession.update({
                 where: { id: lastSessionId },
                 data: { xpDetails: details, xpGained: details.totalXp }
@@ -513,7 +513,7 @@ export async function getBadgeCatalogue() {
     const badges = await prisma.badge.findMany({
         where: { OR: [{ leagueId: user.leagueId }, { leagueId: null }] },
         include: {
-            users: { 
+            users: {
                 include: { user: { select: { nickname: true } } },
                 orderBy: { rank: 'asc' }
             },
@@ -572,7 +572,7 @@ export async function reSyncUserBadges(userId: string) {
 
     const userBadges = user.badges.filter(ub => !ub.badge.id.startsWith("RECORD_"));
     const { getLevelInfo } = await import("@/lib/constants/levels");
-    
+
     // Aggregates for cumulative checks
     const aggregates = await prisma.exerciseSession.groupBy({ by: ['type'], where: { userId }, _sum: { value: true } });
     const totalPumps = aggregates.find(a => a.type === "PUSHUP")?._sum.value || 0;
@@ -621,9 +621,9 @@ export async function reSyncUserBadges(userId: string) {
             else if (reqStr === "3M") req = 180;
             else if (reqStr === "5M") req = 300;
             else if (reqStr === "10M") req = 600;
-            const maxPlank = await prisma.exerciseSession.aggregate({ 
-                where: { userId, type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R"] } }, 
-                _max: { value: true } 
+            const maxPlank = await prisma.exerciseSession.aggregate({
+                where: { userId, type: { in: ["VENTRAL", "LATERAL_L", "LATERAL_R"] } },
+                _max: { value: true }
             });
             if (req > 0) stillEarned = (maxPlank._max.value || 0) >= req;
         } else if (bid.startsWith("HOLISTIC_LOG_")) {
@@ -701,13 +701,13 @@ export async function recalculateTotalXP(userId: string) {
     }, 0);
 
     const newTotalXP = totalSessionXP + totalBadgeXP;
-    
+
     const { getLevelInfo } = await import("@/lib/constants/levels");
     const levelInfo = getLevelInfo(newTotalXP);
 
     await prisma.user.update({
         where: { id: userId },
-        data: { 
+        data: {
             totalXP: newTotalXP,
             level: levelInfo.level
         }
@@ -722,7 +722,7 @@ export async function recalculateTotalXP(userId: string) {
 export async function harmonizeGlobalXP() {
     console.log("Starting global harmonization...");
     const leagues = await prisma.league.findMany({ select: { id: true } });
-    
+
     for (const league of leagues) {
         await reSyncLeagueRecords(league.id);
         await reSyncCumulativeRanks(league.id);
@@ -733,7 +733,7 @@ export async function harmonizeGlobalXP() {
         await reSyncUserBadges(user.id);
         await recalculateTotalXP(user.id);
     }
-    
+
     console.log("Global harmonization complete.");
     return { success: true };
 }
@@ -915,8 +915,8 @@ export async function getTrophiesRoomData() {
     const regularityStats = await getRegularityStats(userId);
 
     const userStats = {
-        allTime: { 
-            ...mapAgg(aggregates), 
+        allTime: {
+            ...mapAgg(aggregates),
             maxHolisticSession: maxHolisticVol,
             regularity: regularityStats
         },
@@ -948,7 +948,7 @@ export async function getRegularityStats(userId: string) {
     });
 
     const dailyStats: Record<string, { total: number, pushups: number, ventral: number, types: Set<string>, targetReached: boolean }> = {};
-    
+
     sessions.forEach(s => {
         const bd = getBrusselsDate(s.date);
         const dateStr = format(bd, 'yyyy-MM-dd');
@@ -981,7 +981,7 @@ export async function getRegularityStats(userId: string) {
     let currentStreak30 = 0; let maxStreak30 = 0;
     let currentStreak3Diff = 0; let maxStreak3Diff = 0;
     let currentStreakTarget = 0; let maxStreakTarget = 0;
-    
+
     let prevDate: Date | null = null;
     for (const dateStr of dates) {
         const currDate = new Date(dateStr);
@@ -1112,7 +1112,7 @@ export async function claimZenReward() {
     if (!user) return { success: false, error: "Utilisateur introuvable" };
 
     const birdIndex = user.zenLevel;
-    
+
     try {
         await prisma.$transaction(async (tx) => {
             if (birdIndex < 7) {
@@ -1142,7 +1142,7 @@ export async function claimZenReward() {
                         create: { userId, badgeId: "HIDDEN_ZEN_BIRD" },
                         update: {}
                     });
-                     await tx.feedItem.create({
+                    await tx.feedItem.create({
                         data: { leagueId: user.leagueId, userId, type: "BADGE_WON", badgeId: "HIDDEN_ZEN_BIRD" }
                     });
                 }
@@ -1152,11 +1152,11 @@ export async function claimZenReward() {
                 let targetXP = 0;
                 let accumulated = 0;
                 const targetLevel = Math.max(1, user.level - 1);
-                
+
                 for (let i = 2; i <= targetLevel; i++) {
-                     const linearCost = (i - 1) * 50;
-                     const acceleration = i > 50 ? Math.pow(i - 50, 2) * 10 : 0;
-                     accumulated += (linearCost + acceleration);
+                    const linearCost = (i - 1) * 50;
+                    const acceleration = i > 50 ? Math.pow(i - 50, 2) * 10 : 0;
+                    accumulated += (linearCost + acceleration);
                 }
                 targetXP = accumulated;
 
